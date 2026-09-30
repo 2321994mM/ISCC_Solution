@@ -1,0 +1,25 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+
+## Build
+publish/
+*.dll
+*.pdb
+
+## Logs
+logs/
+*.log
+
+## OS
+Thumbs.db
+Desktop.ini
+
+## Secrets
+appsettings.Production.json
+*.pfx
+*.key

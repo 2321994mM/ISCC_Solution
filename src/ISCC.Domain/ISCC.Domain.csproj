@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ISCC.Domain</RootNamespace>
+    <AssemblyName>ISCC.Domain</AssemblyName>
+  </PropertyGroup>
+
+</Project>
