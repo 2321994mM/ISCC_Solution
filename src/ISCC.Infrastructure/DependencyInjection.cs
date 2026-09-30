@@ -2,7 +2,7 @@ using ISCC.Application.Cms;
 using ISCC.Application.Dashboard;
 using ISCC.Application.ReferenceData;
 using ISCC.Application.TradeProcedures;
-using ISCC.Domain.Interfaces;
+using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Repositories;
 using ISCC.Infrastructure.Services;

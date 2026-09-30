@@ -1,5 +1,42 @@
 # ISCC Migration Plan — Legacy `Capqwebsite` → Clean Architecture (.NET 9)
 
+## Solution layout
+
+```
+ISCC_Solution/
+├── ISCC.sln
+├── Directory.Packages.props          central package versions
+├── docs/                             this plan + phase2-verification.txt
+└── src/
+    ├── ISCC.Domain/                  entities, enums, value objects
+    │   └── Abstraction/
+    │       ├── IRepository/          IRepository<T>, IUnitOfWork
+    │       └── IService/             reserved for *domain* service abstractions (see its README)
+    ├── ISCC.Application/             use cases + service contracts
+    │   ├── Cms/          ├── ReferenceData/   ├── TradeProcedures/   └── Dashboard/
+    ├── ISCC.Infrastructure/          PlantQuarantineDbContext + 300 generated POCOs
+    ├── ISCC.Shared.Localization/      SharedResource.resx / .Ar.resx
+    └── Host/                         the 3 deployable hosts
+        ├── ISCC.Api.Application/      employers portal  (was ISCC.Web.Employers)
+        ├── ISCC.Api.Gate/             client portal     (was ISCC.Web.Client)
+        └── ISCC.Api.Android/          Android API
+```
+
+Dependency direction is one-way and must stay so:
+
+```
+ISCC.Domain  <-  ISCC.Application  <-  ISCC.Infrastructure  <-  Host projects
+```
+
+`ISCC.Domain` has **no project references of its own.** That constraint is why the
+application service contracts (`ICmsContentService`, `IReferenceDataService`,
+`ITradeProcedureService`, `IDashboardService`) stay in `ISCC.Application` — they return
+Application DTOs, so relocating them into `ISCC.Domain` would require `Domain -> Application`
+while the reverse edge already exists. See `src/ISCC.Domain/Abstraction/IService/README.md`.
+
+The three hosts moved from `src/` to `src/Host/`, so all their `<ProjectReference>` paths
+gained one `..\` segment.
+---
 Analysis date: 2026-09-30
 Legacy source: `C:\Users\Nabila\source\repos\ISCC_Capqwebsite`
 Target: `C:\Users\Nabila\source\repos\ISCC_Solution`

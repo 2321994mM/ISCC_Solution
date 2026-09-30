@@ -1,4 +1,4 @@
-using ISCC.Domain.Interfaces;
+using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Data;
 
 namespace ISCC.Infrastructure.Repositories;

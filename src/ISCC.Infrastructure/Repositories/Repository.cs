@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using ISCC.Domain.Interfaces;
+using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

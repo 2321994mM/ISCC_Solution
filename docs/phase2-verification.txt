@@ -1,4 +1,5 @@
-Phase 2 regression sweep - 2026-09-30 13:08
+Phase 2 regression sweep - 2026-09-30 14:27
+host project: src/Host/ISCC.Api.Application (was ISCC.Web.Employers)
 target: http://localhost:5099
 
   /                                                    HTTP 200      81536 bytes
