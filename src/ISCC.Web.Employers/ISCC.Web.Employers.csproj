@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>ISCC.Web.Employers</RootNamespace>
+    <AssemblyName>ISCC.Web.Employers</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ISCC.Application\ISCC.Application.csproj" />
+    <ProjectReference Include="..\ISCC.Infrastructure\ISCC.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+
+</Project>

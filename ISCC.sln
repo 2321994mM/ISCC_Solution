@@ -9,11 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Application", "src\ISC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Infrastructure", "src\ISCC.Infrastructure\ISCC.Infrastructure.csproj", "{A1B2C3D4-0003-4000-8000-000000000003}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Web.Client", "..\ISCC_Capqwebsite\src\ISCC.Web.Client\ISCC.Web.Client.csproj", "{A1B2C3D4-0004-4000-8000-000000000004}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Web.Client", "src\ISCC.Web.Client\ISCC.Web.Client.csproj", "{A1B2C3D4-0004-4000-8000-000000000004}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Web.Employers", "..\ISCC_Employers\src\ISCC.Web.Employers\ISCC.Web.Employers.csproj", "{A1B2C3D4-0005-4000-8000-000000000005}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Web.Employers", "src\ISCC.Web.Employers\ISCC.Web.Employers.csproj", "{A1B2C3D4-0005-4000-8000-000000000005}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Api.Android", "..\ISCC_AndroidApi\src\ISCC.Api.Android\ISCC.Api.Android.csproj", "{A1B2C3D4-0006-4000-8000-000000000006}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Api.Android", "src\ISCC.Api.Android\ISCC.Api.Android.csproj", "{A1B2C3D4-0006-4000-8000-000000000006}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
