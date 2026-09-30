@@ -1,5 +1,6 @@
 using ISCC.Application;
 using ISCC.Infrastructure;
+using ISCC.Shared.Web;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,30 +21,23 @@ builder.Host.UseSerilog();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Identical to the other two hosts. This was previously missing here entirely, which is
+// why localization was wired in one portal and silently absent from this one.
+builder.Services.AddSharedWeb(builder.Configuration);
+
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
+app.UseSharedWeb();
+app.MapSharedWebAssets();
 app.UseStaticFiles();
-app.UseRouting();
-app.UseSession();
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+/// <summary>Exposed so integration tests can use <c>WebApplicationFactory</c>.</summary>
+public partial class Program { }

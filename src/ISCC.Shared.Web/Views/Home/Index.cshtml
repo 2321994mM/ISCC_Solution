@@ -1,0 +1,19 @@
+@using System.Globalization
+@*
+    Shared Home/Index placeholder.
+
+    Exists so all three hosts serve an identical landing page before real controllers are
+    ported, which is what keeps the skeleton at parity. Api.Gate previously had its own
+    copy and Api.Application had none at all, so "/" 404'd in one portal and not the
+    other. Replace with the real HomeController once the corrected legacy sources land.
+
+    Arabic text is deliberately not written inline here: non-ASCII does not survive
+    reliably through editing tooling, so the strings live in ISCC.Shared.Web.ViewText.
+    Real application copy belongs in the .resx files under ISCC.Shared.Localization and
+    should be resolved through IStringLocalizer.
+*@
+@{
+    var culture = CultureInfo.CurrentUICulture;
+}
+<h1>@ISCC.Shared.Web.ViewText.PortalName(culture)</h1>
+<p>@ISCC.Shared.Web.ViewText.NoPagesMigratedYet(culture)</p>

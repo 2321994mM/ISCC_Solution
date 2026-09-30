@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ISCC.Shared.Web</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.SqlServer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ISCC.Shared.Contracts\ISCC.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\ISCC.Shared.Localization\ISCC.Shared.Localization.csproj" />
+    <!--
+      BaseController needs PlantQuarantineDbContext to write to A__plant_Error_Save, and
+      the error-logging path needs the generated entity types. This is the one downward
+      reference from Shared.Web; it inverts no layer.
+    -->
+    <ProjectReference Include="..\ISCC.Infrastructure\ISCC.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!--
+    Embed wwwroot into the assembly instead of relying on the static-web-assets manifest.
+
+    A Razor class library normally publishes its wwwroot loose, to
+    wwwroot/_content/ISCC.Shared.Web/, served through a build-time manifest. That works in
+    `dotnet run` and in a correct publish, but the path embeds the assembly name, and the
+    manifest is a build artifact an IIS deployment can silently lose.
+
+    Embedding makes the assets travel inside the DLL: identical bytes in every
+    environment, servable at the stable /_shared/... path that MapSharedWebAssets sets up,
+    and cache-busted automatically because the file changes whenever the assembly does.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\**\*" />
+  </ItemGroup>
+
+  <!--
+    This project sits BESIDE src/Host/, never inside it.
+
+    src/Host/ holds the three deployable apps. Everything in here is referenced by them
+    and ships inside their output. A project in Host/ that is not one of the three hosts
+    is a mistake, because "everything in Host/ ships separately" is the rule that makes
+    the folder meaningful.
+
+    Dependency direction stays one-way:
+        Domain <- Application <- Infrastructure <- Shared.Web <- Host projects
+    and
+        Shared.Contracts <- Shared.Web <- Host projects
+
+    Shared.Web references Infrastructure because BaseController needs the DbContext to
+    write to the legacy A__plant_Error_Save log table. That is the one unavoidable
+    downward reference; it does not invert any layer.
+  -->
+
+</Project>

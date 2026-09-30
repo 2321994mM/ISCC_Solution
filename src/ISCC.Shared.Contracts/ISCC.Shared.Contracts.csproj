@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ISCC.Shared.Contracts</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Contracts are the vocabulary shared by every host: both web portals and the Android
+    API. This project deliberately has NO ProjectReference to Domain, Application or
+    Infrastructure, otherwise the dependency graph stops being acyclic the moment a host
+    wants to return an envelope.
+
+    No EF Core, no Serilog. The ASP.NET Core framework reference below is required by
+    ApiControllerBase only, which returns the ApiResponse envelope from action methods.
+    It is a framework reference, not a project reference, so it pulls in no application
+    code.
+  -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

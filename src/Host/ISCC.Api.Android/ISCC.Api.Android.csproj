@@ -6,9 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ISCC.Shared.Contracts\ISCC.Shared.Contracts.csproj" />
     <ProjectReference Include="..\..\ISCC.Application\ISCC.Application.csproj" />
     <ProjectReference Include="..\..\ISCC.Infrastructure\ISCC.Infrastructure.csproj" />
     <ProjectReference Include="..\..\ISCC.Shared.Localization\ISCC.Shared.Localization.csproj" />
+    <ProjectReference Include="..\..\ISCC.Shared.Web\ISCC.Shared.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

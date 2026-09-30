@@ -1,13 +1,13 @@
+using ISCC.Shared.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ISCC.Api.Android.Controllers;
 
 /// <summary>Placeholder. See <see cref="AuthController"/>. Migration is Phase 6.</summary>
-[ApiController]
 [Route("api/[controller]")]
-public class InspectionController : ControllerBase
+public class InspectionController : ApiControllerBase
 {
+    /// <summary>Not migrated yet.</summary>
     [HttpGet]
-    public IActionResult GetAll() => StatusCode(StatusCodes.Status501NotImplemented,
-        new { Message = "Not yet migrated. See docs/MIGRATION-PLAN.md Phase 6." });
+    public ActionResult<ApiResponse<object>> GetAll() => ApiNotImplemented();
 }

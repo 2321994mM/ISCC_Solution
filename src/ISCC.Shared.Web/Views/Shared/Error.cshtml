@@ -1,0 +1,31 @@
+@using System.Globalization
+@model ISCC.Shared.Web.ErrorViewModel
+@*
+    The one error page every portal shows.
+
+    Replaces the per-host Error.cshtml. Shows the trace id so a user can quote it and
+    support can find the matching log row in A__plant_Error_Save or Serilog.
+
+    Reached two ways, and the copy differs for each:
+      - pipeline re-execution after an unhandled fault, or
+      - status-code re-execution for a 4xx that never became an exception.
+    Both preserve the original status code, so the text can be honest about what happened.
+*@
+@{
+    var culture = CultureInfo.CurrentUICulture;
+    var statusCode = Model?.StatusCode ?? 0;
+    var traceId = Model?.RequestId ?? Context.Request.Query["traceId"].FirstOrDefault();
+    var showTraceId = ISCC.Shared.Web.ViewText.ShouldShowTraceId(statusCode) && !string.IsNullOrEmpty(traceId);
+}
+<article class="iscc-error">
+    <h1>@ISCC.Shared.Web.ViewText.ErrorHeading(culture, statusCode)</h1>
+    <p>@ISCC.Shared.Web.ViewText.ErrorBody(culture, statusCode)</p>
+
+    @if (showTraceId)
+    {
+        <p class="iscc-error__trace">
+            @ISCC.Shared.Web.ViewText.ErrorReferenceLabel(culture)
+            <code>@traceId</code>
+        </p>
+    }
+</article>

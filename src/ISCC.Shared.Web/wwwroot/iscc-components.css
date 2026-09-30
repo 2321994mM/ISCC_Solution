@@ -1,0 +1,105 @@
+/*
+ * Shared component styles.
+ *
+ * Structural only: layout, spacing, and the states that accessibility depends on
+ * (focus visibility, disabled contrast). No visual design lives here, so a portal theme
+ * can restyle every component by overriding these rules.
+ */
+
+.iscc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-block-end: 1rem;
+}
+
+.iscc-field__label {
+    font-weight: 600;
+}
+
+.iscc-select,
+.iscc-select2 {
+    inline-size: 100%;
+    min-block-size: 2.5rem;
+    padding-inline: 0.625rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+    background: #fff;
+}
+
+/* Keep the focus ring visible. Never remove this without a replacement. */
+.iscc-select:focus-visible,
+.iscc-select2:focus-visible,
+.iscc-table a:focus-visible,
+.iscc-pager__link:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+}
+
+.iscc-select:disabled,
+.iscc-select2:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+.iscc-table-wrapper {
+    overflow-x: auto;
+}
+
+.iscc-table {
+    inline-size: 100%;
+    border-collapse: collapse;
+}
+
+.iscc-table th,
+.iscc-table td {
+    padding: 0.5rem 0.75rem;
+    border-block-end: 1px solid #e2e8f0;
+    text-align: start;
+}
+
+.iscc-table th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.iscc-table__empty td {
+    padding: 1.5rem;
+    text-align: center;
+    color: #64748b;
+}
+
+.iscc-pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: center;
+    margin-block-start: 0.75rem;
+}
+
+.iscc-pager__link {
+    padding: 0.375rem 0.625rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+    text-decoration: none;
+}
+
+.iscc-pager__link--current {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+    font-weight: 600;
+}
+
+.iscc-pager__count {
+    margin-inline-start: auto;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+/* Right-to-left support. The portals are Arabic-first, so this is a default not an
+   opt-in. */
+[dir="rtl"] .iscc-pager__count {
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+}

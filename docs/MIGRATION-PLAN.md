@@ -91,6 +91,122 @@ Every number in this document was produced by reading the legacy source, not est
 **The solution is currently an empty skeleton.** Phase 2 restarts from the corrected legacy
 repositories; the skeleton, the DbContext scaffold and the localisation project carry over.
 
+## Shared foundation
+
+Four capabilities that every later phase depends on, built once in two shared projects so
+the three hosts cannot drift apart. All of it is verified by running the hosts, not by
+inspecting the code.
+
+### `ISCC.Shared.Contracts` — the wire format
+
+Holds `ApiResponse<T>`, `ApiError`, `ErrorCodes`, `PagedResult<T>`/`IPagedResult`,
+`SelectOption` and `ApiControllerBase`. Only a `FrameworkReference` to
+`Microsoft.AspNetCore.App`, so the Android API can use it without taking a Razor
+dependency.
+
+Every response a client can receive is the same shape:
+
+```json
+{ "success": false, "error": { "code": "NOT_FOUND", "message": "...", "details": {}, "traceId": "..." }, "traceId": "..." }
+```
+
+That includes the failures that never become exceptions. An unmatched route used to return
+a bare `404` with an empty body, which is the one case a client parsing the envelope cannot
+handle. `ErrorCodes.ForStatus` / `MessageForStatus` close that gap.
+
+### `ISCC.Shared.Web` — the portal layer
+
+`BaseController`, the shared Razor views and layout, the functional components, and the
+pipeline wiring, all configured by one `AddSharedWeb` / `UseSharedWeb` pair.
+
+**Error handling.** One `IExceptionHandler` serves JSON callers; HTML falls through to
+re-execution on the shared error view. `SharedExceptionHandler.Map` is the single authority
+for the status code, and the HTML path asks it for its answer too, so a browser and an API
+client are told the same thing about the same failure. Unhandled exception messages never
+reach the caller; they get a `traceId` that matches the row written to
+`A__plant_Error_Save` and the Serilog file. The error page is status-aware — a 404 says
+"page not found" and shows no reference number, because nothing was logged.
+
+**Functional components.** `iscc-table` (with paging and a bilingual empty state),
+`iscc-select`, `iscc-select2` (including cascading dropdowns over an AJAX endpoint). These
+are behavioural widgets, not styling: they replace 11 hand-written legacy tables that each
+had their own idea of an empty state. `/Home/Components` is the proof sheet.
+
+> ⚠️ `TableColumn.Format` takes a **custom** format (`N0`, `N2`, `0.00`), not a composite
+> one. `IFormattable.ToString("{0:N0}")` does not throw — it silently returns the literal
+> string `{3650:N4}`, which looks like a data bug. The component normalises `{0:N0}` to
+> `N0` so both spellings work, but prefer the plain form in new code.
+
+**Assets.** The shared `wwwroot` is embedded in the assembly and served at `/_shared/...`.
+A Razor class library normally serves its `wwwroot` through the static-web-assets manifest,
+which only works when the host was published correctly. The host `wwwroot` folders do not
+exist, so the usual `CompositeFileProvider` fallback throws `DirectoryNotFoundException`
+during startup.
+
+### Hangfire
+
+Background jobs for the three hosts, storage in the same database under the `HangFire`
+schema. The dashboard is **off by default** (`Hangfire:DashboardEnabled`) and gated by an
+`IDashboardAuthorizationFilter`, so enabling it before Phase 3 lands fails closed (401)
+rather than open.
+
+> ### 🔴 Creating the Hangfire schema — read before the first deployment
+>
+> `PrepareSchemaIfNecessary` **defaults to `false`**, in code as well as in every committed
+> `appsettings.json`. A `true` default would mean that deploying a host which merely forgot
+> to set the value silently issues DDL against the live `PlantQuarantine_New` — 298 tables
+> and 15,328 rows of production error logging. Letting a config default make that decision
+> is not good enough, so it has to be typed out.
+>
+> The app therefore never needs DDL rights at runtime. Create the schema once, by hand:
+>
+> ```powershell
+> # Option A — let Hangfire install it, on a scratch database only.
+> #   Set Hangfire:PrepareSchemaIfNecessary=true, start the host, set it back.
+> #
+> # Option B — extract the bundled script, review it, then run it explicitly.
+> #   Hangfire.SqlServer ships install.sql inside the NuGet package.
+> #   (Get-ChildItem "$env:USERPROFILE\.nuget\packages\hangfire.sqlserver\1.8.25" -Recurse -Filter *.sql)
+> #   sqlcmd -S <server> -d PlantQuarantine_New -u <user> -p <password> -C -i install.sql
+> ```
+>
+> **Verified after a full run of all three hosts: the live database is unchanged.** No
+> `HangFire*` tables exist, the table count is still 298 and `A__plant_Error_Save` still
+> holds 15,328 rows. Until the schema is created deliberately, the worker logs connection
+> failures and no jobs run — which is the intended failure mode, since no job has been
+> written yet.
+
+Two further decisions:
+
+- The worker is registered with `services.AddHangfireServer(...)`, not
+  `app.UseHangfireServer(...)`, which is obsolete in Hangfire 1.8.
+- `RecurringJobSeeder` swallows storage failures. An exception out of a hosted service
+  stops the host, and the Android API's job is to serve mobile clients; a Hangfire outage
+  should degrade background processing, not take the API offline.
+
+### `ISCC.Api.Android` is a stateless API
+
+It passes `useSession: false`. Session lives in the one process that created it, so behind
+a load balancer a second instance would silently see an empty session, and the middleware
+would set a cookie the API never reads. It also has no error view, so its status-code
+handler writes the envelope directly rather than re-executing to Razor.
+
+> Registering **both** `UseStatusCodePages` and `UseStatusCodePagesWithReExecute` on one
+> host is a subtle bug, not a redundancy: the middleware registered last is the innermost,
+> so it fills the buffered body first and the outer one then sees a non-empty response and
+> does nothing. A JSON caller would get HTML. One middleware, one writer.
+
+### Known limit: language choice on a first-request error
+
+The resolved culture is mirrored into the `.AspNetCore.Culture` cookie so the language
+choice survives navigation. Re-execution for an error page reads the request cookies parsed
+at the start of the outer request, so the very first request that *both* switches language
+*and* 404s renders the error page in the previous language. It is correct from the next
+navigation onwards. Threading the culture through re-execution would be a lot of machinery
+for a self-correcting cosmetic case.
+
+---
+
 ### `dashBoardController` → `DashboardController`
 
 Class renamed to idiomatic PascalCase with an explicit `[Route("/dashBoard/dash")]` to pin
@@ -261,12 +377,17 @@ Access control consists entirely of hand-written `Session.GetString("UserSession
 
 ### Credentials in source
 
+> **The values are redacted here on purpose.** This repository is public, so writing the
+> credentials down in it would republish a secret that is already in git history and in the
+> legacy source. Each one below is still recoverable from the location given, and each one
+> has to be rotated regardless — see the outstanding actions at the top.
+
 | Location | Credential |
 |---|---|
-| `LoginController.cs:33` | `admin` / `admin@123` — plaintext, role `Administrator` |
-| `LoginController.cs:49` | `Fess` / `Fess@123888` — plaintext, role `PaymentOnly` |
+| `LoginController.cs:33` | `admin` / *(redacted)* — plaintext, role `Administrator` |
+| `LoginController.cs:49` | `Fess` / *(redacted)* — plaintext, role `PaymentOnly` |
 | `ViewModels/ResponseAcquirerCode.cs`, `Method_Bank.cs` | Mastercard gateway URL + **Base64 Basic-auth credentials**, hardcoded |
-| `Capqwebsite/appsettings.json`, `EF/Node.txt` | SQL Server `User=new;Password=123` |
+| `Capqwebsite/appsettings.json`, `EF/Node.txt` | SQL Server login for the live `PlantQuarantine_New` |
 
 > **This is a live financial system with forgeable payment confirmations.** The `Resit` forgery in particular means an attacker can mark any fee as paid without transferring money.
 >

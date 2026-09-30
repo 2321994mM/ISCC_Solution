@@ -1,0 +1,92 @@
+@using ISCC.Shared.Contracts
+@using ISCC.Shared.Web.Components
+@*
+    A live proof sheet for the shared components.
+
+    Exists so the components can be exercised end to end without porting a real page, and
+    so a regression shows up as a broken element here rather than in a migrated screen.
+    It is a normal, authorized-free page: it renders only constant sample data, never
+    anything read from the database.
+
+    Delete it once real pages use the components.
+*@
+@{
+    ViewData["Title"] = "Components";
+    var isArabic = System.Globalization.CultureInfo.CurrentUICulture
+        .TwoLetterISOLanguageName.StartsWith("ar");
+
+    var plain = new List<SelectListItem>
+    {
+        new() { Value = "1", Text = isArabic ? "مصر" : "Egypt" },
+        new() { Value = "2", Text = isArabic ? "السودان" : "Sudan" },
+        new() { Value = "3", Text = isArabic ? "اليونان" : "Greece" }
+    };
+
+    var rows = new List<CountryRow>
+    {
+        new("EG", "Egypt", "Egypt", 36504m),
+        new("SD", "Sudan", "Sudan", 10548m),
+        new("GR", "Greece", "Greece", 6521m)
+    };
+
+    // A real PagedResult so the pager renders more than one page.
+    var paged = PagedResult<CountryRow>.Create(rows, 2, 2, 7);
+}
+
+<h1>Components</h1>
+
+<section>
+    <h2><code>&lt;iscc-select&gt;</code></h2>
+    @* A plain dropdown with a placeholder. *@
+    <iscc-select id="SamplePlain" asp-items="plain"
+                 label="Country" placeholder="-- select --" required="true" />
+</section>
+
+<section>
+    <h2><code>&lt;iscc-select2&gt;</code></h2>
+    @* Searchable, and cascading: changing the first one reloads the second from the
+       server. This is the pattern the legacy ImportingProcedure page hand-rolled. *@
+    <iscc-select2 id="SampleParent" asp-items="plain"
+                  label="Parent" placeholder="-- select a parent --" />
+    <iscc-select2 id="SampleChild"
+                  label="Child (cascading)"
+                  placeholder="-- pick a parent first --"
+                  depends-on="SampleParent"
+                  ajax-url="/Home/Options"
+                  ajax-param="parentId"
+                  minimum-search-length="0" />
+</section>
+
+<section>
+    <h2><code>&lt;iscc-table&gt;</code></h2>
+    @* Empty state, because no items are supplied. *@
+    <iscc-table columns="@(new[] {
+                        new TableColumn("Code", "Code"),
+                        new TableColumn("Name", "Name") })"
+                 empty-message="No records"
+                 empty-message-ar="لا توجد سجلات" />
+</section>
+
+<section>
+    <h2><code>&lt;iscc-table&gt;</code> with rows</h2>
+    <iscc-table items="rows"
+                columns="@(new[] {
+                            new TableColumn("Code", "Code"),
+                            new TableColumn("NameEn", "Name"),
+                            new TableColumn("Total", "Total", "N0") })" />
+</section>
+
+<section>
+    <h2><code>&lt;iscc-table show-pager&gt;</code></h2>
+    <iscc-table items="paged"
+                show-pager="true"
+                columns="@(new[] {
+                            new TableColumn("Code", "Code"),
+                            new TableColumn("NameEn", "Name"),
+                            new TableColumn("Total", "Total", "N0") })" />
+</section>
+
+@* Sample rows for the table component. *@
+@functions {
+    public sealed record CountryRow(string Code, string NameEn, string NameAr, decimal Total);
+}

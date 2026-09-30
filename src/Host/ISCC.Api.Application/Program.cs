@@ -1,7 +1,7 @@
 using ISCC.Application;
 using ISCC.Infrastructure;
+using ISCC.Shared.Web;
 using Serilog;
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,44 +18,30 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+// Layered dependencies, registered in dependency order.
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Shared across all three hosts: localization, the exception handler, JSON conventions,
+// session, authorization. See ISCC.Shared.Web/DependencyInjection.cs.
+builder.Services.AddSharedWeb(builder.Configuration);
+
+// This host is an MVC portal, so views rather than bare controllers.
 builder.Services.AddControllersWithViews();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-    var supportedCultures = new[] { new CultureInfo("en"), new CultureInfo("ar") };
-    options.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("ar");
-    options.SupportedCultures = supportedCultures;
-    options.SupportedUICultures = supportedCultures;
-});
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
+// Shared pipeline: exception handling first, then localization, routing, session,
+// authorization. Each host no longer hand-orders these.
+app.UseSharedWeb();
+app.MapSharedWebAssets();
 app.UseStaticFiles();
-app.UseRouting();
-app.UseRequestLocalization();
-app.UseSession();
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+/// <summary>Exposed so integration tests can use <c>WebApplicationFactory</c>.</summary>
+public partial class Program { }

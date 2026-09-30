@@ -1,0 +1,43 @@
+@*
+    The one layout every portal renders through.
+
+    Replaces the per-host _Layout files, which had already diverged: the employers layout
+    carried 17 asset references and the client layout carried 1. Both now get the same
+    structure and each portal adds only what is genuinely different via @section and the
+    portal name below.
+*@
+@inject Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Builder.WebApplicationOptions> _unused
+@{
+    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isArabic = culture.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+    var portalName = ViewData["PortalName"] as string ?? "ISCC";
+}
+<!DOCTYPE html>
+<html lang="@culture" dir="@(isArabic ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is string t && t.Length > 0 ? t + " - " + portalName : portalName)</title>
+    <iscc-styles />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">@portalName</a>
+        </nav>
+        @await RenderSectionAsync("Header", required: false)
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer>
+        <p>&copy; @DateTime.Now.Year @portalName</p>
+    </footer>
+
+    <iscc-scripts />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
