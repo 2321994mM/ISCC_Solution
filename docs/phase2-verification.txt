@@ -1,0 +1,30 @@
+Phase 2 regression sweep - 2026-09-30 13:08
+target: http://localhost:5099
+
+  /                                                    HTTP 200      81536 bytes
+  /Home/HomePage/Index                                 HTTP 200      81555 bytes
+  /News/Index                                          HTTP 200      15235 bytes
+  /News/Index?ID=7                                     HTTP 200      56207 bytes
+  /News/RowDetail/262                                  HTTP 200      24725 bytes
+  /Offices/Index                                       HTTP 200     182440 bytes
+  /AgricultureLaw/Index                                HTTP 200      16454 bytes
+  /contact/Index                                       HTTP 200      18207 bytes
+  /Farm/Index                                          HTTP 200      90896 bytes
+  /ImportingProcedure/Index                            HTTP 200      41227 bytes
+  /ImportingProcedure/GetItemsByInitiator?ImInitiatorID=57 HTTP 200       4641 bytes
+  /ExportingProcedure/Index                            HTTP 200      42293 bytes
+  /dashBoard/dash                                      HTTP 200      20278 bytes
+  /Login/Index                                         HTTP 200       2585 bytes
+  /Home/Error                                          HTTP 200      14084 bytes
+  /Error/HandleError                                   HTTP 200      14091 bytes
+
+=== intentional non-200, with reasons ===
+  /ImportingProcedure/OpenSource        404  no view existed in the legacy tree either
+  /News/RowDetail?ID=7                  404  news id 7 does not exist (real ids: 262/249/244/53)
+  /Login/GoDataEntryMenu (GET)          405  [HttpPost] in legacy too
+
+=== localization drives lang/dir ===
+  default                : <html lang="ar" dir="rtl">
+  Accept-Language: en    : <html lang="en" dir="ltr">
+
+pages returning 500: 0
