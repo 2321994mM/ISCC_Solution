@@ -27,7 +27,55 @@ Every number in this document was produced by reading the legacy source, not est
 | 2.11 | `_Layout` + 17 CSS/JS/font assets | ✅ done |
 | 2.7 | `ImportingProcedureController` | ✅ done — 🔴 **legacy page was 100% broken**, see below |
 | 2.8 | `ExportingProcedureController` | ✅ done — 🔴 **legacy page was 100% broken**, see below |
-| 2.9 | `dashBoardController` | ⬜ next |
+| 2.9 | `dashBoardController` | ✅ done → `DashboardController`, see below |
+
+**Phase 2 is complete** — all 10 public read-only controllers are ported.
+
+### `dashBoardController` → `DashboardController`
+
+Class renamed to idiomatic PascalCase with an explicit `[Route("/dashBoard/dash")]` to pin
+the URL, because the nav menu links to it by literal string. The legacy `Index` action was
+**not** ported: it returned the entire `WebsiteTypeDetails` table unfiltered through a
+24-line view that polled itself every 60 s, and nothing in the solution references the route.
+
+| Legacy VM | Replaced by |
+|---|---|
+| `CountriesVM`, `CountriesExVM`, `ProductsVM`, `ProductsEXVM` | one `DashboardGroupDto` |
+| `DashboardVM` + 4 `ViewBag` values | one `DashboardDto` |
+
+Two legacy field names were actively misleading and were corrected: `Country` held a *plant
+variety* on two of the four charts, and `CountOrders` held a **tonnage in tonnes**, not an
+order count.
+
+Preserved behaviours worth knowing about:
+
+- **The reporting year rolls over in April**, not January — a visitor in February 2026 sees
+  2025 figures.
+- **Inbound charts filter on `IsAccepted_Date`; outbound charts filter on `User_Creation_Date`.**
+  A consignment created last year but accepted this year drops out of the export charts and
+  vice versa. Currently *not* observable — both return 0 rows for 2026 because the whole
+  export data set spans 2024–2025 only — but it is a real divergence and is left as found.
+- **Inbound queries reach line items through the shipping-method table; outbound queries join
+  them directly to the request**, skipping that table.
+- **The country charts group by `ExportCountry_Id`** — the country of origin of an inbound
+  consignment, read off the request-data table.
+- The country charts divided the summed weight by 1000 *after* aggregating; the product
+  charts divided each row *before* summing. With `decimal` weights these are not always
+  identical, so each keeps its own shape.
+
+**Fixed over legacy:**
+
+- `db.People.ToList().Count()` (×3) materialised every row of `Person`,
+  `Public_Organization` and `Company_National` just to take a row count — now `COUNT(*)`.
+- `orderby Math.Round((double)g.Sum(...))` cannot be translated to SQL by any EF version and
+  throws `NotSupportedException` at runtime. The aggregate stays in SQL; rounding and ranking
+  moved in-memory, which is what the query was trying to express. Ties are broken
+  deterministically by the unrounded value.
+- Each chart declared its label array twice: first via a `foreach` emitting `<text>` markup,
+  then immediately reassigned from a JSON serialisation. The first pass was always discarded
+  but had already been written into the page. Collapsed to one `const`.
+- Tonnages are `double`s rendered into JS array literals; a culture with a comma decimal
+  separator would have split `[1234,5]` into two elements. Now formatted invariantly.
 
 ### 🔴 Three legacy pages could never render at all
 
