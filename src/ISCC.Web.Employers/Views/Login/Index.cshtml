@@ -1,5 +1,3 @@
-@using Microsoft.AspNetCore.Mvc.Localization
-@inject IViewLocalizer Localizer
 @{
     Layout = null;
 }
@@ -14,23 +12,23 @@
         <div class="screen__content">
             <div class="gov-login-heading">
                 <div class="gov-login-heading__logo">
-                    <img src="~/img/logo-capq.png" alt="@Localizer["Login_LogoAlt"]" />
+                    <img src="~/img/logo-capq.png" alt="@L["Login_LogoAlt"]" />
                 </div>
-                <h1 class="gov-login-heading__title">@Localizer["Login_Title"]</h1>
-                <span class="gov-login-heading__subtitle">@Localizer["Login_Subtitle"]</span>
+                <h1 class="gov-login-heading__title">@L["Login_Title"]</h1>
+                <span class="gov-login-heading__subtitle">@L["Login_Subtitle"]</span>
             </div>
             <form class="login" method="post" action="GoDataEntryMenu">
                 <div class="login__field">
-                    <input name="userName" type="text" class="login__input" placeholder="@Localizer["Login_Username"]">
+                    <input name="userName" type="text" class="login__input" placeholder="@L["Login_Username"]">
                     <i class="login__icon fas fa-user"></i>
                 </div>
                 <div class="login__field">
-                    <input name="password" type="password" class="login__input" placeholder="@Localizer["Login_Password"]">
+                    <input name="password" type="password" class="login__input" placeholder="@L["Login_Password"]">
                     <i class="login__icon fas fa-lock"></i>
                 </div>
                 <button class="button login__submit" type="submit">
                     <i class="button__icon fas fa-chevron-left"></i>
-                    <span class="button__text">@Localizer["Login_Button"]</span>
+                    <span class="button__text">@L["Login_Button"]</span>
                 </button>
             </form>
         </div>

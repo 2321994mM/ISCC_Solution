@@ -1,5 +1,7 @@
+using ISCC.Shared.Localization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace ISCC.Web.Employers.Controllers;
@@ -8,7 +10,9 @@ public class LoginController : BaseController
 {
     private readonly ILogger<LoginController> _logger;
 
-    public LoginController(ILogger<LoginController> logger, Microsoft.Extensions.Localization.IStringLocalizer<BaseController> localizer)
+    public LoginController(
+        ILogger<LoginController> logger,
+        IStringLocalizer<SharedResource> localizer)
         : base(localizer)
     {
         _logger = logger;
@@ -43,26 +47,26 @@ public class LoginController : BaseController
             }
             else
             {
-                _logger.LogInformation("userName && password غير صحيح", DateTime.Now.ToLongTimeString());
+                _logger.LogWarning("Invalid credentials for {UserName} at {Time}", userName, DateTime.Now.ToLongTimeString());
 
                 LogErrorToDb(
-                    pageName: "LoginController",
-                    functionName: "GoDataEntryMenu",
-                    errorMessage: "بيانات الدخول خاطئة");
+                    pageName: nameof(LoginController),
+                    functionName: nameof(GoDataEntryMenu),
+                    errorMessage: "Invalid username or password");
 
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
         }
         catch (Exception ex)
         {
-            _logger.LogInformation(ex.Message, "About page visited at {DT}", DateTime.Now.ToLongTimeString());
+            _logger.LogError(ex, "Login failed for {UserName} at {Time}", userName, DateTime.Now.ToLongTimeString());
 
             LogErrorToDb(
-                pageName: "LoginController",
-                functionName: "GoDataEntryMenu",
+                pageName: nameof(LoginController),
+                functionName: nameof(GoDataEntryMenu),
                 errorMessage: ex.Message);
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
     }
 }

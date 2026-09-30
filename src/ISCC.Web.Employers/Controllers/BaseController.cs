@@ -1,3 +1,6 @@
+using ISCC.Infrastructure.Data;
+using ISCC.Infrastructure.Data.Generated;
+using ISCC.Shared.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
@@ -6,45 +9,60 @@ namespace ISCC.Web.Employers.Controllers;
 
 /// <summary>
 /// Base controller for all portal controllers.
-/// Provides localization and shared error logging so controllers don't repeat boilerplate.
+/// Provides localization and the legacy database error logging so controllers
+/// don't repeat that boilerplate.
 /// </summary>
 public abstract class BaseController : Controller
 {
-    private readonly IStringLocalizer _localizer;
+    /// <summary>
+    /// Localizer bound to the shared ISCC.Shared.Localization resource assembly.
+    /// </summary>
+    protected IStringLocalizer L { get; }
 
-    protected IStringLocalizer L => _localizer;
-
-    protected BaseController(IStringLocalizer<BaseController> localizer)
+    protected BaseController(IStringLocalizer<SharedResource> localizer)
     {
-        _localizer = localizer;
+        L = localizer;
     }
+
+    /// <summary>
+    /// Resolves the scoped <see cref="PlantQuarantineDbContext"/> for the current request.
+    /// </summary>
+    protected PlantQuarantineDbContext Db => HttpContext.RequestServices.GetRequiredService<PlantQuarantineDbContext>();
 
     /// <summary>
     /// Saves an error to the shared error log table (A__plant_Error_Save).
     /// Mirrors the behaviour of the legacy Capqwebsite controllers.
     /// </summary>
+    /// <remarks>
+    /// A__plant_Error_Save.Id has no identity/default/trigger, so it must be supplied
+    /// explicitly from the A__plant_Error_Save_SEQ sequence.
+    /// </remarks>
     protected void LogErrorToDb(string pageName, string functionName, string errorMessage, bool isWeb = true)
     {
         try
         {
-            var context = HttpContext.RequestServices.GetRequiredService<Infrastructure.Data.PlantQuarantineDbContext>();
-            var log = new Infrastructure.Data.Generated.APlantErrorSave
+            Db.APlantErrorSaves.Add(new APlantErrorSave
             {
+                Id = long.Parse(GetSequencing(ErrorLogSequence, "long")),
                 PageName = pageName,
                 FunctionName = functionName,
                 ErrorMessage = errorMessage,
                 Date = DateTime.Now,
                 UserIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 IsWeb = isWeb
-            };
-            context.APlantErrorSaves.Add(log);
-            context.SaveChanges();
+            });
+            Db.SaveChanges();
         }
         catch (Exception)
         {
             // Never let error logging break the request pipeline
         }
     }
+
+    /// <summary>
+    /// SQL sequence backing the A__plant_Error_Save.Id column.
+    /// </summary>
+    protected const string ErrorLogSequence = "A__plant_Error_Save_SEQ";
 
     /// <summary>
     /// Reads the next value from a SQL Server sequence (mirrors legacy GetSequencing).
@@ -64,8 +82,7 @@ public abstract class BaseController : Controller
             Direction = System.Data.ParameterDirection.Output
         };
 
-        var context = HttpContext.RequestServices.GetRequiredService<Infrastructure.Data.PlantQuarantineDbContext>();
-        context.Database.ExecuteSqlRaw("set @result = next value for dbo." + seqName, parameter);
+        Db.Database.ExecuteSqlRaw("set @result = next value for dbo." + seqName, parameter);
 
         return parameter.Value?.ToString() ?? string.Empty;
     }
