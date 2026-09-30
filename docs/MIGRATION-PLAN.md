@@ -47,26 +47,49 @@ Every number in this document was produced by reading the legacy source, not est
 
 ## Progress
 
+> ### ⏪ Phase 2 reverted on 2026-09-30 — read this first
+>
+> All 10 ported controllers, their Razor views, `wwwroot` assets, view models, the four
+> Application-layer feature services and their Infrastructure implementations were **deleted**
+> at the user's request: the legacy repositories being used as the migration reference turned
+> out not to be the correct ones, so the porting was done against the wrong source.
+>
+> - The work is **not lost** — it is intact in git history at commit **`470b657`**.
+>   `git checkout 470b657 -- src/Host/ISCC.Api.Application src/ISCC.Application src/ISCC.Infrastructure/Services`
+>   brings it all back.
+> - **What survives** (deliberately kept): `ISCC.Domain`, `ISCC.Infrastructure` including the
+>   `PlantQuarantineDbContext` scaffold of the live `PlantQuarantine_New` database, the
+>   `IRepository`/`IUnitOfWork` abstractions, `ISCC.Shared.Localization`, all three host
+>   skeletons, and `BaseController`.
+> - **The live database was not touched** — verified after the deletion: 298 tables and
+>   321,469 rows in `Im_CheckRequest` still present.
+> - The findings below are **retained as analysis**. They describe real defects in the legacy
+>   code (three pages that could never render, the `Math.Round`-over-aggregate that throws, the
+>   missing authentication) and are worth keeping whichever repos turn out to be the real
+>   reference, but they were measured against the repo that may not be authoritative.
+
 | Phase | Item | Status |
 |---|---|---|
 | 0.2 | Delete `ISCCDbContext`, single context | ✅ done |
 | 0.1 | Repo private + rotate SQL password | 🔴 **still outstanding — user action** |
 | 0.3/0.4 | Legacy `EF/`, `ViewModels/`, old `src/` | ⏸ deliberately **kept** as migration reference; not deleted |
-| 1.3 | `ICmsContentService` (6 controllers share it) | ✅ done |
-| 1.5 | Localization wired, language switcher implemented | ✅ done (new `CultureController`) |
-| 2.1 | `HomeController` | ✅ done |
-| 2.2 | `NewsController` (+ fixed 150/200 truncation, fixed NRE → 404) | ✅ done |
-| 2.3 | `OfficesController` | ✅ done |
-| 2.4 | `AgricultureLawController` | ✅ done |
-| 2.5 | `contactController` | ✅ done |
-| 2.6 | `FarmController` | ✅ done |
-| 2.10 | `ErrorController` | ✅ done |
-| 2.11 | `_Layout` + 17 CSS/JS/font assets | ✅ done |
-| 2.7 | `ImportingProcedureController` | ✅ done — 🔴 **legacy page was 100% broken**, see below |
-| 2.8 | `ExportingProcedureController` | ✅ done — 🔴 **legacy page was 100% broken**, see below |
-| 2.9 | `dashBoardController` | ✅ done → `DashboardController`, see below |
+| — | Restructure: `Domain/Abstraction/{IRepository,IService}`, 3 hosts → `src/Host/` | ✅ done (`470b657`) — **still current** |
+| 1.3 | `ICmsContentService` (6 controllers share it) | ⏪ reverted with Phase 2 |
+| 1.5 | Localization wired, language switcher implemented | ⏪ reverted (`CultureController` deleted); `Shared.Localization` project survives |
+| 2.1 | `HomeController` | ⏪ reverted |
+| 2.2 | `NewsController` (+ fixed 150/200 truncation, fixed NRE → 404) | ⏪ reverted |
+| 2.3 | `OfficesController` | ⏪ reverted |
+| 2.4 | `AgricultureLawController` | ⏪ reverted |
+| 2.5 | `contactController` | ⏪ reverted |
+| 2.6 | `FarmController` | ⏪ reverted |
+| 2.10 | `ErrorController` | ⏪ reverted |
+| 2.11 | `_Layout` + 17 CSS/JS/font assets | ⏪ reverted |
+| 2.7 | `ImportingProcedureController` | ⏪ reverted — 🔴 **legacy page was 100% broken**, see below |
+| 2.8 | `ExportingProcedureController` | ⏪ reverted — 🔴 **legacy page was 100% broken**, see below |
+| 2.9 | `dashBoardController` | ⏪ reverted → `DashboardController`, see below |
 
-**Phase 2 is complete** — all 10 public read-only controllers are ported.
+**The solution is currently an empty skeleton.** Phase 2 restarts from the corrected legacy
+repositories; the skeleton, the DbContext scaffold and the localisation project carry over.
 
 ### `dashBoardController` → `DashboardController`
 

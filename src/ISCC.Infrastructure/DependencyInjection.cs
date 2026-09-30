@@ -1,11 +1,6 @@
-using ISCC.Application.Cms;
-using ISCC.Application.Dashboard;
-using ISCC.Application.ReferenceData;
-using ISCC.Application.TradeProcedures;
 using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Repositories;
-using ISCC.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,10 +21,9 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        services.AddScoped<ICmsContentService, CmsContentService>();
-        services.AddScoped<IReferenceDataService, ReferenceDataService>();
-        services.AddScoped<ITradeProcedureService, TradeProcedureService>();
-        services.AddScoped<IDashboardService, DashboardService>();
+        // Application-layer feature services (CMS content, reference data, trade
+        // procedures, dashboard) were removed along with the Phase 2 controllers they
+        // backed. Register each one here when its controller is ported.
 
         return services;
     }
