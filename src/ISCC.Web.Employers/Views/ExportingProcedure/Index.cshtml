@@ -1,0 +1,754 @@
+@model List<ISCC.Application.TradeProcedures.Dtos.ExportConstraintDto>
+
+@{
+      // The legacy code read a "Lang" request cookie here:
+      //     var langCookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Lang").Value;
+      // No code in the legacy application ever wrote that cookie (the sole Cookies.Append
+      // in the whole solution is commented out, and it was for "UserId"), so
+      // FirstOrDefault() always returned null and the trailing .Value always threw
+      // NullReferenceException. This page could therefore never render for any visitor.
+      // Culture is now resolved by RequestLocalizationMiddleware, so read that instead.
+      // The Arabic and English string literals below are left exactly as they were.
+      var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;}
+
+<!-- Page Header Start -->
+
+<div class="gov-page-header">
+    <div class="container">
+        <div class="gov-page-header__inner">
+
+            <div class="gov-page-header__title">
+
+                <span class="gov-page-header__icon">
+                    <i class="fas fa-balance-scale"></i>
+                </span>
+
+                <div>
+                    <span class="gov-page-header__eyebrow">
+                        التصدير
+                    </span>
+
+                    <h1 class="gov-page-header__h1">
+                        اشتراطات التصدير
+                    </h1>
+                </div>
+
+            </div>
+
+            <nav class="gov-breadcrumb">
+
+                <a href="/Home/HomePage/Index"
+                   class="gov-breadcrumb__link">
+                    الرئيسية
+                </a>
+
+                <i class="fas fa-chevron-left gov-breadcrumb__sep"></i>
+
+                <span class="gov-breadcrumb__current">
+                    اشتراطات التصدير
+                </span>
+
+            </nav>
+
+        </div>
+    </div>
+</div>
+
+<!-- Page Header End -->
+
+
+<div class="mx-auto max-w-7xl px-6">
+
+    <div class="container-fluid bg-light">
+
+        <div class="container pt-5">
+
+            <!-- ============================= -->
+            <!-- Search Form -->
+            <!-- ============================= -->
+
+            <form id="searchForm" class="text-start">
+
+                <div class="row">
+
+                    <!-- الدولة / المنشأ -->
+                    <div class="col-md-4">
+
+                        <label class="label lbl-style">
+                            المنشأ
+                        </label>
+
+                        <br>
+                        <br>
+
+                        @Html.DropDownList(
+                        "CountryID",
+                                                (IEnumerable<SelectListItem>)ViewData["CountryList"]!,
+                                                "-- اختار --",
+                                                new
+                                                {
+                                                    @id = "ImInitiatorListId",
+                                                    @class = "form-control"
+                                                }
+                                                )
+
+                    </div>
+
+
+                    <!-- النباتات -->
+                    <div class="col-md-4">
+
+                        <label class="label lbl-style">
+                            النباتات
+                        </label>
+
+                        <br>
+                        <br>
+
+                        @Html.DropDownList(
+                                                "ItemID",
+                                                (IEnumerable<SelectListItem>)ViewData["ItemList"]!,
+                                                "-- اختار --",
+                                                new
+                                                {
+                                                    @id = "ItemListId",
+                                                    @class = "form-control"
+                                                }
+                                                )
+
+                    </div>
+
+
+                    <!-- مسمى مختصر -->
+                    <div style="display:none;" class="col-md-4">
+
+                        <label class="label lbl-style">
+                            مسمى مختصر
+                        </label>
+
+                        <br>
+                        <br>
+
+                        <select class="operator form-control">
+
+                            <option value="">
+                                مسمى مختصر
+                            </option>
+
+                            <option value="">
+                                ___
+                            </option>
+
+                            <option value="">
+                                ___
+                            </option>
+
+                            <option value="">
+                                __
+                            </option>
+
+                            <option value="">
+                                __
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <br />
+
+
+                <!-- زر البحث -->
+
+                <div class="row">
+
+                    <div class="col-md-4"></div>
+
+                    <div class="col-md-4">
+
+                        <center style="margin-bottom:15px;">
+
+                            <input id="btnsearch"
+                                   type="submit"
+                                   class="bg-primary-deep text-primary-foreground py-2 px-4"
+                                   name="btnSave"
+                                   value="بحث">
+
+                        </center>
+
+                    </div>
+
+                    <div class="col-md-4"></div>
+
+                </div>
+
+            </form>
+
+
+            <!-- ============================= -->
+            <!-- النتائج -->
+            <!-- ============================= -->
+
+            <div id="divdata">
+
+                @if (Model != null)
+                {
+                    <partial name="_PartialExporting.cshtml" for="@Model" />
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- Certificate Modal -->
+<!-- ===================================================== -->
+
+<div class="modal fade"
+     id="certificateModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <!-- Header -->
+
+            <div class="modal-header">
+
+                <h5 class="modal-title"
+                    id="certificateModalTitle">
+                    الشهادة
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <!-- Body -->
+
+            <div class="modal-body">
+
+                <div id="certificateModalContent"
+                     class="certificate-modal-content">
+                </div>
+
+            </div>
+
+
+            <!-- Footer -->
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    إغلاق
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- CSS -->
+<!-- ===================================================== -->
+
+<style>
+
+    /* =========================================
+           Certificate Column
+           ========================================= */
+
+    .certificate-cell {
+        width: 300px;
+        max-width: 300px;
+        vertical-align: top;
+        word-break: break-word;
+    }
+
+
+    /* =========================================
+           Certificate Preview
+           يظهر جزء فقط من النص
+           ========================================= */
+
+    .certificate-preview {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        overflow: hidden;
+        line-height: 1.8;
+        max-height: 5.4em;
+        word-break: break-word;
+    }
+
+
+    /* =========================================
+           Show More Button
+           ========================================= */
+
+    .show-certificate {
+        padding: 0;
+        margin-top: 5px;
+        text-decoration: underline;
+        color: #0d6efd;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+
+        .show-certificate:hover {
+            text-decoration: none;
+            color: #084298;
+        }
+
+
+    /* =========================================
+           Modal Content
+           ========================================= */
+
+    .certificate-modal-content {
+        max-height: 60vh;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 2;
+        font-size: 16px;
+        padding: 10px;
+    }
+
+</style>
+
+
+<!-- ===================================================== -->
+<!-- jQuery -->
+<!-- ===================================================== -->
+
+<script src="~/js/jquery-3.4.1.min.js"></script>
+
+
+<!-- ===================================================== -->
+<!-- JavaScript -->
+<!-- ===================================================== -->
+
+<script>
+
+    $(document).ready(function () {
+
+
+        // =====================================================
+        // Select2
+        // =====================================================
+
+        $("#ItemListId").select2({
+
+            placeholder: "-- اختار --",
+
+            allowClear: true,
+
+            width: "100%"
+
+        });
+
+
+        $("#ImInitiatorListId").select2({
+
+            placeholder: "-- اختار --",
+
+            allowClear: true,
+
+            width: "100%"
+
+        });
+
+
+        // =====================================================
+        // تغيير الدولة
+        // =====================================================
+
+        $("#ImInitiatorListId").on("change", function () {
+
+            var countryId = $(this).val();
+
+            console.log("Country ID:", countryId);
+
+
+            // تفريغ النباتات
+
+            $("#ItemListId").empty();
+
+
+            // الاختيار الافتراضي
+
+            $("#ItemListId").append(
+
+                new Option(
+                    "-- اختار --",
+                    "",
+                    true,
+                    true
+                )
+
+            );
+
+
+            $("#ItemListId").trigger("change");
+
+
+            // تفريغ النتائج القديمة
+
+            $("#divdata").empty();
+
+
+            // التأكد من اختيار الدولة
+
+            if (!countryId || countryId == "0") {
+
+                return;
+
+            }
+
+
+            // تعطيل النباتات أثناء التحميل
+
+            $("#ItemListId").prop("disabled", true);
+
+
+            // =================================================
+            // جلب النباتات
+            // =================================================
+
+            $.ajax({
+
+                url: "/ExportingProcedure/GetItemsByCountry",
+
+                type: "GET",
+
+                data: {
+
+                    CountryID: countryId
+
+                },
+
+
+                success: function (data) {
+
+                    console.log("Items:", data);
+
+
+                    $.each(data, function (index, item) {
+
+                        $("#ItemListId").append(
+
+                            new Option(
+
+                                item.nameAr,
+
+                                item.id,
+
+                                false,
+
+                                false
+
+                            )
+
+                        );
+
+                    });
+
+
+                    $("#ItemListId")
+
+                        .prop("disabled", false)
+
+                        .trigger("change");
+
+                },
+
+
+                error: function (xhr, status, error) {
+
+                    console.log(
+                        "GetItems Error:",
+                        error
+                    );
+
+
+                    console.log(
+                        "Response:",
+                        xhr.responseText
+                    );
+
+
+                    $("#ItemListId")
+                        .prop("disabled", false);
+
+
+                    alert(
+                        "حدث خطأ أثناء تحميل النباتات"
+                    );
+
+                }
+
+            });
+
+        });
+
+
+        // =====================================================
+        // تغيير النبات
+        // =====================================================
+
+        $("#ItemListId").on("change", function () {
+
+            $("#divdata").empty();
+
+        });
+
+
+        // =====================================================
+        // زر البحث
+        // =====================================================
+
+        $("#searchForm").on("submit", function (e) {
+
+            // منع Reload الصفحة
+
+            e.preventDefault();
+
+
+            var countryId =
+                $("#ImInitiatorListId").val();
+
+
+            var itemId =
+                $("#ItemListId").val();
+
+
+            console.log(
+                "Search CountryID:",
+                countryId
+            );
+
+
+            console.log(
+                "Search ItemID:",
+                itemId
+            );
+
+
+            // =================================================
+            // التأكد من الدولة
+            // =================================================
+
+            if (!countryId || countryId == "0") {
+
+                alert(
+                    "من فضلك اختر الدولة"
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
+            // التأكد من النبات
+            // =================================================
+
+            if (!itemId || itemId == "0") {
+
+                alert(
+                    "من فضلك اختر النبات"
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
+            // Loading
+            // =================================================
+
+            $("#divdata").html(
+
+                '<div class="text-center p-4">' +
+
+                '<span>جاري تحميل الاشتراطات...</span>' +
+
+                '</div>'
+
+            );
+
+
+            // تعطيل البحث
+
+            $("#btnsearch")
+                .prop("disabled", true);
+
+
+            // =================================================
+            // جلب الاشتراطات
+            // =================================================
+
+            $.ajax({
+
+                url:
+                    "/ExportingProcedure/GetConstraints",
+
+                type: "GET",
+
+                data: {
+
+                    CountryID: countryId,
+
+                    ItemID: itemId
+
+                },
+
+
+                success: function (data) {
+
+                    console.log(
+                        "Constraints:",
+                        data
+                    );
+
+
+                    // تحميل الـ Partial
+
+                    $("#divdata").html(data);
+
+                },
+
+
+                error: function (
+                    xhr,
+                    status,
+                    error
+                ) {
+
+                    console.log(
+                        "GetConstraints Error:",
+                        error
+                    );
+
+
+                    console.log(
+                        "Response:",
+                        xhr.responseText
+                    );
+
+
+                    $("#divdata").html(
+
+                        '<div class="alert alert-danger">' +
+
+                        'حدث خطأ أثناء تحميل الاشتراطات' +
+
+                        '</div>'
+
+                    );
+
+                },
+
+
+                complete: function () {
+
+                    // إعادة تفعيل البحث
+
+                    $("#btnsearch")
+                        .prop("disabled", false);
+
+                }
+
+            });
+
+        });
+
+
+        // =====================================================
+        // Certificate Popup
+        //
+        // مهم:
+        // نستخدم document.on لأن الجدول يتم تحميله AJAX
+        // =====================================================
+
+        $(document)
+            .off("click", ".show-certificate")
+            .on(
+                "click",
+                ".show-certificate",
+                function () {
+
+                    var title =
+                        $(this).attr(
+                            "data-title"
+                        );
+
+
+                    var content =
+                        $(this).attr(
+                            "data-content"
+                        );
+
+
+                    // عنوان Popup
+
+                    $("#certificateModalTitle")
+                        .text(title);
+
+
+                    // النص الكامل
+
+                    $("#certificateModalContent")
+                        .text(content);
+
+
+                    // فتح Bootstrap 5 Modal
+
+                    var modalElement =
+                        document.getElementById(
+                            "certificateModal"
+                        );
+
+
+                    var modal =
+                        bootstrap.Modal
+                            .getOrCreateInstance(
+                                modalElement
+                            );
+
+
+                    modal.show();
+
+                }
+            );
+
+
+    });
+
+</script>

@@ -2,9 +2,15 @@
 
 
 @{
-    var langCookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Lang").Value;
-    var lang = string.IsNullOrEmpty(langCookies) ? "ar" : langCookies;
-}
+      // The legacy code read a "Lang" request cookie here:
+      //     var langCookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Lang").Value;
+      // No code in the legacy application ever wrote that cookie (the sole Cookies.Append
+      // in the whole solution is commented out, and it was for "UserId"), so
+      // FirstOrDefault() always returned null and the trailing .Value always threw
+      // NullReferenceException. This page could therefore never render for any visitor.
+      // Culture is now resolved by RequestLocalizationMiddleware, so read that instead.
+      // The Arabic and English string literals below are left exactly as they were.
+      var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;}
 
 @{
     if (Model != null && Model.Count > 0)

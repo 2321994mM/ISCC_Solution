@@ -1,5 +1,6 @@
 using ISCC.Application.Cms;
 using ISCC.Application.ReferenceData;
+using ISCC.Application.TradeProcedures;
 using ISCC.Domain.Interfaces;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Repositories;
@@ -26,6 +27,7 @@ public static class DependencyInjection
 
         services.AddScoped<ICmsContentService, CmsContentService>();
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
+        services.AddScoped<ITradeProcedureService, TradeProcedureService>();
 
         return services;
     }

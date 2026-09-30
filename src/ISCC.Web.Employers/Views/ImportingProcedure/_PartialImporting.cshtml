@@ -1,0 +1,63 @@
+ @model List<ISCC.Application.TradeProcedures.Dtos.ImportConstraintDto>
+
+
+@{
+      // The legacy code read a "Lang" request cookie here:
+      //     var langCookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Lang").Value;
+      // No code in the legacy application ever wrote that cookie (the sole Cookies.Append
+      // in the whole solution is commented out, and it was for "UserId"), so
+      // FirstOrDefault() always returned null and the trailing .Value always threw
+      // NullReferenceException. This page could therefore never render for any visitor.
+      // Culture is now resolved by RequestLocalizationMiddleware, so read that instead.
+      // The Arabic and English string literals below are left exactly as they were.
+      var lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;}
+
+@{
+    if (Model != null && Model.Count > 0)
+    {
+        <div class="row">
+			
+				<table id="resultsTable" class="table table-bordered">
+					<thead>
+						<tr>
+							@* <th scope="col">ID</th> *@
+							<th scope="col">اسم الدولة</th>
+							<th scope="col">اسم النبات</th>
+							<th scope="col">الاسم المختصر</th>
+							<th scope="col">الشروط بالعربية</th>
+							<th scope="col">الشروط بالانجليزيه</th>
+							<th scope="col">الشهاده بالعربية</th>
+							<th scope="col">الشهاده بالنجليزيه</th>
+						</tr>
+					</thead>
+					<tbody>
+					@foreach (var item in @Model)
+					{
+						<tr>
+							<td>@item.InitiatorNameAr</td>
+							<td>@item.ItemName</td>
+							<td>@item.ShortNameAr</td>
+							<td>@item.ConstrainTextAr</td>
+							<td>@item.ConstrainTextEn</td>
+							<td>@item.InSideCertificateAr</td>
+							<td>@item.InSideCertificateEn</td>
+
+							
+						</tr>
+					}
+
+					</tbody>
+				</table>
+			</div>
+        
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-12 text-center">
+				<p class="text-bold">@(lang == "ar" ? "لا يوجد بيانات" : "No Data Found")</p>
+				<img src="~/img/no-data.png" />
+            </div>
+        </div>
+    }
+}

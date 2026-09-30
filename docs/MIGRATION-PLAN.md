@@ -25,9 +25,52 @@ Every number in this document was produced by reading the legacy source, not est
 | 2.6 | `FarmController` | ✅ done |
 | 2.10 | `ErrorController` | ✅ done |
 | 2.11 | `_Layout` + 17 CSS/JS/font assets | ✅ done |
-| 2.7 | `ImportingProcedureController` | ⬜ next |
-| 2.8 | `ExportingProcedureController` | ⬜ next |
+| 2.7 | `ImportingProcedureController` | ✅ done — 🔴 **legacy page was 100% broken**, see below |
+| 2.8 | `ExportingProcedureController` | ✅ done — 🔴 **legacy page was 100% broken**, see below |
 | 2.9 | `dashBoardController` | ⬜ next |
+
+### 🔴 Three legacy pages could never render at all
+
+`/ImportingProcedure/Index`, `/ExportingProcedure/Index` and `/Farm/Index` all began with:
+
+```csharp
+var langCookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Lang").Value;
+```
+
+`FirstOrDefault` returns `null` when no such cookie is present, so the trailing `.Value`
+threw `NullReferenceException` on **every** request. No code in the legacy solution ever
+wrote a `Lang` cookie — the only `Cookies.Append` in the entire application is commented
+out, and it was for `UserId`, not `Lang`. So these three pages were permanently broken, and
+all three are linked from the main navigation menu.
+
+That means **745 lines of controller code across `ImportingProcedureController`,
+`ExportingProcedureController` and `FarmController` had never successfully executed.**
+There is therefore no production behaviour to compare against for them; the ported versions
+were verified against hand-written SQL transcriptions of the legacy LINQ instead — the
+import and export constraint queries return identical row counts on both sides.
+
+Fixed by reading the culture resolved by `RequestLocalizationMiddleware` rather than a
+cookie that never existed. Occurrences: 5 views.
+
+### Filter divergences preserved in the trade-procedure service
+
+`ImportingProcedureController` and `ExportingProcedureController` applied *different*
+soft-delete rules to each other, and different rules again between their own three queries.
+All are reproduced verbatim rather than normalised, because normalising would change which
+rows appear:
+
+| Query | Rule |
+|---|---|
+| Import — countries, constraints | `IsActive` + `UserDeletionDate IS NULL` + `UserDeletionId IS NULL` on all joined tables |
+| Import — items | same, but `Im_Constrain_Initiator_Texts` is inner-joined and **not filtered at all**, so initiators having no requirement text are still excluded |
+| Export — countries | `UserDeletionDate` checked on `Country` but **not** on `Ex_CountryConstrains` |
+| Export — items | `Ex_CountryConstrains` filtered; **`Item_ShortNames` not filtered at all**, so deleted varieties can still be listed |
+| Export — constraints | `Countries` joined but **never filtered** |
+
+Also preserved: import labels a variety as `"ParentItem/Variety"` while export shows the bare
+variety name; and the legacy `Im_InitiatorVM.IDInitiator` field, despite its name, was
+assigned the **country** id — renaming it without changing the value would have broken the
+cascading drop-down round trip.
 
 Verified live against `PlantQuarantine_New` after the first Phase 2 slice: 9 pages
 return HTTP 200, `/Offices/Index` renders 32 office cards with 50 map embeds,
