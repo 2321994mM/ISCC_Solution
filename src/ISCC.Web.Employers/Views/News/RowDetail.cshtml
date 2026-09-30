@@ -1,0 +1,73 @@
+@model ISCC.Application.Cms.Dtos.CmsContentItemDto
+
+<!-- Page Header -->
+<div class="gov-page-header">
+    <div class="container">
+        <div class="gov-page-header__inner">
+            <div class="gov-page-header__title">
+                <span class="gov-page-header__icon"><i class="fas fa-newspaper"></i></span>
+                <div>
+                    <span class="gov-page-header__eyebrow">@ViewBag.TypeAr</span>
+                    <h1 class="gov-page-header__h1">تفاصيل @ViewBag.TypeAr</h1>
+                </div>
+            </div>
+            <nav class="gov-breadcrumb">
+                <a href="@Url.Action("Index","Home")" class="gov-breadcrumb__link">الرئيسية</a>
+                <i class="fas fa-chevron-left gov-breadcrumb__sep"></i>
+                <a href="@Url.Action("Index","News", new { ID = ViewBag.SectionId })" class="gov-breadcrumb__link">@ViewBag.TypeAr</a>
+                <i class="fas fa-chevron-left gov-breadcrumb__sep"></i>
+                <span class="gov-breadcrumb__current">التفاصيل</span>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid gov-inner-page">
+    <div class="container">
+        <div class="gov-detail-card">
+            <div class="row align-items-start">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    @if (!string.IsNullOrEmpty(Model.FilePath))
+                    {
+                        <img src="@Model.FilePath" alt="@Model.TitleAr" class="gov-detail-img" />
+                    }
+                </div>
+                <div class="col-lg-7">
+                    @if (Model.Date.HasValue)
+                    {
+                        <div class="gov-detail-date">
+                            <i class="fas fa-calendar-alt ml-1"></i>
+                            @Model.Date.Value.ToString("dd/MM/yyyy")
+                        </div>
+                    }
+                    <h2 class="gov-detail-title">@Model.TitleAr</h2>
+                    @if (!string.IsNullOrEmpty(Model.DescAr))
+                    {
+                        <div class="gov-detail-body">
+                            <p>@Model.DescAr</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.LinkUrl))
+                    {
+                        <div class="gov-detail-actions">
+                            <a href="@Model.LinkUrl" class="btn btn-primary" target="_blank">
+                                <i class="fas fa-external-link-alt ml-1"></i> المصدر الأصلي
+                            </a>
+                            <a href="@Url.Action("Index","News", new { ID = ViewBag.SectionId })" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right ml-1"></i> رجوع
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="gov-detail-actions">
+                            <a href="@Url.Action("Index","News", new { ID = ViewBag.SectionId })" class="btn btn-secondary">
+                                <i class="fas fa-arrow-right ml-1"></i> رجوع
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

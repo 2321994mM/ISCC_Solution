@@ -1,0 +1,48 @@
+ @model List<ISCC.Application.ReferenceData.Dtos.FarmStopDto>
+
+
+@{
+    var langCookies = Context.Request.Cookies.FirstOrDefault(c => c.Key == "Lang").Value;
+    var lang = string.IsNullOrEmpty(langCookies) ? "ar" : langCookies;
+}
+
+@{
+    if (Model != null && Model.Count > 0)
+    {
+
+<div class="row">
+
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th scope="col">كود المزرعة</th>
+				<th scope="col">اسم المزرعة</th>
+				<th scope="col">تاريخ الايقاف</th>
+				<th scope="col">الشركة</th>
+				<th scope="col">الاصناف</th>
+				<th scope="col">المحافظة</th>
+				<th scope="col">Text104</th>
+				
+			</tr>
+		</thead>
+		<tbody>
+
+					@foreach (var item in @Model)
+					{
+						<tr>
+							<td>@item.Farmcode</td>
+							<td>@item.Farmname</td>
+							<td>@item.StopDate</td>
+							<td>@item.Compname</td>
+							<td>@item.Previewdate</td>
+							<td>@item.Cropname</td>
+							<td>@item.Text104</td>
+							
+
+						</tr>
+					}
+		</tbody>
+	</table>
+</div>
+	}
+}

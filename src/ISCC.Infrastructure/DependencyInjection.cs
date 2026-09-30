@@ -1,6 +1,9 @@
+using ISCC.Application.Cms;
+using ISCC.Application.ReferenceData;
 using ISCC.Domain.Interfaces;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Repositories;
+using ISCC.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +23,9 @@ public static class DependencyInjection
 
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<ICmsContentService, CmsContentService>();
+        services.AddScoped<IReferenceDataService, ReferenceDataService>();
 
         return services;
     }

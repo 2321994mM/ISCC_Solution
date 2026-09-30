@@ -1,0 +1,155 @@
+@model List<ISCC.Application.Cms.Dtos.CmsContentItemDto>
+
+<!-- Page Header -->
+<div class="gov-page-header">
+    <div class="container">
+        <div class="gov-page-header__inner">
+            <div class="gov-page-header__title">
+                <span class="gov-page-header__icon"><i class="fas fa-balance-scale"></i></span>
+                <div>
+                    <span class="gov-page-header__eyebrow">التشريعات والقوانين</span>
+                    <h1 class="gov-page-header__h1">@ViewBag.TypeAr</h1>
+                </div>
+            </div>
+            <nav class="gov-breadcrumb">
+                <a href="@Url.Action("Index", "Home")" class="gov-breadcrumb__link">الرئيسية</a>
+                <i class="fas fa-chevron-left gov-breadcrumb__sep"></i>
+                <span class="gov-breadcrumb__current">@ViewBag.TypeAr</span>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid gov-inner-page">
+    <div class="container">
+        <div class="mx-auto max-w-7xl px-6">
+        @if (Model != null && Model.Count > 0)
+        {
+            var typeId = Model.FirstOrDefault()?.SectionId;
+
+            @* فيديوهات يوتيوب *@
+            if (typeId == 16 || typeId == 15 || typeId == 14 || typeId == 6)
+            {
+                <div class="row">
+                    @foreach (var item in Model)
+                    {
+                        if (!string.IsNullOrEmpty(item.LinkUrl))
+                        {
+                            var embedUrl = item.LinkUrl.Contains("watch?v=")
+                                ? item.LinkUrl.Replace("watch?v=", "embed/").Split('&')[0]
+                                : item.LinkUrl;
+                            <div class="col-md-4 mb-4">
+                                <div class="gov-video-card card">
+                                    <div class="gov-video-card__frame">
+                                        <iframe src="@embedUrl" frameborder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowfullscreen></iframe>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <h5 class="mb-2">@item.TitleAr</h5>
+                                        <a href="@item.LinkUrl" class="btn btn-primary btn-sm" target="_blank">
+                                            <i class="fab fa-youtube ml-1"></i> مشاهدة على يوتيوب
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+            @* صفحة اتصل بنا من التشريعات (ID=17) *@
+            else if (typeId == 17)
+            {
+                @foreach (var item in Model)
+                {
+                    <div class="row">
+                        <div class="col-lg-5 mb-4">
+                            <div class="gov-contact-info-card">
+                                <div class="gov-contact-info-card__item">
+                                    <div class="gov-contact-info-card__icon"><i class="fas fa-map-marker-alt"></i></div>
+                                    <div><h5>العنوان</h5><p>@item.TitleAr</p></div>
+                                </div>
+                                <div class="gov-contact-info-card__item">
+                                    <div class="gov-contact-info-card__icon"><i class="fas fa-envelope"></i></div>
+                                    <div><h5>البريد الإلكتروني</h5><p>@item.TitleEn</p></div>
+                                </div>
+                                <div class="gov-contact-info-card__item">
+                                    <div class="gov-contact-info-card__icon"><i class="fas fa-phone-alt"></i></div>
+                                    <div><h5>أرقام السويتش</h5><p>@item.DescEn</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7 mb-4">
+                            <div class="gov-map-card">
+                                <div class="gov-map-card__header"><i class="fas fa-map ml-2"></i> الموقع الجغرافي</div>
+                                <iframe src="@item.LinkUrl" width="100%" height="400" style="border:0; display:block;" loading="lazy" allowfullscreen=""></iframe>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            @* ملفات PDF *@
+            else
+            {
+                <div class="row">
+                    @foreach (var item in Model)
+                    {
+
+
+                        <div class="col-md-4 col-sm-6 mb-4">
+                            <a href="#" class="gov-pdf-card openPdf" data-pdf="@item.FilePath"
+                               class="group flex items-start gap-5 rounded-xl border border-border bg-card p-6 transition-all hover:border-gold hover:shadow-elegant">
+                                <div class="grid size-14 shrink-0 place-items-center rounded-md bg-primary-deep text-gold ring-1 ring-gold/30">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-[11px] font-semibold uppercase tracking-wider text-gold">قانون</div>
+                                    <div class="mt-1 font-display text-lg font-bold text-primary-deep group-hover:text-gold">
+                                        @item.TitleAr
+                                    </div>
+                                    <div class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground group-hover:text-primary-deep">
+                                        <i class="fas fa-eye ml-1"></i> عرض
+                                    </div>
+                                </div>
+                            </a>
+
+@*                             <a href="#" class="gov-pdf-card openPdf" data-pdf="@item.FilePath">
+                                <div class="gov-pdf-card__icon">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <div class="gov-pdf-card__title">@item.TitleAr</div>
+                                <div class="gov-pdf-card__action">
+                                    <i class="fas fa-eye ml-1"></i> عرض
+                                </div>
+                            </a>
+ *@                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="gov-empty-state">
+                <i class="fas fa-folder-open gov-empty-state__icon"></i>
+                <h3>لا توجد بيانات متاحة حالياً</h3>
+                <p>لم يتم إضافة أي محتوى لهذا القسم بعد.</p>
+            </div>
+        }
+    </div>
+</div>
+</div>
+<!-- PDF Modal -->
+<div id="pdfModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
+    <div id="closeModal" style="position:absolute; top:16px; left:20px; cursor:pointer; color:#fff; width:40px; height:40px; background:var(--gov-danger,#b42318); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+        <i class="fas fa-times"></i>
+    </div>
+    <iframe id="pdfFrame" style="width:min(92vw,1100px); height:min(80vh,760px); margin:6vh auto; display:block; border:none; border-radius:8px; background:#fff;"></iframe>
+</div>
+<script>
+    const modal = document.getElementById("pdfModal");
+    const frame = document.getElementById("pdfFrame");
+    document.getElementById("closeModal").onclick = function () { modal.style.display = "none"; frame.src = ""; };
+    document.querySelectorAll(".openPdf").forEach(l => l.addEventListener("click", function (e) {
+        e.preventDefault(); frame.src = this.getAttribute("data-pdf"); modal.style.display = "flex";
+    }));
+</script>

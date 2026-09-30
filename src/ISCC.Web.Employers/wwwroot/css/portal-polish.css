@@ -1,0 +1,174 @@
+/* A small visual layer for the public portal.  It deliberately sits after the
+   existing theme so legacy pages keep their original structure and behavior. */
+:root {
+    --portal-ink: #123b31;
+    --portal-green: #1f6b53;
+    --portal-gold: #c99a3a;
+    --portal-surface: #f6f8f4;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body.gov-portal {
+    background: var(--portal-surface);
+    color: #1e312b;
+}
+
+.gov-portal header {
+    box-shadow: 0 8px 26px rgba(13, 57, 43, .08);
+}
+
+.gov-portal header > div {
+    gap: 1.5rem;
+}
+
+.gov-portal header .navbar {
+    flex: 1 1 auto;
+}
+
+.gov-portal .navbar-nav {
+    align-items: center;
+    gap: .15rem;
+}
+
+.gov-portal .navbar-nav .nav-link {
+    border-radius: .55rem;
+    color: var(--portal-ink) !important;
+    font-weight: 700;
+    padding: .65rem .8rem;
+    transition: color .2s ease, background-color .2s ease;
+}
+
+.gov-portal .navbar-nav .nav-link:hover,
+.gov-portal .navbar-nav .nav-link:focus {
+    background: #edf5ef;
+    color: var(--portal-green) !important;
+}
+
+.gov-portal .dropdown-menu {
+    border: 1px solid rgba(18, 59, 49, .1);
+    border-radius: .8rem !important;
+    box-shadow: 0 16px 34px rgba(13, 57, 43, .14);
+    margin-top: .55rem !important;
+    overflow: hidden;
+    padding: .45rem;
+}
+
+.gov-portal .dropdown-item {
+    border-radius: .45rem;
+    font-weight: 600;
+    padding: .6rem .8rem;
+}
+
+.gov-portal .dropdown-item:hover,
+.gov-portal .dropdown-item:focus {
+    background: #edf5ef;
+    color: var(--portal-ink);
+}
+
+.gov-portal .services,
+.gov-portal .btn-pay {
+    box-shadow: 0 7px 18px rgba(31, 107, 83, .2);
+    white-space: nowrap;
+}
+
+.gov-portal .gov-main {
+    padding-bottom: 0 !important;
+}
+
+.gov-portal .back-to-top {
+    border-radius: 999px;
+    bottom: 1.5rem;
+    box-shadow: 0 8px 20px rgba(13, 57, 43, .25);
+    height: 2.9rem;
+    line-height: 2.9rem;
+    right: 1.5rem;
+    width: 2.9rem;
+}
+
+/* Home page */
+.gov-portal #services a {
+    box-shadow: 0 10px 24px rgba(4, 42, 31, .15);
+}
+
+.gov-portal .group.flex.items-center.gap-4.bg-card {
+    min-height: 7rem;
+}
+
+.gov-portal .capq-about__text p + p {
+    margin-top: 1rem;
+}
+
+.gov-portal .imgs {
+    box-shadow: 0 24px 55px rgba(10, 55, 40, .18);
+}
+
+.gov-portal article.group {
+    box-shadow: 0 8px 24px rgba(13, 57, 43, .06);
+}
+
+.gov-portal article.group:hover {
+    transform: translateY(-4px);
+}
+
+.gov-portal footer {
+    border-top: 4px solid var(--portal-gold);
+}
+
+@media (max-width: 1199.98px) {
+    .gov-portal header > div {
+        flex-wrap: wrap;
+    }
+
+    .gov-portal header .navbar {
+        order: 3;
+        width: 100%;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .gov-portal header > div {
+        padding-bottom: .85rem;
+        padding-top: .85rem;
+    }
+
+    .gov-portal .navbar {
+        padding: 0 !important;
+    }
+
+    .gov-portal .navbar-collapse {
+        background: #fff;
+        border: 1px solid rgba(18, 59, 49, .1);
+        border-radius: .8rem;
+        box-shadow: 0 14px 28px rgba(13, 57, 43, .1);
+        margin-top: .7rem;
+        padding: .55rem;
+    }
+
+    .gov-portal .navbar-nav {
+        align-items: stretch;
+    }
+
+    .gov-portal .dropdown-menu {
+        border: 0;
+        box-shadow: none;
+        margin: 0 .45rem !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .gov-portal header .font-display.text-lg {
+        font-size: .95rem;
+    }
+
+    .gov-portal header .text-\[11px\] {
+        font-size: .58rem;
+    }
+
+    .gov-portal .back-to-top {
+        bottom: 1rem;
+        right: 1rem;
+    }
+}

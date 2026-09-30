@@ -8,6 +8,36 @@ Every number in this document was produced by reading the legacy source, not est
 
 ---
 
+## Progress
+
+| Phase | Item | Status |
+|---|---|---|
+| 0.2 | Delete `ISCCDbContext`, single context | ✅ done |
+| 0.1 | Repo private + rotate SQL password | 🔴 **still outstanding — user action** |
+| 0.3/0.4 | Legacy `EF/`, `ViewModels/`, old `src/` | ⏸ deliberately **kept** as migration reference; not deleted |
+| 1.3 | `ICmsContentService` (6 controllers share it) | ✅ done |
+| 1.5 | Localization wired, language switcher implemented | ✅ done (new `CultureController`) |
+| 2.1 | `HomeController` | ✅ done |
+| 2.2 | `NewsController` (+ fixed 150/200 truncation, fixed NRE → 404) | ✅ done |
+| 2.3 | `OfficesController` | ✅ done |
+| 2.4 | `AgricultureLawController` | ✅ done |
+| 2.5 | `contactController` | ✅ done |
+| 2.6 | `FarmController` | ✅ done |
+| 2.10 | `ErrorController` | ✅ done |
+| 2.11 | `_Layout` + 17 CSS/JS/font assets | ✅ done |
+| 2.7 | `ImportingProcedureController` | ⬜ next |
+| 2.8 | `ExportingProcedureController` | ⬜ next |
+| 2.9 | `dashBoardController` | ⬜ next |
+
+Verified live against `PlantQuarantine_New` after the first Phase 2 slice: 9 pages
+return HTTP 200, `/Offices/Index` renders 32 office cards with 50 map embeds,
+`/News/Index?ID=7` renders 12 cards, and `lang`/`dir` follow the negotiated culture
+(`ar`/`rtl` by default, `en`/`ltr` on `Accept-Language: en`).
+
+Build: **0 errors, 0 warnings**. The AutoMapper advisory `NU1903` is gone.
+
+---
+
 ## 1. What the legacy backend actually is
 
 | Metric | Count |

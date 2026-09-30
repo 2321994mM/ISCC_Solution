@@ -1,5 +1,681 @@
+@model ISCC.Application.Cms.Dtos.HomePageDto
 @{
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Home Page";
 }
 
-<h1>Welcome to ISCC Employers Portal</h1>
+@* ===== TOP BAR ===== *@
+
+
+@* ===== HERO ===== *@
+
+
+
+@* ===== QUICK LINKS ===== *@
+
+<section class="relative isolate overflow-hidden">
+    <img src="~/img/hero-fields-DJLmT-UN.jpg"
+         alt="حقول زراعية مصرية"
+         width="1920"
+         height="1280"
+         class="absolute inset-0 -z-10 size-full object-cover" />
+    <div class="absolute inset-0 -z-10 bg-gradient-to-l from-primary-deep/95 via-primary-deep/85 to-primary-deep/50"></div>
+    <div class="mx-auto max-w-7xl px-6 py-24 md:py-36">
+        <div class="max-w-3xl">
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-semibold tracking-wide text-gold-soft">
+                <span class="size-1.5 rounded-full bg-gold"></span>بوابة حكومية رسمية
+            </div>
+            <h1 class="font-display text-4xl font-bold leading-[1.2] text-primary-foreground md:text-6xl">
+                خدمات الحجر الزراعي<span class="block text-gold">في واجهة رقمية موحدة</span>
+            </h1>
+            <p class="mt-6 max-w-2xl text-base leading-loose text-primary-foreground/85 md:text-lg">
+                معلومات موثقة، خدمات إلكترونية، تشريعات، تنبيهات وإحصائيات في تجربة أسرع وأكثر وضوحاً للمستوردين
+                والمصدرين والجهات الحكومية.
+            </p>
+            <div class="mt-10 flex flex-wrap items-center gap-3" id="services">
+                <a href="https://www.capq.gov.eg/Exporting/Main"
+                   class=" inline-flex items-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-bold text-primary-deep shadow-gold transition-transform hover:scale-[1.02]">
+                    الخدمات الإلكترونية
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="lucide lucide-arrow-left size-4"
+                         aria-hidden="true">
+                        <path d="m12 19-7-7 7-7"></path>
+                        <path d="M19 12H5"></path>
+                    </svg>
+                </a>
+                <a href="/Fees/index"
+                   class=" inline-flex items-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-bold text-primary-deep shadow-gold transition-transform hover:scale-[1.02]">
+                    الدفع
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="lucide lucide-arrow-left size-4"
+                         aria-hidden="true">
+                        <path d="m12 19-7-7 7-7"></path>
+                        <path d="M19 12H5"></path>
+                    </svg>
+                </a>
+                
+                
+                
+                <a href="@Url.Action("Index", "ImportingProcedure")"
+                       class="inline-flex items-center gap-2 rounded-md border border-primary-foreground/30 bg-primary-foreground/5 px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-foreground/15">اشتراطات الاستيراد</a>
+                       <a href="@Url.Action("Index", "ExportingProcedure")"
+                                                                                                                                                                                                                                                     class="inline-flex items-center gap-2 rounded-md border border-primary-foreground/30 bg-primary-foreground/5 px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary-foreground/15">اشتراطات التصدير</a>
+            </div>
+            <div class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-primary-foreground/70">
+                <span>• تشريعات محدّثة</span><span>• مؤشرات مباشرة</span><span>• تنبيهات رسمية</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="border-y border-border bg-card">
+    <div class="mx-auto grid max-w-7xl grid-cols-2 gap-px bg-border md:grid-cols-4">
+        <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 1 })" class="group flex items-center gap-4 bg-card px-6 py-8 transition-colors hover:bg-gold-soft">
+            <div class="grid size-12 shrink-0 place-items-center rounded-md bg-primary-deep text-gold ring-1 ring-gold/30">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     class="lucide lucide-file-text size-6"
+                     aria-hidden="true">
+                    <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path>
+                    <path d="M14 2v5a1 1 0 0 0 1 1h5"></path>
+                    <path d="M10 9H8"></path>
+                    <path d="M16 13H8"></path>
+                    <path d="M16 17H8"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="font-display text-lg font-bold text-primary-deep">التشريعات</div>
+                <div class="text-xs text-muted-foreground">قوانين وقرارات الحجر الزراعي</div>
+            </div>
+        </a> <a href="@Url.Action("Index", "Offices")" class="group flex items-center gap-4 bg-card px-6 py-8 transition-colors hover:bg-gold-soft">
+            <div class="grid size-12 shrink-0 place-items-center rounded-md bg-primary-deep text-gold ring-1 ring-gold/30">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     class="lucide lucide-building2 lucide-building-2 size-6"
+                     aria-hidden="true">
+                    <path d="M10 12h4"></path>
+                    <path d="M10 8h4"></path>
+                    <path d="M14 21v-3a2 2 0 0 0-4 0v3"></path>
+                    <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"></path>
+                    <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="font-display text-lg font-bold text-primary-deep">مكاتبنا</div>
+                <div class="text-xs text-muted-foreground">فروع ومنافذ الإدارة</div>
+            </div>
+        </a>
+        <a href="@Url.Action("Index", "News", new { ID = 8 })" class="group flex items-center gap-4 bg-card px-6 py-8 transition-colors hover:bg-gold-soft">
+            <div class="grid size-12 shrink-0 place-items-center rounded-md bg-primary-deep text-gold ring-1 ring-gold/30">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     class="lucide lucide-megaphone size-6"
+                     aria-hidden="true">
+                    <path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"></path>
+                    <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"></path>
+                    <path d="M8 6v8"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="font-display text-lg font-bold text-primary-deep">الإعلانات</div>
+                <div class="text-xs text-muted-foreground">آخر إعلانات الإدارة</div>
+            </div>
+        </a>
+        <a href="@Url.Action("dash", "dashBoard")" class="group flex items-center gap-4 bg-card px-6 py-8 transition-colors hover:bg-gold-soft">
+            <div class="grid size-12 shrink-0 place-items-center rounded-md bg-primary-deep text-gold ring-1 ring-gold/30">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     class="lucide lucide-chart-column size-6"
+                     aria-hidden="true">
+                    <path d="M3 3v16a2 2 0 0 0 2 2h16"></path>
+                    <path d="M18 17V9"></path>
+                    <path d="M13 17V5"></path>
+                    <path d="M8 17v-3"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="font-display text-lg font-bold text-primary-deep">الإحصائيات</div>
+                <div class="text-xs text-muted-foreground">لوحة المؤشرات والبيانات</div>
+            </div>
+        </a>
+    </div>
+</section>
+
+@* ===== ABOUT ===== *@
+<section id="about" class="py-24 beigecolor">
+    <div class="mx-auto grid max-w-7xl gap-14 px-6 md:grid-cols-2 md:items-start">
+        <div>
+            <div class="ornament-divider mb-6 max-w-xs me-auto ms-0">
+                <span class="font-display text-sm uppercase tracking-[0.3em]">عن الإدارة</span>
+            </div>
+            <h2 class="font-display text-4xl font-bold leading-tight text-primary-deep md:text-5xl">
+                الحجر الزراعي المصري<br /><span class="text-gold">يرحب بكم</span>
+            </h2>
+            <div class="mt-8 space-y-5 leading-loose text-foreground/85">
+                @if (Model.Intro != null && Model.Intro.Any())
+                {
+                    @foreach (var item in Model.Intro)
+                    {
+                        <div class="capq-about__text">
+                            <p>@item.DescAr</p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="capq-about__text">
+                        <p>يُعد الحجر الزراعي المصري أحد الركائز الأساسية للسياسة الزراعية في مصر، وقد ارتبطت نشأته بتطور التجارة الزراعية الدولية وازدياد مخاطر انتقال الآفات والأمراض النباتية عبر الحدود.</p>
+                        <p>يسهم الحجر الزراعي في دعم الصادرات الزراعية المصرية بتطبيق المعايير الدولية للصحة النباتية وفقاً لاتفاقية الوقاية الدولية للنبات (IPPC).</p>
+                    </div>
+                }
+            </div>
+            <div class="mt-2 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-xl border border-border bg-card p-3">
+                    <div class="mb-3 inline-grid size-10 place-items-center rounded-md bg-primary-deep text-gold">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="24"
+                             height="24"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             class="lucide lucide-shield-check size-5"
+                             aria-hidden="true">
+                            <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <div class="font-display text-base font-bold text-primary-deep">حماية الثروة النباتية</div>
+                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        منع دخول وانتشار الآفات الحجرية عبر المنافذ.
+                    </p>
+                </div>
+                <div class="rounded-xl border border-border bg-card p-3">
+                    <div class="mb-3 inline-grid size-10 place-items-center rounded-md bg-primary-deep text-gold">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="24"
+                             height="24"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             class="lucide lucide-globe size-5"
+                             aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                            <path d="M2 12h20"></path>
+                        </svg>
+                    </div>
+                    <div class="font-display text-base font-bold text-primary-deep">تمثيل دولي</div>
+                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        عضو في الاتفاقية الدولية لوقاية النباتات (IPPC).
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="relative">
+            <div class="absolute -inset-4 -z-10 rounded-2xl"></div>
+            <img src="/img/inspection.jpg"
+                 alt="فحص النباتات في المعمل"
+                 width="1280"
+                 height="1280"
+                 loading="lazy"
+                 class="aspect-[4/5] w-full rounded-xl object-cover shadow-elegant imgs" />
+            <div class="absolute bottom-6 start-6 max-w-[18rem] rounded-lg bg-background/95 p-3 shadow-elegant backdrop-blur">
+                <div class="font-display text-2xl font-bold text-primary-deep">القانون 53 لسنة 1966</div>
+                <div class="mt-1 text-xs text-muted-foreground">
+                    الإطار التشريعي الرئيسي المنظم لأعمال الحجر الزراعي في مصر
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+
+@* ===== NEWS ===== *@
+
+<section id="news" class="bg-gold-soft py-24">
+    <div class="mx-auto max-w-7xl px-6">
+        <div class="mb-12 flex items-end justify-between gap-6">
+            <div>
+                <div class="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-primary">المركز الإعلامي</div>
+                <h2 class="font-display text-4xl font-bold text-primary-deep md:text-5xl">آخر الأخبار</h2>
+            </div>
+            <a href="@Url.Action("Index", "News", new { ID = 7 })"
+               class="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-primary-deep hover:text-gold">
+                مشاهدة المزيد
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     class="lucide lucide-arrow-left size-4"
+                     aria-hidden="true">
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                </svg>
+            </a>
+        </div>
+        <div class="grid gap-6 md:grid-cols-3">
+            @if (Model.News != null)
+            {
+                @foreach (var item in Model.News)
+                {
+            <article class="group flex flex-col overflow-hidden rounded-xl border border-primary-deep/10 bg-background transition-all hover:border-gold hover:shadow-elegant">
+                <div class="relative aspect-[16/10] overflow-hidden">
+                            <img src="@item.FilePath" alt="@item.TitleAr"
+                         loading="lazy"
+                         class="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-primary-deep/40 to-transparent"></div>
+                    <div class="absolute bottom-3 start-3 inline-flex items-center gap-2 rounded-full bg-background/90 px-3 py-1 text-[11px] font-semibold text-primary-deep">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="24"
+                             height="24"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             class="lucide lucide-newspaper size-3"
+                             aria-hidden="true">
+                            <path d="M15 18h-5"></path>
+                            <path d="M18 14h-8"></path>
+                            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-4 0v-9a2 2 0 0 1 2-2h2"></path>
+                            <rect width="8" height="4" x="10" y="6" rx="1"></rect>
+                        </svg>
+                        خبر
+                    </div>
+                </div>
+                <div class="flex flex-1 flex-col p-6">
+                    <h3 class="font-display text-lg font-bold leading-snug text-primary-deep">
+                                @item.TitleAr
+                            </h3>
+                    <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+                                @item.DescAr
+                            </p>
+                            <a href="@Url.Action("RowDetail", "News", new { ID = item.Id, Type = "الأخبار" })"
+                       class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-gold hover:text-primary-deep">
+                        تفاصيل
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="24"
+                             height="24"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             class="lucide lucide-arrow-left size-4"
+                             aria-hidden="true">
+                            <path d="m12 19-7-7 7-7"></path>
+                            <path d="M19 12H5"></path>
+                        </svg>
+                    </a>
+                </div>
+            </article>
+         
+                }
+            }
+        </div>
+    </div>
+</section>
+
+@* ===== ANNOUNCEMENTS ===== *@
+<section id="announcements" class="py-24 beigecolor">
+    <div class="mx-auto max-w-7xl px-6">
+        <div class="mb-12 flex items-end justify-between gap-6">
+            <div>
+                <div class="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-gold">رسائل رسمية</div>
+                <h2 class="font-display text-4xl font-bold text-primary-deep md:text-5xl">الإعلانات</h2>
+            </div>
+            <a href="@Url.Action("Index", "News", new { ID = 8 })" class="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-primary-deep hover:text-gold">
+                مشاهدة المزيد
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     stroke-linecap="round"
+                     stroke-linejoin="round"
+                     class="lucide lucide-arrow-left size-4"
+                     aria-hidden="true">
+                    <path d="m12 19-7-7 7-7"></path>
+                    <path d="M19 12H5"></path>
+                </svg>
+            </a>
+
+            </div>
+        <div class="grid gap-5 md:grid-cols-2">
+          
+       
+                @if (Model.Advertisements != null)
+                {
+                    @foreach (var item in Model.Advertisements)
+                    {
+
+                    <a href="@Url.Action("RowDetail", "News", new { ID = item.Id, Type = "الإعلانات" })"
+                    class="group flex items-start gap-5 rounded-xl border border-border bg-card p-6 transition-all hover:border-gold hover:shadow-elegant">
+                    <div class="grid size-14 shrink-0 place-items-center rounded-md bg-primary-deep text-gold ring-1 ring-gold/30">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                             width="24"
+                             height="24"
+                             viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             stroke-linecap="round"
+                             stroke-linejoin="round"
+                             class="lucide lucide-megaphone size-6"
+                             aria-hidden="true">
+                            <path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"></path>
+                            <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"></path>
+                            <path d="M8 6v8"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-[11px] font-semibold uppercase tracking-wider text-gold">إعلان</div>
+                        <div class="mt-1 font-display text-lg font-bold text-primary-deep group-hover:text-gold">
+                                @item.TitleAr 
+                            </div>
+                        <div class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground group-hover:text-primary-deep">
+                            التفاصيل<svg xmlns="http://www.w3.org/2000/svg"
+                                         width="24"
+                                         height="24"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         class="lucide lucide-arrow-left size-4"
+                                         aria-hidden="true">
+                                <path d="m12 19-7-7 7-7"></path>
+                                <path d="M19 12H5"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+         
+                       
+                    }
+                }
+         
+        </div>
+
+    </div>
+</section>
+
+
+@* ===== ALERTS ===== *@
+
+<section class="bg-primary-deep py-24 text-primary-foreground">
+    <div class="mx-auto max-w-7xl px-6">
+        <div class="mb-12 max-w-2xl">
+            <div class="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-gold">رسائل مهمة</div>
+            <h2 class="font-display text-4xl font-bold md:text-5xl">التنبيهات</h2>
+        </div>
+
+
+  
+
+        <div class="grid gap-6 md:grid-cols-2">
+              @if (Model.Alerts != null)
+            {
+                @foreach (var item in Model.Alerts)
+                {
+
+                    <a
+                    class="group flex items-start gap-5 rounded-xl border border-border bg-card p-6 transition-all hover:border-gold hover:shadow-elegant">
+                    <div class="grid size-14 shrink-0 place-items-center rounded-md bg-primary-deep text-gold ring-1 ring-gold/30">
+                     <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="24"
+                                     height="24"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     class="lucide lucide-bell size-5"
+                                     aria-hidden="true">
+                                    <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
+                                    <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>
+                                </svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-[11px] font-semibold uppercase tracking-wider text-gold">تنبيه</div>
+                        <div class="mt-1 font-display text-lg font-bold text-primary-deep group-hover:text-gold">
+                               @item.TitleAr
+                            </div>
+                        <div class="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground group-hover:text-primary-deep">
+                            التفاصيل<svg xmlns="http://www.w3.org/2000/svg"
+                                         width="24"
+                                         height="24"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2"
+                                         stroke-linecap="round"
+                                         stroke-linejoin="round"
+                                         class="lucide lucide-arrow-left size-4"
+                                         aria-hidden="true">
+                                <path d="m12 19-7-7 7-7"></path>
+                                <path d="M19 12H5"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+         
+
+
+
+
+
+
+
+
+
+
+
+                @*     <article class="flex flex-col rounded-xl border border-primary-foreground/15 bg-primary-foreground/5 p-7 transition-colors hover:bg-primary-foreground/10">
+                        <div class="mb-5 flex items-center justify-between">
+                            <div class="grid size-11 place-items-center rounded-md bg-gold text-primary-deep">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="24"
+                                     height="24"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     class="lucide lucide-bell size-5"
+                                     aria-hidden="true">
+                                    <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
+                                    <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>
+                                </svg>
+                            </div>
+                            <div class="inline-flex items-center gap-1.5 text-xs text-primary-foreground/70">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     width="24"
+                                     height="24"
+                                     viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2"
+                                     stroke-linecap="round"
+                                     stroke-linejoin="round"
+                                     class="lucide lucide-calendar size-3.5"
+                                     aria-hidden="true">
+                                    <path d="M8 2v4"></path>
+                                    <path d="M16 2v4"></path>
+                                    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                                    <path d="M3 10h18"></path>
+                                </svg> @if (item.Date != null)
+                                {
+                                    <div class="capq-alert__date"><i class="fas fa-calendar"></i> @item.Date.Value.ToString("dd-MM-yyyy")</div>
+                                }
+                            </div>
+                        </div>
+                        <h3 class="font-display text-lg font-bold leading-snug">@item.TitleAr</h3>
+                        <p class="mt-3 flex-1 text-sm leading-relaxed text-primary-foreground/75">
+                            @item.DescAr
+                        </p>
+                    </article>
+ *@
+                }
+
+            }
+
+        </div>
+    </div>
+</section>
+
+
+
+
+@* ===== CONTACT ===== *@
+
+<section id="contact" class="py-24 beigecolor">
+    <div class="mx-auto grid max-w-7xl gap-12 px-6 md:grid-cols-2 md:items-center">
+        <div>
+            <div class="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-gold">تواصل معنا</div>
+            <h2 class="font-display text-4xl font-bold text-primary-deep md:text-5xl">
+                نحن في خدمتكم<span class="block text-gold">على مدار أيام العمل</span>
+            </h2>
+            <p class="mt-6 max-w-md leading-loose text-foreground/80">
+                للاستفسارات الفنية أو طلبات المعاينة وإصدار الشهادات يمكنكم التواصل مع الإدارة عبر القنوات الرسمية.
+            </p>
+        </div>
+        <div class="grid gap-4">
+            <div class="flex items-start gap-5 rounded-xl border border-border bg-card p-3">
+                <div class="grid size-11 shrink-0 place-items-center rounded-md bg-primary-deep text-gold">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="lucide lucide-map-pin"
+                         aria-hidden="true">
+                        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-gold">العنوان</div>
+                    <div class="mt-1 text-foreground">١ ش نادي الصيد — الدقي — الجيزة، جمهورية مصر العربية</div>
+                </div>
+            </div>
+            <div class="flex items-start gap-5 rounded-xl border border-border bg-card p-3">
+                <div class="grid size-11 shrink-0 place-items-center rounded-md bg-primary-deep text-gold">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="lucide lucide-phone"
+                         aria-hidden="true">
+                        <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-gold">الهاتف</div>
+                    <div class="mt-1 text-foreground">(202) 37608574 — 3335162</div>
+                </div>
+            </div>
+            <div class="flex items-start gap-5 rounded-xl border border-border bg-card p-3">
+                <div class="grid size-11 shrink-0 place-items-center rounded-md bg-primary-deep text-gold">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round"
+                         class="lucide lucide-mail"
+                         aria-hidden="true">
+                        <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path>
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-xs font-semibold uppercase tracking-wider text-gold">البريد الإلكتروني</div>
+                    <div class="mt-1 text-foreground">
+                        <a href="mailto:ippc@capq.gov.eg">ippc@capq.gov.eg</a> — <a href="mailto:tech.office@capq.gov.eg">tech.office@capq.gov.eg</a>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+

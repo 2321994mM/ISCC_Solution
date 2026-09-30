@@ -1,22 +1,342 @@
+@using System.Globalization
+@using Microsoft.AspNetCore.Localization
+@inject Microsoft.Extensions.Options.IOptions<RequestLocalizationOptions> LocoOptions
 <!DOCTYPE html>
-<html lang="en">
+@{
+    // Drives <html lang> and dir=rtl from the negotiated culture instead of hard-coding Arabic.
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    var culture = requestCulture?.RequestCulture.Culture
+                  ?? CultureInfo.CurrentUICulture;
+    var isRtl = culture.TwoLetterISOLanguageName.Equals("ar", StringComparison.OrdinalIgnoreCase);
+}
+<html lang="@culture.TwoLetterISOLanguageName" dir="@(isRtl ? "rtl" : "ltr")">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ISCC Employers Portal</title>
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <title>@ViewData["Title"] Capq</title>
+
+    <!-- Font Awesome -->
+    <link href="~/fontawesome-free-5.15.4-web/css/all.min.css" rel="stylesheet" />
+    <!-- Flaticon Font -->
+    <link href="~/lib/flaticon/font/flaticon.css" rel="stylesheet" />
+
+    <!-- Libraries Stylesheet -->
+    <link href="~/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/css/swiper-bundle.min.css">
+    <link rel="stylesheet" href="~/css/select2.min.css" />
+    <link href="~/css/styleESLAM.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/styles.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    @* <link href="~/css/style.min.css" rel="stylesheet" />
+    <link href="~/css/style.css" rel="stylesheet" /> *@
+
+    @* jQuery 3.7.1 only. The legacy layout also loaded jquery-3.4.1.min.js at the end of
+       the body, which silently overwrote this one. The 3.4.1 tag is intentionally gone. *@
+    <script src="~/js/jquery-3.7.1.min.js"></script>
+    @*<script src="~/js/bootstrap.min.js"></script> *@
+
 </head>
-<body>
-    <header>
-        <nav>
-            <a href="/">ISCC Employers Portal</a>
-        </nav>
+<body class="gov-portal">
+    <!-- Topbar Start -->
+    <div class="bg-primary-deep text-primary-foreground text-xs">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-2">
+            <span class="opacity-85">جمهورية مصر العربية — وزارة الزراعة واستصلاح الأراضي</span>
+            <div class="hidden items-center gap-4 md:flex opacity-80">
+                <a asp-area="" asp-controller="contact" asp-action="Index" title="" class="gov-action hover:text-gold">
+                    <i class="fa fa-phone-alt"></i>
+                    اتصل بنا
+                </a>
+                <a href="https://www.youtube.com/channel/UCom5EcnKh68bWAi6fii82kQ" target="_blank" rel="noopener noreferrer" class="gov-action hover:text-gold" title="يوتيوب" aria-label="يوتيوب">
+                    <i class="fab fa-youtube" aria-hidden="true"></i>
+                </a>
+                <a href="https://www.facebook.com/share/199Y374kXH/" target="_blank" rel="noopener noreferrer" class="gov-action hover:text-gold" title="فيسبوك" aria-label="فيسبوك">
+                    <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                </a>
+                <span>|</span>
+                @* Legacy had href="" here: the language switcher was never implemented,
+                   so the "English" link did nothing. Now posts to CultureController. *@
+                <form asp-controller="Culture" asp-action="Set" method="post" class="d-inline">
+                    <input type="hidden" name="culture" value="@(isRtl ? "en" : "ar")" />
+                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                    <button type="submit" class="gov-action hover:text-gold bg-transparent border-0">
+                        <i class="fa fa-globe"></i>
+                        <b>@(isRtl ? "English" : "العربية")</b>
+                    </button>
+                </form>
+                <span>|</span>
+                @if (Context.Session.GetString("UserSession") != null)
+                {
+                    <span class="gov-user hover:text-gold">
+                        <i class="fa fa-user-shield"></i>
+                        @Context.Session.GetString("UserSession")
+                    </span>
+                }
+                <a href="@Url.Action("ClearSession", "Home")" class="gov-logout hover:text-gold" title="تسجيل الخروج"><i class="fa fa-power-off" aria-hidden="true"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <header class="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center px-6 py-4">
+            <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 mar-l-10">
+                <div class="relative grid size-12">
+                    <img src="~/img/logo-capq2.png" alt="ISCC" />
+                </div>
+                <div class="leading-tight">
+                    <div class="font-display text-lg font-bold text-primary-deep">الإدارة المركزية للحجر الزراعي</div>
+                    <div class="text-[11px] tracking-wider text-muted-foreground">
+                        CENTRAL ADMINISTRATION OF PLANT QUARANTINE
+                    </div>
+                </div>
+            </a>
+
+            <nav class="navbar navbar-expand-lg navbar-dark py-3 py-lg-0">
+
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"> <i class="fa fa-bars" aria-hidden="true"></i></span>
+                </button>
+                <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                    @if (Context.Session.GetString("UserSession") == null)
+                    {
+                        <div class="navbar-nav ml-auto py-0">
+                            <a asp-area="" asp-controller="Home" asp-action="Index" title="" class="nav-link text-sm">
+                                الرئيسية
+                            </a>
+                            <div class="nav-item dropdown">
+                                <a href="#" data-bs-toggle="dropdown" class="nav-link text-sm dropdown-toggle">تشريعات</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 1 })" class="dropdown-item">
+                                        قانون الزراعة
+                                    </a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 2 })" class="dropdown-item">
+                                        قرارات وزارية
+                                    </a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 3 })" class="dropdown-item">
+                                        قوائم الآفات
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle text-sm" data-bs-toggle="dropdown">الاستيراد</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("Index", "ImportingProcedure")" class="dropdown-item">اشتراطات الاستيراد</a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 13 })" class="dropdown-item">إجراءات فتح المنشأ</a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 16 })" class="dropdown-item">شرح الخدمات الالكترونية</a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 14 })" class="dropdown-item">
+                                        فيديوهات تعريفية
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle text-sm" data-bs-toggle="dropdown">التصدير</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("Index", "ExportingProcedure")" class="dropdown-item">اشتراطات التصدير</a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 4 })" class="dropdown-item">المزارع المعتمدة</a>
+                                    <a href="@Url.Action("Index", "Farm")" class="dropdown-item">المزارع الموقوفة</a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 5 })" class="dropdown-item">
+                                        المحطات المعتمدة
+                                    </a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 15 })" class="dropdown-item">
+                                        شرح الخدمات الالكترونية
+                                    </a>
+                                    <a href="@Url.Action("Index", "AgricultureLaw", new { ID = 6 })" class="dropdown-item">
+                                        فيديوهات تعريفية
+                                    </a>
+                                </div>
+                            </div>
+
+                            <a href="@Url.Action("Index", "Offices")" class="nav-item nav-link text-sm">
+                                مكاتبنا
+                            </a>
+
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle text-sm" data-bs-toggle="dropdown"> شهادة الصحة النباتية</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="https://www.capq.gov.eg/Exporting/PhytosanitaryCertificate/Index" class="dropdown-item" target="_blank"> التحقق من الشهادة بالرقم</a>
+                                    <a href="https://www.capq.gov.eg/Exporting/PhytosanitaryCertificateLogin/Index" class="dropdown-item" target="_blank">التحقق من الشهادات للدول</a>
+                                </div>
+                            </div>
+                            <a href="~/dashBoard/dash" class="nav-item nav-link text-sm">الإحصائيات</a>
+                        </div>
+                        <a href="/Fees/GeneralPayment"
+                           class="hidden mar-l-10 md:inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors services btn-pay">
+                            الدفع
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left size-4" aria-hidden="true">
+                                <path d="m12 19-7-7 7-7"></path>
+                                <path d="M19 12H5"></path>
+                            </svg>
+                        </a>
+
+                        <a href="https://www.capq.gov.eg/Exporting/Main"
+                           class="hidden md:inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors services">
+                            الخدمات الإلكترونية
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left size-4" aria-hidden="true">
+                                <path d="m12 19-7-7 7-7"></path>
+                                <path d="M19 12H5"></path>
+                            </svg>
+                        </a>
+                    }
+                    else if (Context.Session.GetString("UserRole") == "PaymentOnly")
+                    {
+                        <div class="navbar-nav ml-auto py-0">
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link text-sm dropdown-toggle" data-bs-toggle="dropdown">الدفع</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("Index", "CheckGeneralPayment")" class="dropdown-item">
+                                        اعادة مراجعة الحساب الحكومى
+                                    </a>
+                                    <a href="@Url.Action("Index", "CheckInspectionPayment")" class="dropdown-item">
+                                        اعادة مراجعة الحساب الخاص
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="navbar-nav ml-auto py-0">
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link text-sm dropdown-toggle" data-bs-toggle="dropdown">تشريعات</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 1 })" class="dropdown-item">قانون الزراعة</a>
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 2 })" class="dropdown-item">قرارات وزارية</a>
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 3 })" class="dropdown-item">قوائم الافات</a>
+                                </div>
+                            </div>
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle text-sm" data-bs-toggle="dropdown">الاستيراد</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 13 })" class="dropdown-item">إجراءات فتح المنشأ</a>
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 16 })" class="dropdown-item">شرح الخدمات الالكترونية</a>
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 14 })" class="dropdown-item">وارد فيديوهات تعريفية</a>
+                                </div>
+                            </div>
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle text-sm" data-bs-toggle="dropdown">التصدير</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 5 })" class="dropdown-item">المحطات المعتمدة</a>
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 4 })" class="dropdown-item">المزارع المعتمدة</a>
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 15 })" class="dropdown-item">شرح الخدمات الالكترونية</a>
+                                    <a href="@Url.Action("Index", "DataEntry", new { ID = 6 })" class="dropdown-item">صادر فيديوهات تعريفية</a>
+                                </div>
+                            </div>
+                            <a href="@Url.Action("Index", "DataEntry", new { ID = 8 })" class="nav-item nav-link text-sm">
+                                الإعلانات
+                            </a>
+                            <a href="@Url.Action("Index", "DataEntry", new { ID = 12 })" class="nav-item nav-link text-sm">
+                                مكاتبنا
+                            </a>
+                            <a href="@Url.Action("Index", "DataEntry", new { ID = 17 })" class="nav-item nav-link text-sm">
+                                اتصل بنا
+                            </a>
+                            <a href="@Url.Action("Index", "DataEntry", new { ID = 9 })" class="nav-item nav-link text-sm">
+                                السليدر
+                            </a>
+                            <a href="@Url.Action("Index", "DataEntry", new { ID = 10 })" class="nav-item nav-link text-sm">
+                                التنبيهات
+                            </a>
+                            <a href="@Url.Action("Index", "DataEntry", new { ID = 11 })" class="nav-item nav-link text-sm">
+                                التعريف بالشركة
+                            </a>
+                            <a href="@Url.Action("Index", "DataEntry", new { ID = 7 })" class="nav-item nav-link text-sm">
+                                الأخبار
+                            </a>
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link text-sm dropdown-toggle" data-bs-toggle="dropdown">الدفع</a>
+                                <div class="dropdown-menu rounded-0 m-0">
+                                    <a href="@Url.Action("GovernmentPayments", "Fees")" class="dropdown-item">
+                                        تقارير الدفع
+                                    </a>
+                                    <a href="@Url.Action("Index", "CheckGeneralPayment")" class="dropdown-item">
+                                        اعادة مراجعة الحساب الحكومي
+                                    </a>
+                                    <a href="@Url.Action("Index", "CheckInspectionPayment")" class="dropdown-item">
+                                        اعادة مراجعة الحساب الخاص
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </nav>
+        </div>
     </header>
-    <main>
-        @RenderBody()
-    </main>
-    <footer>
-        <p>&copy; @DateTime.Now.Year - ISCC</p>
+
+    <div class="">
+        <main role="main" class="pb-3 gov-main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Footer Start -->
+    <footer class="bg-primary-deep py-14 text-primary-foreground">
+        <div class="mx-auto grid max-w-7xl gap-10 px-6 md:grid-cols-3">
+            <div>
+                <div class="flex items-center gap-3">
+                    <div class="relative grid size-12">
+                        <img src="~/img/logo-capq2.png" alt="ISCC">
+                    </div>
+                    <div class="font-display text-base font-bold">الإدارة المركزية للحجر الزراعي</div>
+                </div>
+                <p class="mt-4 text-sm leading-relaxed text-primary-foreground/75">
+                    البوابة الرسمية لخدمات الحجر الزراعي بجمهورية مصر العربية — وزارة الزراعة واستصلاح الأراضي.
+                </p>
+            </div>
+            <div class="text-center">
+                <div class="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-gold">روابط مفيدة</div>
+                <ul class="space-y-2 text-sm text-primary-foreground/85">
+                    @* Legacy used href="~/News/Index?ID=7": the ~ prefix is not resolved inside
+                       an href attribute, so all four links were broken. Now absolute. *@
+                    <li><a href="/News/Index?ID=7" class="hover:text-gold">الأخبار</a></li>
+                    <li><a href="/News/Index?ID=10" class="hover:text-gold">التنبيهات</a></li>
+                    <li><a href="/News/Index?ID=8" class="hover:text-gold">الإعلانات</a></li>
+                    <li><a href="/contact/Index" class="hover:text-gold">اتصل بنا</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-gold">اتصل بنا</div>
+                <ul class="space-y-2 text-sm text-primary-foreground/85">
+                    <li>١ ش نادي الصيد — الدقي — الجيزة</li>
+                    <li>مبني الاصلاح الزراعي الدور السادس</li>
+                    <li>(202) 37608574 — 3335162</li>
+                    <li>
+                        <a href="mailto:ippc@capq.gov.eg">ippc@capq.gov.eg</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="mx-auto mt-10 max-w-7xl px-6">
+            <div class="gold-rule mb-6 w-full opacity-40"></div>
+            <p class="text-center text-xs text-primary-foreground/60">
+                © @DateTime.Now.Year
+                جميع الحقوق محفوظة — الإدارة المركزية للحجر الزراعي
+            </p>
+        </div>
     </footer>
+    <!-- Footer End -->
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary back-to-top"><i class="fa fa-angle-double-up"></i></a>
+
+    @* Legacy loaded select2.min.js twice from ~/js and then a third time from the jsDelivr CDN
+       (release candidate 4.1.0-rc.0), and loaded jquery-3.4.1 here to overwrite the 3.7.1 already
+       loaded in <head>. Only the local select2 build is kept now. *@
+    <script src="~/js/select2.min.js"></script>
+
+    <!-- JavaScript Libraries -->
+    <script src="~/js/bootstrap.bundle5.min.js"></script>
+    <script src="~/lib/easing/easing.min.js"></script>
+    <script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="~/lib/isotope/isotope.pkgd.min.js"></script>
+    <script src="~/lib/lightbox/js/lightbox.min.js"></script>
+    <!-- Template Javascript -->
+    <script src="~/js/main.js" asp-append-version="true"></script>
+    <script src="~/js/site.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
