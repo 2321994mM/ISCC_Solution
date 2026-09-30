@@ -1,0 +1,42 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace ISCC.Infrastructure.Data.Generated;
+
+/// <summary>
+/// أنواع معالجات
+/// </summary>
+public partial class TreatmentType
+{
+    public byte Id { get; set; }
+
+    /// <summary>
+    /// الاسم بالعربية
+    /// </summary>
+    public string? ArName { get; set; }
+
+    /// <summary>
+    /// الاسم بالانجليزية
+    /// </summary>
+    public string? EnName { get; set; }
+
+    public byte MainTypeId { get; set; }
+
+    public bool IsActive { get; set; }
+
+    public DateTime? UserUpdationDate { get; set; }
+
+    public short? UserDeletionId { get; set; }
+
+    public DateTime? UserDeletionDate { get; set; }
+
+    public short UserCreationId { get; set; }
+
+    public DateTime UserCreationDate { get; set; }
+
+    public short? UserUpdationId { get; set; }
+
+    public virtual TreatmentMainType MainType { get; set; } = null!;
+
+    public virtual ICollection<TreatmentMethod> TreatmentMethods { get; set; } = new List<TreatmentMethod>();
+}

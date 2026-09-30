@@ -11,6 +11,6 @@ public class ValidationException : DomainException
 
     public ValidationException(IDictionary<string, string[]> errors) : base("Validation failed")
     {
-        Errors = errors;
+        Errors = new Dictionary<string, string[]>(errors);
     }
 }

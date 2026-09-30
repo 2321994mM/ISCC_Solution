@@ -1,3 +1,5 @@
+using ISCC.Domain.Enums;
+
 namespace ISCC.Domain.Entities;
 
 public class User : BaseEntity
