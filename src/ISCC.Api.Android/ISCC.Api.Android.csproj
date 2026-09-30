@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ISCC.Application\ISCC.Application.csproj" />
     <ProjectReference Include="..\ISCC.Infrastructure\ISCC.Infrastructure.csproj" />
+    <ProjectReference Include="..\ISCC.Shared.Localization\ISCC.Shared.Localization.csproj" />
   </ItemGroup>
 
   <ItemGroup>

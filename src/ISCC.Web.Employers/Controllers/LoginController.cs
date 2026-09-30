@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace ISCC.Web.Employers.Controllers;
@@ -7,10 +8,12 @@ namespace ISCC.Web.Employers.Controllers;
 public class LoginController : Controller
 {
     private readonly ILogger<LoginController> _logger;
+    private readonly IStringLocalizer<LoginController> _localizer;
 
-    public LoginController(ILogger<LoginController> logger)
+    public LoginController(ILogger<LoginController> logger, IStringLocalizer<LoginController> localizer)
     {
         _logger = logger;
+        _localizer = localizer;
     }
 
     [AllowAnonymous]

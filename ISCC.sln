@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Application", "src\ISC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Infrastructure", "src\ISCC.Infrastructure\ISCC.Infrastructure.csproj", "{A1B2C3D4-0003-4000-8000-000000000003}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Shared.Localization", "src\ISCC.Shared.Localization\ISCC.Shared.Localization.csproj", "{A1B2C3D4-0007-4000-8000-000000000007}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Web.Client", "src\ISCC.Web.Client\ISCC.Web.Client.csproj", "{A1B2C3D4-0004-4000-8000-000000000004}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ISCC.Web.Employers", "src\ISCC.Web.Employers\ISCC.Web.Employers.csproj", "{A1B2C3D4-0005-4000-8000-000000000005}"
@@ -33,6 +35,10 @@ Global
 		{A1B2C3D4-0003-4000-8000-000000000003}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-0003-4000-8000-000000000003}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-0003-4000-8000-000000000003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-0007-4000-8000-000000000007}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-0007-4000-8000-000000000007}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-0007-4000-8000-000000000007}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-0007-4000-8000-000000000007}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A1B2C3D4-0004-4000-8000-000000000004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A1B2C3D4-0004-4000-8000-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-0004-4000-8000-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
