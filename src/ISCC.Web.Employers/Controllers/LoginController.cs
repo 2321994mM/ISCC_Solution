@@ -1,19 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 
 namespace ISCC.Web.Employers.Controllers;
 
-public class LoginController : Controller
+public class LoginController : BaseController
 {
     private readonly ILogger<LoginController> _logger;
-    private readonly IStringLocalizer<LoginController> _localizer;
 
-    public LoginController(ILogger<LoginController> logger, IStringLocalizer<LoginController> localizer)
+    public LoginController(ILogger<LoginController> logger, Microsoft.Extensions.Localization.IStringLocalizer<BaseController> localizer)
+        : base(localizer)
     {
         _logger = logger;
-        _localizer = localizer;
     }
 
     [AllowAnonymous]
@@ -46,12 +44,24 @@ public class LoginController : Controller
             else
             {
                 _logger.LogInformation("userName && password غير صحيح", DateTime.Now.ToLongTimeString());
+
+                LogErrorToDb(
+                    pageName: "LoginController",
+                    functionName: "GoDataEntryMenu",
+                    errorMessage: "بيانات الدخول خاطئة");
+
                 return RedirectToAction("Index");
             }
         }
         catch (Exception ex)
         {
             _logger.LogInformation(ex.Message, "About page visited at {DT}", DateTime.Now.ToLongTimeString());
+
+            LogErrorToDb(
+                pageName: "LoginController",
+                functionName: "GoDataEntryMenu",
+                errorMessage: ex.Message);
+
             return RedirectToAction("Index");
         }
     }
