@@ -1,25 +1,36 @@
-## .NET
-bin/
-obj/
-*.user
-*.suo
+## Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+artifacts/
+
+## IDE
 .vs/
 .vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
 
-## Build
-publish/
-*.dll
-*.pdb
+## Secrets - never commit
+appsettings.Local.json
+appsettings.*.Local.json
+*.pfx
+*.key
+secrets.json
 
 ## Logs
 logs/
 *.log
 
+## Local DB tools
+*.db
+*.db-shm
+*.db-wal
+DatabaseScripts/**/local/
+
 ## OS
 Thumbs.db
-Desktop.ini
-
-## Secrets
-appsettings.Production.json
-*.pfx
-*.key
+.DS_Store
