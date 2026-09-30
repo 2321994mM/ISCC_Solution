@@ -1,49 +1,45 @@
-using ISCC.Domain.Entities;
+using System.Linq.Expressions;
 using ISCC.Domain.Interfaces;
 using ISCC.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace ISCC.Infrastructure.Repositories;
 
-public class Repository<T> : IRepository<T> where T : BaseEntity
+public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly ISCCDbContext _context;
-    protected readonly DbSet<T> _dbSet;
+    protected readonly PlantQuarantineDbContext Context;
+    protected readonly DbSet<T> Set;
 
-    public Repository(ISCCDbContext context)
+    public Repository(PlantQuarantineDbContext context)
     {
-        _context = context;
-        _dbSet = context.Set<T>();
+        Context = context;
+        Set = context.Set<T>();
     }
 
-    public virtual async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public IQueryable<T> Query() => Set;
+
+    public async Task<T?> GetByIdAsync(object key, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
+        return await Set.FindAsync(new[] { key }, cancellationToken);
     }
 
-    public virtual async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<T>> ListAsync(Expression<Func<T, bool>>? predicate = null,
+                                        CancellationToken cancellationToken = default)
     {
-        return await _dbSet.Where(e => !e.IsDeleted).ToListAsync(cancellationToken);
+        IQueryable<T> query = Set;
+        if (predicate is not null)
+            query = query.Where(predicate);
+
+        return await query.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
+    public async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        await _dbSet.AddAsync(entity, cancellationToken);
+        await Set.AddAsync(entity, cancellationToken);
         return entity;
     }
 
-    public virtual Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
-    {
-        entity.UpdatedAt = DateTime.UtcNow;
-        _dbSet.Update(entity);
-        return Task.CompletedTask;
-    }
+    public void Update(T entity) => Set.Update(entity);
 
-    public virtual Task DeleteAsync(T entity, CancellationToken cancellationToken = default)
-    {
-        entity.IsDeleted = true;
-        entity.UpdatedAt = DateTime.UtcNow;
-        _dbSet.Update(entity);
-        return Task.CompletedTask;
-    }
+    public void Remove(T entity) => Set.Remove(entity);
 }

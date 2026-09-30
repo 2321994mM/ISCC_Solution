@@ -1,7 +1,6 @@
 using ISCC.Domain.Interfaces;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Repositories;
-using ISCC.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,22 +12,14 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ISCCDbContext>(options =>
-            options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly(typeof(ISCCDbContext).Assembly.FullName)));
-
-        // The real, DB-first scaffolded context (311 tables). Registered separately from
-        // ISCCDbContext so the connection string always comes from configuration.
+        // Single context for the whole solution. PlantQuarantineDbContext is the
+        // database-first scaffold of PlantQuarantine_New (311 tables, 14 views) and is
+        // a verified superset of the legacy AgricultureDBContext (300 tables, 11 views).
         services.AddDbContext<PlantQuarantineDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
-        services.AddScoped<IPaymentService, PaymentService>();
-        services.AddScoped<IInspectionService, InspectionService>();
-        services.AddScoped<IEmployerService, EmployerService>();
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }

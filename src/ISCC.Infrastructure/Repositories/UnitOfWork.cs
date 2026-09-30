@@ -1,38 +1,29 @@
-using ISCC.Domain.Entities;
 using ISCC.Domain.Interfaces;
 using ISCC.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace ISCC.Infrastructure.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly ISCCDbContext _context;
+    private readonly PlantQuarantineDbContext _context;
     private readonly Dictionary<Type, object> _repositories = new();
 
-    public UnitOfWork(ISCCDbContext context)
+    public UnitOfWork(PlantQuarantineDbContext context)
     {
         _context = context;
     }
 
-    public IRepository<T> Repository<T>() where T : BaseEntity
+    public IRepository<T> Repository<T>() where T : class
     {
-        var type = typeof(T);
-        if (!_repositories.ContainsKey(type))
+        if (!_repositories.TryGetValue(typeof(T), out var repository))
         {
-            _repositories[type] = new Repository<T>(_context);
+            repository = new Repository<T>(_context);
+            _repositories[typeof(T)] = repository;
         }
-        return (IRepository<T>)_repositories[type];
+
+        return (IRepository<T>)repository;
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        return await _context.SaveChangesAsync(cancellationToken);
-    }
-
-    public void Dispose()
-    {
-        _context.Dispose();
-        GC.SuppressFinalize(this);
-    }
+        => await _context.SaveChangesAsync(cancellationToken);
 }

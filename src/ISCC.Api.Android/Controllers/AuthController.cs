@@ -1,37 +1,16 @@
-using ISCC.Application.DTOs;
-using ISCC.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ISCC.Api.Android.Controllers;
 
+/// <summary>
+/// Placeholder. The legacy Android API has not been migrated yet (Phase 6, blocked on
+/// the old project folder). Deliberately returns 501 rather than pretending to work.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
-
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
-    {
-        var user = await _authService.AuthenticateAsync(request.Username, request.Password, cancellationToken);
-        if (user == null)
-            return Unauthorized(new { Message = "Invalid username or password" });
-
-        var session = await _authService.CreateSessionAsync(user, cancellationToken);
-
-        var response = new LoginResponse(
-            user.Id,
-            user.Username,
-            user.FullName,
-            user.Role.ToString(),
-            session.SessionToken
-        );
-
-        return Ok(response);
-    }
+    public IActionResult Login() => StatusCode(StatusCodes.Status501NotImplemented,
+        new { Message = "Not yet migrated. See docs/MIGRATION-PLAN.md Phase 6." });
 }

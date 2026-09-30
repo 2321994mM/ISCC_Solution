@@ -9,10 +9,14 @@
     <ProjectReference Include="..\ISCC.Domain\ISCC.Domain.csproj" />
   </ItemGroup>
 
+  <!--
+    AutoMapper and FluentValidation were removed in Phase 0. AutoMapper 13.0.1 carries
+    the unpatched advisory GHSA-rvv3-g6hj-g44x (NU1903) and its only profile mapped
+    entities that do not exist in the database. Re-add when real request DTOs exist.
+  -->
+
   <ItemGroup>
-    <PackageReference Include="AutoMapper" />
-    <PackageReference Include="FluentValidation" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
 
 </Project>

@@ -1,41 +1,13 @@
-using ISCC.Application.DTOs;
-using ISCC.Domain.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ISCC.Api.Android.Controllers;
 
+/// <summary>Placeholder. See <see cref="AuthController"/>. Migration is Phase 6.</summary>
 [ApiController]
 [Route("api/[controller]")]
 public class InspectionController : ControllerBase
 {
-    private readonly IInspectionService _inspectionService;
-
-    public InspectionController(IInspectionService inspectionService)
-    {
-        _inspectionService = inspectionService;
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
-    {
-        var inspection = await _inspectionService.GetInspectionByIdAsync(id, cancellationToken);
-        if (inspection == null)
-            return NotFound();
-
-        return Ok(inspection);
-    }
-
-    [HttpGet("client/{clientId}")]
-    public async Task<IActionResult> GetByClient(int clientId, CancellationToken cancellationToken)
-    {
-        var inspections = await _inspectionService.GetInspectionsByClientIdAsync(clientId, cancellationToken);
-        return Ok(inspections);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateInspectionRequest request, CancellationToken cancellationToken)
-    {
-        // TODO: Use AutoMapper to map DTO to entity
-        return Ok();
-    }
+    [HttpGet]
+    public IActionResult GetAll() => StatusCode(StatusCodes.Status501NotImplemented,
+        new { Message = "Not yet migrated. See docs/MIGRATION-PLAN.md Phase 6." });
 }
