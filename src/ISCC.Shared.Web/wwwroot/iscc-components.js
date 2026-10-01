@@ -156,17 +156,51 @@
             console.warn('ISCC components: jQuery is required. Add <iscc-scripts jquery="true" />.');
             return;
         }
+
+        // Checked before select2, not after. Most pages carry no searchable select at all, and
+        // warning about select2 on those would be noise on every page for a library that is
+        // only conditionally needed. Count first, then decide whether its absence matters.
+        var targets = $('[data-iscc-select2]');
+        if (!targets.length) { return; }
+
         if (typeof $.fn.select2 === 'undefined') {
-            console.warn('ISCC components: select2 is not loaded. Searchable selects will be inert.');
+            console.warn('ISCC components: ' + targets.length + ' control(s) need select2, which is not loaded. Add <iscc-scripts select2="true" />.');
             return;
         }
 
-        $('[data-iscc-select2]').each(function () { enhance(this); });
+        targets.each(function () { enhance(this); });
     }
 
     // Run on ready and again after any partial update.
-    $(init);
-    $(document).on('ajaxComplete', init);
+    //
+    // This must not touch jQuery at the moment this IIFE executes. The layout emits
+    // <iscc-scripts> *before* the page's Scripts section, so on any page that loads jQuery
+    // there -- the login page does, via _ValidationScriptsPartial -- jQuery is still
+    // undefined here. Calling $(init) directly threw ReferenceError: $ is not defined,
+    // which killed this script outright and left every select2 inert. The typeof guard
+    // inside init() could not catch it, because the throw happened on the call, before
+    // init() ever ran.
+    //
+    // Binding on DOMContentLoaded instead means every synchronous script in the document has
+    // executed by then, so jQuery is present whenever the page loads it at all. Only a page
+    // that genuinely never loads jQuery reaches the warning.
+    function bind() {
+        if (typeof $ === 'undefined') {
+            console.warn('ISCC components: jQuery is not loaded. Add <iscc-scripts jquery="true" />.');
+            return;
+        }
+
+        // init() keeps its own guards: it is also reachable from ajaxComplete and is exposed
+        // on window.ISCC for tests and for pages that build markup dynamically.
+        $(init);
+        $(document).on('ajaxComplete', init);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bind);
+    } else {
+        bind();
+    }
 
     // Expose for tests and for pages that build markup dynamically.
     window.ISCC = window.ISCC || {};
