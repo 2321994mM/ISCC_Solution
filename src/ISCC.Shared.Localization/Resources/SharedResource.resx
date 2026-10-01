@@ -81,4 +81,22 @@
   <data name="AllFinalResults" xml:space="preserve">
     <value>All quarantine statuses</value>
   </data>
+  <data name="Login_Failed" xml:space="preserve">
+    <value>Invalid user name or password.</value>
+  </data>
+  <data name="Login_UsernameRequired" xml:space="preserve">
+    <value>Enter your user name.</value>
+  </data>
+  <data name="Login_PasswordRequired" xml:space="preserve">
+    <value>Enter your password.</value>
+  </data>
+  <data name="Login_RememberMe" xml:space="preserve">
+    <value>Remember me</value>
+  </data>
+  <data name="Login_AccessDenied" xml:space="preserve">
+    <value>You do not have permission to open this page.</value>
+  </data>
+  <data name="Login_LoggedOut" xml:space="preserve">
+    <value>You have been signed out.</value>
+  </data>
 </root>

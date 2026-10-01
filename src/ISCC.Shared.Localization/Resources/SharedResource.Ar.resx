@@ -81,4 +81,22 @@
   <data name="AllFinalResults" xml:space="preserve">
     <value>كل مواقف الحجر</value>
   </data>
+  <data name="Login_Failed" xml:space="preserve">
+    <value>اسم المستخدم أو كلمة السر غير صحيحة.</value>
+  </data>
+  <data name="Login_UsernameRequired" xml:space="preserve">
+    <value>من فضلك أدخل اسم المستخدم.</value>
+  </data>
+  <data name="Login_PasswordRequired" xml:space="preserve">
+    <value>من فضلك أدخل كلمة السر.</value>
+  </data>
+  <data name="Login_RememberMe" xml:space="preserve">
+    <value>تذكرني</value>
+  </data>
+  <data name="Login_AccessDenied" xml:space="preserve">
+    <value>ليس لديك صلاحية الدخول إلى هذه الصفحة.</value>
+  </data>
+  <data name="Login_LoggedOut" xml:space="preserve">
+    <value>تم تسجيل خروجك.</value>
+  </data>
 </root>

@@ -262,6 +262,17 @@ public static class SharedWebServiceCollectionExtensions
             app.UseSession();
         }
 
+        // Must precede UseAuthorization. [Authorize] does not run authentication itself:
+        // without this in the pipeline the user is always anonymous, so every [Authorize]
+        // action redirects to LoginPath even when a perfectly valid cookie is presented.
+        // The symptom is a redirect loop on any protected page.
+        //
+        // Unconditional rather than behind a flag. A host with no authentication scheme
+        // registered still runs this without complaint — it resolves a null default scheme
+        // and calls next — so there is no case where skipping it is the right call, and a
+        // flag here would only create a way to get the order wrong.
+        app.UseAuthentication();
+
         app.UseAuthorization();
 
         return app;

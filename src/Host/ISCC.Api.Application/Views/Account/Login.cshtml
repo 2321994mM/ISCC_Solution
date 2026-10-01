@@ -1,0 +1,111 @@
+@model ISCC.Api.Application.Controllers.LoginViewModel
+@using ISCC.Shared.Localization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject IStringLocalizer<SharedResource> L
+@{
+    var culture = System.Globalization.CultureInfo.CurrentUICulture;
+    var isArabic = culture.TwoLetterISOLanguageName.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+
+    // Per-field messages are written out here rather than taken from the model, because
+    // asp-validation-for renders [Required]'s ErrorMessage verbatim and a localization key
+    // in that attribute would appear in the page as the key itself. Written by hand, the
+    // message is only emitted when the field actually failed, so a clean form has no
+    // empty error elements reserving space.
+    var userNameError = ViewData.ModelState.TryGetValue("UserName", out var un) && un.Errors.Count > 0;
+    var passwordError = ViewData.ModelState.TryGetValue("Password", out var pw) && pw.Errors.Count > 0;
+}
+<!DOCTYPE html>
+<html lang="@culture.TwoLetterISOLanguageName" dir="@(isArabic ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@L["Login_Title"]</title>
+    <style>
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 2rem 1rem; min-height: 100vh;
+            background: #f4f6f8; color: #1f2933;
+            font-family: "Segoe UI", Tahoma, "Noto Naskh Arabic", Arial, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card {
+            width: 100%; max-width: 25rem; background: #fff;
+            border: 1px solid #dfe3e8; border-radius: .5rem;
+            box-shadow: 0 1px 3px rgba(16,24,40,.1); padding: 2rem;
+        }
+        h1 { font-size: 1.15rem; font-weight: 600; margin: 0 0 .25rem; text-align: center; }
+        .subtitle { color: #616e7c; font-size: .8125rem; margin: 0 0 1.5rem; text-align: center; }
+        label { display: block; font-size: .8125rem; font-weight: 600; margin-bottom: .25rem; }
+        input[type=text], input[type=password] {
+            width: 100%; padding: .5rem .625rem; font-size: .9375rem; color: inherit;
+            background: #fff; border: 1px solid #cbd2d9; border-radius: .375rem;
+        }
+        input:focus { outline: 2px solid #1a56db; outline-offset: 1px; border-color: #1a56db; }
+        input[aria-invalid=true] { border-color: #b42318; }
+        .field { margin-bottom: 1rem; }
+        .error { color: #b42318; font-size: .75rem; margin-top: .25rem; }
+        .validation-summary-errors {
+            background: #fef3f2; border: 1px solid #fda29b; color: #b42318;
+            border-radius: .375rem; padding: .625rem .75rem;
+            font-size: .8125rem; margin-bottom: 1rem;
+        }
+        .validation-summary-errors ul { margin: 0; padding-inline-start: 1.25rem; }
+        .validation-summary-errors:empty { display: none; }
+        .check { display: flex; align-items: center; gap: .5rem; margin-bottom: 1.25rem; }
+        .check label { margin: 0; font-weight: 400; }
+        button {
+            width: 100%; padding: .5625rem 1rem; font-size: .9375rem; font-weight: 600;
+            color: #fff; background: #1a56db; border: 1px solid #1a56db;
+            border-radius: .375rem; cursor: pointer;
+        }
+        button:hover { background: #1749a6; }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>@L["Login_Title"]</h1>
+        <p class="subtitle">@L["Login_Subtitle"]</p>
+
+        <form method="post" asp-controller="Account" asp-action="Login" novalidate>
+            <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
+
+            @* Model-level errors only. Per-field messages are rendered below. *@
+            <div asp-validation-summary="ModelOnly"></div>
+
+            <div class="field">
+                <label for="UserName">@L["Login_Username"]</label>
+                <input type="text" id="UserName" name="UserName" autocomplete="username"
+                       autofocus aria-invalid="@(userNameError ? "true" : null)"
+                       aria-describedby="@(userNameError ? "UserName-error" : null)"
+                       value="@Model.UserName" />
+                @if (userNameError)
+                {
+                    <div class="error" id="UserName-error">@L["Login_UsernameRequired"]</div>
+                }
+            </div>
+
+            <div class="field">
+                <label for="Password">@L["Login_Password"]</label>
+                @* Value deliberately omitted: a failed sign-in must not echo the password
+                   into the HTML, where it would sit in the back-forward cache. *@
+                <input type="password" id="Password" name="Password" autocomplete="current-password"
+                       aria-invalid="@(passwordError ? "true" : null)"
+                       aria-describedby="@(passwordError ? "Password-error" : null)" />
+                @if (passwordError)
+                {
+                    <div class="error" id="Password-error">@L["Login_PasswordRequired"]</div>
+                }
+            </div>
+
+            <div class="check">
+                <input type="checkbox" id="RememberMe" name="RememberMe" value="true" />
+                <label for="RememberMe">@L["Login_RememberMe"]</label>
+            </div>
+
+            <button type="submit">@L["Login_Button"]</button>
+        </form>
+    </main>
+</body>
+</html>
