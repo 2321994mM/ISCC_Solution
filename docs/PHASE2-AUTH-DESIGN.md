@@ -52,23 +52,54 @@ Real, populated RBAC model:
 4. **Portals (Cookie)**: wire Cookie auth in `ISCC.Api.Application`/`ISCC.Api.Gate` Program.cs consistent with NewMvc (same claim names, expiry policy). Keep culture cookie write order intact (before/after `UseRequestLocalization` as we already have).
 5. **Android API (JWT)**: add JWT Bearer support behind a config flag (`Auth:Jwt:Enabled`) but **do not** force it until the contract is confirmed. Add Swagger security definition only when JWT is enabled.
 
-## Decisions needed (block Phase 2 implementation)
+## Decisions
 
-1. **Password migration strategy**  
-   - A) **Force reset on first login** (recommended): after plaintext auth succeeds once, immediately redirect to "change password" screen; do not issue auth ticket until new password is set and hashed. This is cleanest and safest.  
-   - B) **Silent rehash on successful login** (pragmatic): accept plaintext, if it's not a hash, overwrite with hash and continue. Users don't notice friction.  
-   - C) **Keep plaintext forever** (not recommended): easy now, creates long-term risk.
+### 1. Password storage — DECIDED: unchanged
 
-2. **Android API authentication contract**  
-   How does the Android app authenticate today? Does it call a login endpoint? If so, where (route) and what does it expect (token type, expiry, claims)? If unknown, I propose we implement cookie auth for portals only for now and defer JWT wiring until we can inspect traffic or the legacy API's auth surface.
+**Keep the legacy plaintext comparison exactly as-is.** `PR_User.Password` stays as it
+is; no rehash, no forced reset, no migration of stored values.
 
-3. **RBAC enforcement level**  
-   - A) **Authenticate only** initially (just logged-in check), add menu/privilege checks per area as we port controllers.  
-   - B) **Full RBAC from day one** (enforce `PR_GroupModuleMenuPrivilage` against controller/actions). More work up front but prevents privilege leakage.
+Rationale: holding auth behaviour constant across the migration means any login
+problem is unambiguously a migration problem rather than a change in authentication
+semantics. The plaintext exposure is a pre-existing condition of the system, not
+something the migration introduces, and it is tracked separately as a security item
+rather than folded into the port.
 
-4. **Privilage boundary**  
-   Keep `dbPrivilage` as a separate DbContext (recommended). Agree this is the intended split (not merging into the main DB).
+Consequences accepted:
+- `PR_User.Password` remains plaintext (603 populated accounts, 998 active users).
+- Any future hashing migration is a separate, self-contained project.
+- Passwords must never be written to logs. The legacy `PR_User` already carries
+  `IS_Failure` / `Failure_Notes` / `LastLoginDate` columns; login must not populate
+  those with the submitted password.
+
+### 2. Android API authentication contract — OPEN
+
+No login endpoint exists anywhere in `PlantQuar.API` (238 WebAPI2 controllers). The
+mobile auth contract is unknown. JWT wiring is deferred until this is answered;
+portals proceed independently.
+
+### 3. RBAC enforcement — DECIDED: authenticate-only first
+
+Match the legacy behaviour: a logged-in check only, equivalent to the legacy
+`BaseController` `Session["UserId"]` null-check. Granular
+`PR_GroupModuleMenuPrivilage` enforcement is added per feature area as its
+controllers are ported, so the privilege model is applied where it is understood
+rather than guessed at globally.
+
+### 4. Privilage boundary — DECIDED: separate database
+
+`dbPrivilage` stays a separate database reached through its own DbContext,
+mirroring the legacy NewMvc design of two independent connection strings. No tables
+are migrated into `PlantQuarantine_New`.
 
 ## Concrete next step
 
-Write the design doc (this file), commit it, then implement minimal cookie auth for `ISCC.Api.Application` aligned with the NewMvc approach — **without** changing password storage yet — and surface the above decisions in the commit/PR notes. That keeps us moving while blocking on the security-critical choices.
+Implement cookie auth for `ISCC.Api.Application` against the decisions above:
+
+1. `PrivilageDbContext` in `ISCC.Infrastructure`, modelling only the auth tables.
+2. `IUserAuthenticationService` abstraction + implementation, reproducing the
+   NewMvc validation sequence and claim set exactly.
+3. Cookie authentication wired into `ISCC.Api.Application`, preserving the existing
+   culture-cookie write order.
+4. Login view/controller, localised through `SharedResource.resx`.
+5. Verify by running the host and exercising the login path.

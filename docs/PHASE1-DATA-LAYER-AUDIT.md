@@ -105,3 +105,75 @@ The real constraint on this project is elsewhere: `dbPrivilage` is a **second
 database** that is not in this DbContext at all, and it holds the real
 authentication model (`PR_User`, 998 rows, all active, passwords stored in
 plaintext). See `docs/PHASE2-AUTH-DESIGN.md`.
+
+---
+
+# Addendum — `dbPrivilage` mapped
+
+`PlantQuarantineDbContext` covers only `PlantQuarantine_New`. The audit found a
+second database holding the RBAC data, unreachable from the solution. It now has
+its own context.
+
+## `PrivilageDbContext` (`src/ISCC.Infrastructure/Data/Privilage/`)
+
+A separate `DbContext`, not more `DbSet`s on `PlantQuarantineDbContext`. The two
+databases have different lifecycles, and EF Core cannot express a join across two
+contextes — the legacy `PlantQuarantine.NewMvc` app used two connection strings in
+exactly this way.
+
+Three tables mapped, hand-written rather than scaffolded:
+
+| Entity | Table | Rows |
+|---|---|---|
+| `PrUser` | `PR_User` | 998 |
+| `PrGroup` | `PR_Group` | 21 |
+| `PrUserGroup` | `PR_UserGroup` | 134 |
+
+Verified read-only against the live database: model materialises, keys resolve
+(`Id` on all three), row counts match, the `PR_User` → `UserGroups` → `Group`
+navigation loads with `Include`, and the nullable CRUD flags project correctly.
+
+The remaining nine tables (`PR_Menu` 221, `PR_Module` 55, `PR_GroupModuleMenu` 194,
+`PR_GroupModuleMenuPrivilage` 8,418, `PR_Admin`, `PR_Application`,
+`PR_ApplicationCategory`, `PR_Mission`, `PR_Setting`) are deliberately **not**
+mapped yet. They get mapped when privilege enforcement lands, in the feature area
+that needs them.
+
+## 🔴 The RBAC model enforces nothing
+
+This is the most important finding in the audit, and it corrects an earlier
+assumption that `dbPrivilage` carried a working permission system.
+
+**`PR_UserGroup` — all five permission columns are NULL in all 134 rows.**
+
+```
+user=693 group=17 view=null add=null edit=null del=null print=null
+memberships with at least one NULL flag: 134   <- every row
+```
+
+**`PR_GroupModuleMenuPrivilage` — 8,418 rows, and every flag is set to 1.**
+
+```
+CanView=1: 8417   CanAdd=1: 8417   CanEdit=1: 8415
+CanDelete=1: 8415 CanPrint=1: 8417  all-null: 0   active: 8417/8418
+```
+
+So across 18 groups and 194 menu assignments there is not a single denial in the
+table. Combined with the previous result, the effective model is:
+
+> If you belong to a group, you may do everything that group may do — and every
+> group may do everything.
+
+The table *looks* like a permission system because it has 8,418 rows of flags. It
+enforces nothing.
+
+**This matches the code.** The audit found 6 `[Authorize]` attributes across 587
+controllers and a `Session["UserId"]` null-check in `BaseController` — which is
+exactly what an all-allow permission table produces. The legacy system is
+de facto authenticate-only.
+
+Consequence for the migration: **enforcing these flags would be a behaviour
+change, not a port.** "Authenticate only" is the faithful reproduction. This
+independently confirms the Phase 2 decision to port the existing behaviour as-is
+rather than improve on it mid-migration.
+
