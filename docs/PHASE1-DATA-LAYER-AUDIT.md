@@ -41,21 +41,39 @@ Passes 1 and 2 both reported defects that did not exist. See "Corrections" below
 Mapping resolution: 288 explicit `ToTable`, 14 `ToView`, 9 by naming convention
 (DbSet property name matches the table name exactly, which EF resolves correctly).
 
-## Defect found and fixed
+## Trailing-space table name — a defect in the schema, not the mapping
 
 `PlantQuarantineDbContext.cs:6606`
 
 ```csharp
-entity.ToTable("Im_choose_Constrain ");   // trailing space
+entity.ToTable("Im_choose_Constrain ");
 ```
 
-Trailing space in a table name. It works only because SQL Server's default collation
-ignores trailing spaces when comparing identifiers, so every query succeeds and the
-bug is invisible — until the database is restored under a binary or case-sensitive
-collation, at which point every read of this table fails at runtime.
+The live table's real name has a trailing space:
 
-Fixed to `entity.ToTable("Im_choose_Constrain");`. Verified: `Im_choose_Constrain`
-has PK `PK_Im_Constrain_chooes` on `ID`, so the mapping is otherwise correct.
+```sql
+SELECT '[' + name + ']' FROM sys.tables WHERE name LIKE 'Im_choose%';
+-- [Im_choose_Constrain ]
+SELECT LEN(name);  -- 19   ("Im_choose_Constrain" is 18 characters)
+```
+
+So the trailing space in the mapping is **correct** — it is an exact match, and it
+resolves under any collation.
+
+**This corrects an earlier commit in this document's history.** `d0f7c1b` removed the
+trailing space and justified it as *"the trailing space worked only because the default
+collation ignores trailing spaces in identifiers."* That was backwards. Removing it does
+not make the mapping more robust; it makes the mapping depend on collation behaviour
+where it previously did not. The change has been reverted.
+
+The real defect is the trailing space in the **database schema**. Renaming the table
+would fix it permanently, but the live database is meant to stay untouched, so that is a
+decision for the database owner rather than a change to make here. Until then the
+mapping must carry the trailing space.
+
+`Im_choose_Constrain` is referenced **zero times** in the legacy application, so nothing
+depends on it today. That is what makes deferring the rename low-risk.
+
 
 ## Keyless tables — both correct, documented
 
@@ -176,4 +194,80 @@ Consequence for the migration: **enforcing these flags would be a behaviour
 change, not a port.** "Authenticate only" is the faithful reproduction. This
 independently confirms the Phase 2 decision to port the existing behaviour as-is
 rather than improve on it mid-migration.
+
+---
+
+# Addendum 2 — Column-level verification
+
+Table names and counts matching does **not** mean the schemas match. A model can name
+every table correctly and still reference a column that no longer exists, which fails at
+query time rather than at build time. So both models were materialised through EF Core
+and compared property-by-property against `sys.columns` and `sys.key_constraints` for
+every mapped table.
+
+## `PlantQuarantineDbContext` vs `PlantQuarantine_New`
+
+```
+tables compared : 297
+model columns   : 3,792
+db columns      : 3,735
+```
+
+| Check | Result |
+|---|---|
+| Model maps a table the DB lacks | 0 |
+| **Model column missing in DB** | **0** |
+| DB column absent from model | 1 |
+| Nullability mismatch | 0 |
+| Primary key mismatch | 0 |
+
+**The one real gap: `A_AttachmentData.A_AttachmentTableType_ID`.** Present in the
+database, absent from the model. It is `smallint NULL` with no default, so nothing
+breaks: EF generates an explicit column list, so the column is simply not selected, and
+because it is nullable with no default an insert that omits it still succeeds. This is a
+staleness gap to be aware of, not a defect to fix. Nothing in the legacy application
+reads it.
+
+## `PrivilageDbContext` vs `dbPrivilage`
+
+```
+tables compared : 3
+model columns   : 37
+db columns      : 141
+```
+
+| Check | Result |
+|---|---|
+| Model column missing in DB | 0 |
+| Nullability mismatch | 0 |
+| Primary key mismatch | 0 |
+| DB columns absent from model | 8 |
+
+The 8 unmapped columns are deliberate — `Governorate`, `Station`, `Function_Group`,
+`Job_Code`, `Carreer_Code`, `IS_Mail_Send`, `IS_Failure`, `Failure_Notes`. They are
+mapped when the features that read them are ported.
+
+**This context is not a complete model of `dbPrivilage`.** It covers 3 of the database's
+tables and 37 of its 141 columns. That is sufficient for authentication and nothing more.
+
+## Two false positives, recorded so they are not re-investigated
+
+- **`Im_choose_Constrain`** reported as "model maps a table the DB lacks". An artefact of
+  comparing strings exactly while the table name genuinely ends in a space. See above.
+- **`A_AttachmentData`, `CompanyActivity`, `Company_National`, `Ex_ContactData`**
+  reported as primary key mismatches, `model=[Id] db=[Id+Id]`. A join artefact. Each table
+  has exactly one PK constraint over exactly one key column. Two of them carry a
+  constraint name inherited from a rename — `Company_National` holds `PK_Companies` and
+  `Ex_ContactData` holds `PK_Company_ContactType` — which is why they were worth checking.
+
+## Answer to "are the databases up to date"
+
+**`PlantQuarantine_New` — yes.** Every column the model references exists, nullability
+agrees everywhere, and every primary key matches. One nullable column in the database is
+unmapped, which cannot cause a runtime failure.
+
+**`dbPrivilage` — no, by design.** Three of its tables are mapped. The other nine,
+including the 8,418-row `PR_GroupModuleMenuPrivilage`, are not, and will not be until
+privilege enforcement lands.
+
 

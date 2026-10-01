@@ -6603,7 +6603,16 @@ public partial class PlantQuarantineDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK_Im_Constrain_chooes");
 
-            entity.ToTable("Im_choose_Constrain");
+            // The trailing space is the table's real name, verified against sys.tables
+            // (LEN(name) = 19). It must be kept here: it makes this an exact match, which
+            // resolves under any collation. Dropping it would leave the mapping working
+            // only because the default collation ignores trailing spaces in identifiers,
+            // and it would break under a binary or case-sensitive one.
+            //
+            // The trailing space is a defect in the DATABASE, not in this mapping. The
+            // real fix is renaming the table, which needs a decision because the live
+            // database is meant to stay untouched. See docs/PHASE1-DATA-LAYER-AUDIT.md.
+            entity.ToTable("Im_choose_Constrain ");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
