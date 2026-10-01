@@ -51,6 +51,10 @@
        which 404s silently — the browser just reports a missing stylesheet. *@
     <link rel="stylesheet" href="/_shared/lib/bootstrap/dist/css/bootstrap@(isArabic ? ".rtl" : "").min.css" />
     <link rel="stylesheet" href="/_shared/css/site.css" />
+    @* Navigation tree rules. Loaded after site.css because .side-nav a { ... } in site.css
+       is a plain element selector and would otherwise win on source order for equal
+       specificity against the .side-nav .nav-link rules here. *@
+    <link rel="stylesheet" href="/_shared/iscc-nav.css" />
     <iscc-styles />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -66,15 +70,22 @@
                         <small>Plant Quarantine</small>
                     </span>
                 </a>
+                @* The real navigation tree, from dbPrivilage via MenuViewComponent. Replaces
+                   the hardcoded Dashboard/Import pair that stood in before the RBAC tables
+                   were mapped. *@
                 <nav class="side-nav" aria-label="@L["Nav_Main"]">
                     <a class="@(activeMenu == "Dashboard" || activeMenu == null ? "active" : "")"
                        asp-area="" asp-controller="Home" asp-action="Index">
                         <span aria-hidden="true">&#8962;</span> @L["Nav_Dashboard"]
                     </a>
-                    @* Import is the next area to be ported; the link is inert until then. *@
-                    <a class="@(activeMenu == "Import" ? "active" : "") disabled" aria-disabled="true">
-                        <span aria-hidden="true">&#8618;</span> @L["Nav_Import"]
-                    </a>
+                    @* The real navigation tree, from dbPrivilage. MenuViewComponent returns an empty
+                   view for an anonymous visitor, so no guard is needed here — but the
+                   IsAuthenticated check is kept because it also skips the database query,
+                   and an anonymous request should not pay for one. *@
+                @if (signedIn)
+                {
+                    @await Component.InvokeAsync("Menu")
+                }
                 </nav>
             </aside>
         }

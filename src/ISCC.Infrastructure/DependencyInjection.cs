@@ -1,9 +1,11 @@
 using ISCC.Application.Auth;
+using ISCC.Application.Menu;
 using ISCC.Application.ReferenceData;
 using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Auth;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Data.Privilage;
+using ISCC.Infrastructure.Menu;
 using ISCC.Infrastructure.ReferenceData;
 using ISCC.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -50,6 +52,11 @@ public static class DependencyInjection
         // Outlet from PlantQuarantine_New.
         services.Configure<AuthOptions>(configuration.GetSection(AuthOptions.SectionName));
         services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
+
+        // Navigation (Phase 3.3). Read-only over dbPrivilage's RBAC tables. Replaces the
+        // three legacy menu stored procedures and the per-node Html.Action fan-out that
+        // called them, which cost one round trip per menu node on every page view.
+        services.AddScoped<IMenuService, MenuService>();
 
         return services;
     }

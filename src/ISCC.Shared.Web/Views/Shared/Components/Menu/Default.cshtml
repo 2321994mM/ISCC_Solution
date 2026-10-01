@@ -1,0 +1,15 @@
+@using ISCC.Shared.Web.Components
+@model MenuViewModel
+@*
+    View component entry point for the navigation tree.
+
+    Deliberately one line. The tree itself is rendered by MenuTagHelper, which recurses into
+    itself per level; Razor partials would be the obvious alternative and do not work inside a
+    view component result, because partial lookup resolves against the calling controller's
+    folder rather than the component's. See ISCC.Shared.Web.Menu.MenuTagHelper.
+
+    Never invoked for an anonymous visitor — MenuViewComponent returns empty content for one,
+    and the layout additionally guards on IsAuthenticated so the query is skipped.
+*@
+
+<iscc-menu items="Model.Items" />

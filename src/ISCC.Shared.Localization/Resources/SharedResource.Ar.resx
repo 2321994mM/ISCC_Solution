@@ -120,6 +120,12 @@
   <data name="Portal_Name" xml:space="preserve">
     <value>بوابة الهيئة</value>
   </data>
+  <data name="Menu_NotPorted" xml:space="preserve">
+    <value>لم يتم نقل هذه الشاشة بعد</value>
+  </data>
+  <data name="Menu_Expand" xml:space="preserve">
+    <value>إظهار أو إخفاء هذا القسم</value>
+  </data>
   <data name="Nav_Main" xml:space="preserve">
     <value>القائمة الرئيسية</value>
   </data>

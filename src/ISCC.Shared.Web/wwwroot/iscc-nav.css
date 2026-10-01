@@ -1,0 +1,191 @@
+/*
+  Navigation tree styles.
+
+  Scoped entirely under .side-nav so nothing here can reach the page body. Sits in its own
+  file rather than in site.css because site.css is a verbatim copy of the prototype's
+  stylesheet — appending to it would make the diff against that original unreadable.
+
+  Written with logical properties (inset-inline-start, padding-inline-start) throughout, so
+  the same rules lay out correctly under dir="rtl" and dir="ltr" with no mirrored override
+  block. That is the same reason site.css uses them.
+
+  The legacy tree was styled by assets/css/rtl-css/style-rtl.css, ~370 lines of float and
+  absolute-positioning rules for nested <ul class="mainNav"> markup. None of it is carried
+  over: the markup changed, and reimplementing rules written against float layout would mean
+  porting selectors that describe nothing the current design does not already express.
+*/
+
+/* ---------------------------------------------------------------------------
+   Containers
+   --------------------------------------------------------------------------- */
+
+.side-nav .nav-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+  Nested levels are indented, not offset with margin-inline-start, because the legacy
+  approach of absolutely positioning the submenu meant a deep branch could render outside
+  the sidebar's 280px and over the page content.
+*/
+.side-nav .nav-tree .nav-tree {
+  margin-inline-start: 14px;
+  padding-inline-start: 10px;
+  border-inline-start: 1px solid rgba(255, 255, 255, .14);
+}
+
+/* ---------------------------------------------------------------------------
+   Nodes
+   --------------------------------------------------------------------------- */
+
+.side-nav .nav-node {
+  position: relative;
+}
+
+.side-nav .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, .84);
+  font-weight: 600;
+  font-size: .92rem;
+  text-decoration: none;
+  cursor: pointer;
+
+  /* Reset of the icon-glyph rule inherited from site.css.
+
+     site.css has `.side-nav span { width: 24px; text-align: center; }`, written for the
+     fixed-width glyph slot the prototype's flat two-item menu used. That selector matches
+     EVERY span in the sidebar, including the label spans of a three-level tree. With no
+     width of its own, .nav-link inherited width:24px and its content box collapsed to
+     nothing, so every label rendered at zero width.
+
+     Measured before this reset: a 194px list item with a 40px link and a 0px label. */
+  width: auto;
+  text-align: start;
+}
+
+/*
+  Leaves sit one step in from their branch so the hierarchy is legible without relying on
+  the indent alone, which is too subtle to carry the structure on its own.
+*/
+.side-nav .nav-leaf > .nav-link {
+  font-weight: 500;
+  font-size: .86rem;
+  padding-inline-start: 30px;
+}
+
+.side-nav a.nav-link:hover,
+.side-nav a.nav-link:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
+  outline: none;
+}
+
+.side-nav a.nav-link:focus-visible {
+  /* Visible focus ring is required for keyboard users; :focus-visible avoids showing it on
+     mouse clicks, which is what :focus would do here. */
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .75);
+}
+
+.side-nav a.nav-link.active {
+  color: #fff;
+  background: rgba(255, 255, 255, .18);
+}
+
+/* ---------------------------------------------------------------------------
+   Disclosure
+   --------------------------------------------------------------------------- */
+
+.side-nav details.nav-group > summary.nav-link {
+  list-style: none;
+}
+
+/*
+  WebKit keeps a marker on <summary> regardless of list-style, and it cannot be removed
+  with ::marker alone. This is the documented workaround.
+*/
+.side-nav details.nav-group > summary.nav-link::-webkit-details-marker {
+  display: none;
+}
+
+/*
+  The caret rotates to point along the reading direction when open. The glyph itself is
+  direction-aware rather than being swapped for a mirror image, which avoids shipping two
+  characters for one state.
+*/
+.side-nav .nav-caret {
+  /* The one span in the tree that SHOULD be a fixed-width glyph slot, so it keeps
+     site.css's 24px behaviour on purpose — set explicitly rather than left to inherit,
+     so that rule can be changed in site.css without silently breaking the caret. */
+  flex: 0 0 16px;
+  width: 16px;
+  text-align: center;
+  font-size: .7rem;
+  line-height: 1;
+  opacity: .7;
+  transition: transform .15s ease;
+}
+
+.side-nav details.nav-group[open] > summary .nav-caret {
+  transform: rotate(-90deg);
+}
+
+/* In RTL the same -90deg points the wrong way, since the glyph is already mirrored by the
+   browser's bidi handling. Flipping the axis keeps open/closed readable in both. */
+[dir="rtl"] .side-nav details.nav-group[open] > summary .nav-caret {
+  transform: rotate(90deg);
+}
+
+.side-nav .nav-text {
+  /* Same site.css override as .nav-link, plus the flex sizing. As a flex item with no
+     flex-basis, a long unbreakable label would otherwise set the item's width from its
+     content and push the row wider than the sidebar. */
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------------------
+   Not yet ported
+   --------------------------------------------------------------------------- */
+
+/*
+  An entry whose area is not migrated yet. Rendered as a <span>, not an <a>, so it cannot be
+  activated at all — a link to a controller that does not exist is a 404, and there are 221
+  of them. It is dimmed and non-interactive rather than hidden: knowing a feature exists and
+  is still to be migrated is useful, and hiding it would make the menu look finished.
+*/
+.side-nav .nav-link.disabled {
+  color: rgba(255, 255, 255, .34);
+  cursor: default;
+}
+
+.side-nav .nav-link.disabled:hover {
+  background: transparent;
+}
+
+/*
+  A branch whose every descendant is unported. Kept visible as a label, for the same reason.
+  The caret is dropped because there is nothing to expand.
+*/
+.side-nav .nav-group-empty .nav-caret {
+  visibility: hidden;
+}
+
+/*
+  prefers-reduced-motion: the caret transition is decorative and 150ms, but honouring the
+  setting costs one line and the preference exists for a reason.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .side-nav .nav-caret {
+    transition: none;
+  }
+}

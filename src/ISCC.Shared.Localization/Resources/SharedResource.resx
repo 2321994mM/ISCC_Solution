@@ -147,4 +147,10 @@
   <data name="Login_Guest" xml:space="preserve">
     <value>Not signed in</value>
   </data>
+  <data name="Menu_NotPorted" xml:space="preserve">
+    <value>This screen has not been migrated yet</value>
+  </data>
+  <data name="Menu_Expand" xml:space="preserve">
+    <value>Show or hide this section</value>
+  </data>
 </root>

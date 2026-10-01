@@ -25,8 +25,13 @@ namespace ISCC.Infrastructure.Data.Privilage;
 /// </para>
 /// <para>
 /// Registered in <see cref="Infrastructure.DependencyInjection"/> against the
-/// <c>PrivilegeConnection</c> connection string. Only three tables are mapped; see
-/// <see cref="PrUser"/> for why the other nine are not.
+/// <c>PrivilegeConnection</c> connection string. See <see cref="PrUser"/> for why the
+/// remaining tables are not mapped.
+/// </para>
+/// <para>
+/// The five navigation tables were added for the menu port. They are read-only: nothing in
+/// this solution writes to them, and the menu is a projection of existing rows rather than a
+/// new source of truth.
 /// </para>
 /// </remarks>
 public class PrivilageDbContext : DbContext
@@ -51,6 +56,21 @@ public class PrivilageDbContext : DbContext
 
     /// <summary>Group memberships, carrying the per-user CRUD flags.</summary>
     public virtual DbSet<PrUserGroup> PrUserGroups { get; set; } = null!;
+
+    /// <summary>Registered applications, reachable to filter groups by category.</summary>
+    public virtual DbSet<PrApplication> PrApplications { get; set; } = null!;
+
+    /// <summary>Functional modules: the middle level of the navigation tree.</summary>
+    public virtual DbSet<PrModule> PrModules { get; set; } = null!;
+
+    /// <summary>Menu leaves: the clickable entries at the bottom of the navigation tree.</summary>
+    public virtual DbSet<PrMenu> PrMenus { get; set; } = null!;
+
+    /// <summary>Which leaves belong to which module in which group, and in what order.</summary>
+    public virtual DbSet<PrGroupModuleMenu> PrGroupModuleMenus { get; set; } = null!;
+
+    /// <summary>Per-user permission rows. This is what filters the menu, not PrUserGroups.</summary>
+    public virtual DbSet<PrGroupModuleMenuPrivilage> PrGroupModuleMenuPrivilages { get; set; } = null!;
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -130,6 +150,108 @@ public class PrivilageDbContext : DbContext
                 .WithMany(g => g.UserGroups)
                 .HasForeignKey(e => e.PrGroupId)
                 .HasConstraintName("FK_PR_UserGroup_PR_Group");
+        });
+
+        // The five navigation tables below. All read-only, mapped to the live schema exactly.
+
+        modelBuilder.Entity<PrApplication>(entity =>
+        {
+            entity.ToTable("PR_Application");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id").ValueGeneratedNever();
+            entity.Property(e => e.ApplicationName).HasColumnName("ApplicationName").HasMaxLength(300);
+            entity.Property(e => e.ApplicationDescription).HasColumnName("ApplicationDescription").HasMaxLength(500);
+            entity.Property(e => e.PrApplicationCategoryId).HasColumnName("PR_ApplicationCategoryId");
+        });
+
+        modelBuilder.Entity<PrModule>(entity =>
+        {
+            entity.ToTable("PR_Module");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id").ValueGeneratedNever();
+            entity.Property(e => e.ModuleName).HasColumnName("ModuleName").HasMaxLength(300);
+
+            // varchar, not nvarchar, in the live table. Unlike the other bilingual columns
+            // this one cannot hold non-Latin text at all. Preserved rather than "fixed",
+            // because widening it is a schema change to a database this port must not touch.
+            entity.Property(e => e.ModuleNameEn).HasColumnName("ModuleName_En").HasMaxLength(150);
+
+            entity.Property(e => e.ModuleDescription).HasColumnName("ModuleDescription").HasMaxLength(500);
+            entity.Property(e => e.Active).HasColumnName("Active");
+            entity.Property(e => e.PrApplicationId).HasColumnName("PR_ApplicationId");
+            entity.Property(e => e.PrApplicationCategoryId).HasColumnName("PR_ApplicationCategoryId");
+
+            entity.HasOne<PrApplication>()
+                .WithMany()
+                .HasForeignKey(e => e.PrApplicationId)
+                .HasConstraintName("FK_PR_Module_PR_Application");
+        });
+
+        modelBuilder.Entity<PrMenu>(entity =>
+        {
+            entity.ToTable("PR_Menu");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id").ValueGeneratedNever();
+            entity.Property(e => e.MenuTitle).HasColumnName("MenuTitle").HasMaxLength(300);
+            entity.Property(e => e.MenuTitleEn).HasColumnName("MenuTitle_En").HasMaxLength(300);
+            entity.Property(e => e.MenuUrl).HasColumnName("MenuURL").HasMaxLength(500);
+            entity.Property(e => e.Active).HasColumnName("Active");
+            entity.Property(e => e.PrMenuId).HasColumnName("PR_MenuId");
+            entity.Property(e => e.GroupId).HasColumnName("Group_Id");
+            entity.Property(e => e.PrModuleId).HasColumnName("PR_ModuleId");
+            entity.Property(e => e.PrApplicationId).HasColumnName("PR_ApplicationId");
+            entity.Property(e => e.PrApplicationCategoryId).HasColumnName("PR_ApplicationCategoryId");
+
+            entity.HasOne<PrModule>()
+                .WithMany()
+                .HasForeignKey(e => e.PrModuleId)
+                .HasConstraintName("FK_PR_Menu_PR_Module");
+        });
+
+        modelBuilder.Entity<PrGroupModuleMenu>(entity =>
+        {
+            entity.ToTable("PR_GroupModuleMenu");
+
+            // Composite key, matching PK_PR_GroupModuleMenu. No surrogate Id column exists,
+            // so there is nothing to mark ValueGeneratedNever on here.
+            entity.HasKey(e => new { e.PrGroupId, e.PrModuleId, e.PrMenuId });
+
+            // The table's own column names are PR_GroupId, PR_ModuleId and PR_MenuId — no
+            // "Pr" prefix stripped and no rename. Without these three HasColumnName calls
+            // EF uses the CLR property names (PrGroupId) verbatim and the generated SQL
+            // fails with "Invalid column name 'PrGroupId'".
+            entity.Property(e => e.PrGroupId).HasColumnName("PR_GroupId");
+            entity.Property(e => e.PrModuleId).HasColumnName("PR_ModuleId");
+            entity.Property(e => e.PrMenuId).HasColumnName("PR_MenuId");
+
+            entity.Property(e => e.IsActive).HasColumnName("IS_Active");
+            entity.Property(e => e.OrderBy).HasColumnName("Order_BY");
+        });
+
+        modelBuilder.Entity<PrGroupModuleMenuPrivilage>(entity =>
+        {
+            entity.ToTable("PR_GroupModuleMenuPrivilage");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id").ValueGeneratedNever();
+
+            // Every key except Id is nullable, and one live row has all of them NULL. A
+            // required property here would make that row fail to materialise rather than
+            // simply not match, so nullability is kept as the schema has it.
+            entity.Property(e => e.PrGroupId).HasColumnName("PR_GroupId");
+            entity.Property(e => e.PrModuleId).HasColumnName("PR_ModuleId");
+            entity.Property(e => e.PrMenuId).HasColumnName("PR_MenuId");
+            entity.Property(e => e.PrUserId).HasColumnName("PR_User_id");
+
+            entity.Property(e => e.CanView).HasColumnName("CanView");
+            entity.Property(e => e.CanAdd).HasColumnName("CanAdd");
+            entity.Property(e => e.CanEdit).HasColumnName("CanEdit");
+            entity.Property(e => e.CanDelete).HasColumnName("CanDelete");
+            entity.Property(e => e.CanPrint).HasColumnName("CanPrint");
+            entity.Property(e => e.IsActive).HasColumnName("IS_Active");
         });
     }
 }

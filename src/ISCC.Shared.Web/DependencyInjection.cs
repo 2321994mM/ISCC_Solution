@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using ISCC.Shared.Contracts;
+using ISCC.Shared.Web.Menu;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
@@ -108,6 +109,16 @@ public static class SharedWebServiceCollectionExtensions
             options.Cookie.IsEssential = true;
             options.Cookie.SameSite = SameSiteMode.Lax;
         });
+
+        // Navigation. MenuRouteResolver walks the endpoint table to decide which of the 221
+        // stored PR_Menu routes exist in this solution yet, so that links to unported areas
+        // can be rendered inert instead of as anchors that 404.
+        //
+        // Registered as a singleton deliberately: the endpoint table is fixed once the
+        // application has started, and rebuilding a set of every endpoint on every page view
+        // to answer that question would be pure overhead. It depends only on endpoint data
+        // sources, which are singletons themselves.
+        services.AddSingleton<MenuRouteResolver>();
 
         return services;
     }
