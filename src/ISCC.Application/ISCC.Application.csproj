@@ -7,6 +7,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ISCC.Domain\ISCC.Domain.csproj" />
+
+    <!--
+      For SelectOption, the bilingual dropdown type. ISCC.Shared.Contracts is a leaf
+      project with no references of its own, so this is a sideways reference and creates
+      no cycle. Reusing SelectOption rather than declaring a second option type in
+      ReferenceData/Dtos keeps one definition of the bilingual contract: the legacy code
+      had three separate lookup shapes (LookupOptionViewModel, SelectOption, and raw
+      {Value, Text} tuples) and every shared select component now depends on this one.
+    -->
+    <ProjectReference Include="..\ISCC.Shared.Contracts\ISCC.Shared.Contracts.csproj" />
   </ItemGroup>
 
   <!--

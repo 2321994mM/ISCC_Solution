@@ -75,4 +75,10 @@
   <data name="Login_LogoAlt" xml:space="preserve">
     <value>Central Administration of Plant Quarantine</value>
   </data>
+  <data name="AllCompanies" xml:space="preserve">
+    <value>All companies</value>
+  </data>
+  <data name="AllFinalResults" xml:space="preserve">
+    <value>All quarantine statuses</value>
+  </data>
 </root>

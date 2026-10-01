@@ -75,4 +75,10 @@
   <data name="Login_LogoAlt" xml:space="preserve">
     <value>الإدارة المركزية للحجر الزراعي</value>
   </data>
+  <data name="AllCompanies" xml:space="preserve">
+    <value>كل الشركات</value>
+  </data>
+  <data name="AllFinalResults" xml:space="preserve">
+    <value>كل مواقف الحجر</value>
+  </data>
 </root>

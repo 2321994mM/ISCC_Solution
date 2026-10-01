@@ -41,31 +41,31 @@ public abstract class ApiControllerBase : ControllerBase
     protected ActionResult<ApiResponse<object>> ApiValidationError(
         IDictionary<string, string[]> details,
         string? message = null) =>
-        BadRequest(Fail(ErrorCodes.ValidationFailed, message ?? "One or more validation errors occurred.", details));
+        BadRequest(Fail<object>(ErrorCodes.ValidationFailed, message ?? "One or more validation errors occurred.", details));
 
     /// <summary>400 with a domain rule violation.</summary>
     protected ActionResult<ApiResponse<object>> ApiBadRequest(string message) =>
-        BadRequest(Fail(ErrorCodes.DomainRuleViolation, message));
+        BadRequest(Fail<object>(ErrorCodes.DomainRuleViolation, message));
 
     /// <summary>401 unauthenticated.</summary>
     protected ActionResult<ApiResponse<object>> ApiUnauthenticated(string message = "Authentication is required.") =>
-        Unauthorized(Fail(ErrorCodes.Unauthenticated, message));
+        Unauthorized(Fail<object>(ErrorCodes.Unauthenticated, message));
 
     /// <summary>403 forbidden.</summary>
     protected ActionResult<ApiResponse<object>> ApiForbidden(string message = "You do not have permission to perform this action.") =>
-        StatusCode(StatusCodes.Status403Forbidden, Fail(ErrorCodes.Forbidden, message));
+        StatusCode(StatusCodes.Status403Forbidden, Fail<object>(ErrorCodes.Forbidden, message));
 
     /// <summary>404 not found.</summary>
     protected ActionResult<ApiResponse<object>> ApiNotFound(string message = "The requested resource was not found.") =>
-        NotFound(Fail(ErrorCodes.NotFound, message));
+        NotFound(Fail<object>(ErrorCodes.NotFound, message));
 
     /// <summary>409 conflict.</summary>
     protected ActionResult<ApiResponse<object>> ApiConflict(string message) =>
-        Conflict(Fail(ErrorCodes.Conflict, message));
+        Conflict(Fail<object>(ErrorCodes.Conflict, message));
 
     /// <summary>422 semantically invalid, but well-formed.</summary>
     protected ActionResult<ApiResponse<object>> ApiUnprocessable(string message) =>
-        UnprocessableEntity(Fail(ErrorCodes.DomainRuleViolation, message));
+        UnprocessableEntity(Fail<object>(ErrorCodes.DomainRuleViolation, message));
 
     /// <summary>
     /// 501, for an endpoint that exists as a route but has not been migrated yet.
@@ -79,12 +79,26 @@ public abstract class ApiControllerBase : ControllerBase
     /// <param name="message">Defaults to a message naming the migration phase.</param>
     protected ActionResult<ApiResponse<object>> ApiNotImplemented(
         string message = "Not yet migrated. See docs/MIGRATION-PLAN.md Phase 6.") =>
-        StatusCode(StatusCodes.Status501NotImplemented, Fail(ErrorCodes.NotImplemented, message));
+        StatusCode(StatusCodes.Status501NotImplemented, Fail<object>(ErrorCodes.NotImplemented, message));
+
+    /// <summary>
+    /// 404 with an envelope whose <c>data</c> is typed to match the success path.
+    /// </summary>
+    /// <remarks>
+    /// Needed by any endpoint that returns data on success, because the untyped overload
+    /// produces an <c>ApiResponse&lt;object&gt;</c> and the compiler will not unify the two
+    /// branches into one return type. The failure carries no data, so nothing changes on
+    /// the wire — it only lets a method declare a single return type.
+    /// </remarks>
+    /// <typeparam name="T">The type the success path returns.</typeparam>
+    /// <param name="message">The failure message.</param>
+    protected ActionResult<ApiResponse<T>> ApiNotFound<T>(string message) =>
+        NotFound(Fail<T>(ErrorCodes.NotFound, message));
 
     /// <summary>
     /// Builds a failure envelope stamped with the current trace id.
     /// </summary>
-    private ApiResponse<object> Fail(string code, string message, IDictionary<string, string[]>? details = null)
+    private ApiResponse<T> Fail<T>(string code, string message, IDictionary<string, string[]>? details = null)
     {
         var error = details is null
             ? ApiError.Create(code, message)
@@ -92,6 +106,6 @@ public abstract class ApiControllerBase : ControllerBase
 
         error.TraceId = HttpContext.TraceIdentifier;
 
-        return new ApiResponse<object> { Success = false, Error = error, TraceId = HttpContext.TraceIdentifier };
+        return new ApiResponse<T> { Success = false, Error = error, TraceId = HttpContext.TraceIdentifier };
     }
 }

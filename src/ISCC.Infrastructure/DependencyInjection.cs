@@ -1,5 +1,7 @@
+using ISCC.Application.ReferenceData;
 using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Data;
+using ISCC.Infrastructure.ReferenceData;
 using ISCC.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +26,12 @@ public static class DependencyInjection
         // Application-layer feature services (CMS content, reference data, trade
         // procedures, dashboard) were removed along with the Phase 2 controllers they
         // backed. Register each one here when its controller is ported.
+        //
+        // Reference data (Phase 3.1) is live. It is the first ported feature and the
+        // reference pattern for the rest: the contract sits in ISCC.Application under
+        // <Feature>/ with Dtos/ beside it, the EF implementation sits here, and the
+        // controller in the host consumes only the contract.
+        services.AddScoped<IReferenceDataService, ReferenceDataService>();
 
         return services;
     }
