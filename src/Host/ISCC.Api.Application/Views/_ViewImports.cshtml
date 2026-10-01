@@ -1,5 +1,19 @@
 @using ISCC.Api.Application
 @using ISCC.Api.Application.Controllers
-@using ISCC.Infrastructure.Auth
+@using ISCC.Shared.Contracts
+@using ISCC.Shared.Localization
 @using ISCC.Shared.Web
+@using ISCC.Infrastructure.Auth
+@using Microsoft.Extensions.Localization
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@*
+    Injected into every view in this portal. The resource file name must stay
+    SharedResource.resx, because ISStringLocalizer<T> resolves the file from T's type name.
+*@
+@inject IStringLocalizer<SharedResource> L
+@*
+    Views/_ViewImports.cshtml for the employers/staff portal.
+
+    Deliberately does NOT set Layout. The layout is set by _ViewStart.cshtml in the same
+    folder, and setting it here as well would be a second source of truth that could drift.
+*@

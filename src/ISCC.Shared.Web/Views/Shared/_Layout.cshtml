@@ -1,43 +1,119 @@
 @*
-    The one layout every portal renders through.
+    The one layout every browser portal renders through.
 
-    Replaces the per-host _Layout files, which had already diverged: the employers layout
-    carried 17 asset references and the client layout carried 1. Both now get the same
-    structure and each portal adds only what is genuinely different via @section and the
-    portal name below.
+    Structure ported from PlantQuarantine.NewMvc/Views/Shared/_Layout.cshtml, which had
+    the sidebar, topbar and user chip already designed. Three things are deliberately
+    different from that original:
+
+      1. Direction follows the request culture. The original hardcoded lang="ar" dir="rtl",
+         which meant an English user got an RTL shell with left-pointing chevrons and
+         LTR-positioned Bootstrap internals.
+      2. Bootstrap is loaded direction-aware. The original loaded only bootstrap.min.css
+         while the document was dir="rtl"; Bootstrap 5 ships a separate RTL build, so
+         form-control padding, dropdown carets and close buttons came out mirrored.
+         site.css itself is fine either way — it uses logical properties
+         (inset-inline-start, padding-inline-end) throughout.
+      3. Assets come from ISCC.Shared.Web/wwwroot, embedded in that assembly and served
+         at /_shared/ by MapSharedWebAssets, rather than from each host's own wwwroot.
+
+    The user chip reads the claims AccountController issues, which is what makes the
+    sign-in work visible: the display name and outlet name are on screen from here.
 *@
-@inject Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Builder.WebApplicationOptions> _unused
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ISCC.Shared.Localization.SharedResource> L
 @{
-    var culture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-    var isArabic = culture.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
-    var portalName = ViewData["PortalName"] as string ?? "ISCC";
+    var culture = System.Globalization.CultureInfo.CurrentUICulture;
+    var lang = culture.TwoLetterISOLanguageName;
+    var isArabic = lang.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+
+    var bodyClass = ViewData["BodyClass"] as string;
+    var activeMenu = ViewData["ActiveMenu"] as string;
+
+    // Sign-in has no sidebar and no topbar: there is no session yet, so there is no user
+    // to greet and no menu to navigate. The full-bleed panel is the whole page.
+    var isLoginPage = bodyClass == "login-page";
+
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var displayName = signedIn ? User.Identity!.Name : L["Login_Guest"];
+    var outletName = User.FindFirst("OutletName")?.Value;
+    var pageTitle = ViewData["Title"] as string;
+
+    var portalName = L["Portal_Name"];
 }
 <!DOCTYPE html>
-<html lang="@culture" dir="@(isArabic ? "rtl" : "ltr")">
+<html lang="@lang" dir="@(isArabic ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(ViewData["Title"] is string t && t.Length > 0 ? t + " - " + portalName : portalName)</title>
+    <title>@(string.IsNullOrEmpty(pageTitle) ? portalName : pageTitle + " - " + portalName)</title>
+    <link rel="icon" href="/_shared/favicon.ico" />
+    @* Built by concatenation rather than an interpolated conditional. Interpolating
+       (isArabic ? "rtl" : "") between two dots yields "bootstrap..min.css" in English,
+       which 404s silently — the browser just reports a missing stylesheet. *@
+    <link rel="stylesheet" href="/_shared/lib/bootstrap/dist/css/bootstrap@(isArabic ? ".rtl" : "").min.css" />
+    <link rel="stylesheet" href="/_shared/css/site.css" />
     <iscc-styles />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <header>
-        <nav>
-            <a href="/">@portalName</a>
-        </nav>
-        @await RenderSectionAsync("Header", required: false)
-    </header>
+<body class="@bodyClass">
+    <div class="app-shell">
+        @if (!isLoginPage)
+        {
+            <aside class="app-sidebar">
+                <a class="brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark">PQ</span>
+                    <span>
+                        <strong>@portalName</strong>
+                        <small>Plant Quarantine</small>
+                    </span>
+                </a>
+                <nav class="side-nav" aria-label="@L["Nav_Main"]">
+                    <a class="@(activeMenu == "Dashboard" || activeMenu == null ? "active" : "")"
+                       asp-area="" asp-controller="Home" asp-action="Index">
+                        <span aria-hidden="true">&#8962;</span> @L["Nav_Dashboard"]
+                    </a>
+                    @* Import is the next area to be ported; the link is inert until then. *@
+                    <a class="@(activeMenu == "Import" ? "active" : "") disabled" aria-disabled="true">
+                        <span aria-hidden="true">&#8618;</span> @L["Nav_Import"]
+                    </a>
+                </nav>
+            </aside>
+        }
 
-    <main>
-        @RenderBody()
-    </main>
+        <div class="app-main">
+            @if (!isLoginPage)
+            {
+                <header class="topbar">
+                    <div>
+                        <span class="section-kicker">@portalName</span>
+                        <h1>@(ViewData["PageHeading"] ?? pageTitle)</h1>
+                    </div>
+                    <div class="topbar-actions">
+                        <span class="user-chip">
+                            <span>@displayName</span>
+                            @if (!string.IsNullOrWhiteSpace(outletName))
+                            {
+                                <small>@outletName</small>
+                            }
+                        </span>
+                        <a class="icon-button" asp-area="" asp-controller="Account" asp-action="Logout"
+                           title="@L["Logout_Title"]" aria-label="@L["Logout_Title"]">
+                            &#8629;
+                        </a>
+                    </div>
+                </header>
+            }
 
-    <footer>
-        <p>&copy; @DateTime.Now.Year @portalName</p>
-    </footer>
+            <main role="main" class="content-area">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
 
-    <iscc-scripts />
+    @* Only the shell's own scripts. jQuery and select2 are the page's decision, because
+       most pages do not need them and the login page in particular should not pay for a
+       90 KB download it never calls. *@
+    <script src="/_shared/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <iscc-scripts jquery="false" select2="false" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -296,6 +296,17 @@ public static class SharedWebServiceCollectionExtensions
     /// files; the host's own <c>wwwroot</c>, if it has one, is still served separately at
     /// the root by the usual <c>UseStaticFiles</c>.
     /// </para>
+    /// <para>
+    /// <b>Must be called before <c>UseSharedWeb</c>, not after.</b>
+    /// <c>UseSharedWeb</c> calls <c>UseRouting</c>, and once routing has run the endpoint for
+    /// a request is fixed, so a static-file middleware registered afterwards never serves it.
+    /// The failure does not look like a failure: the request reaches the MVC endpoint, gets a
+    /// 200, and returns an HTML document where a stylesheet was requested — a status-code check
+    /// passes and only the missing styling reveals it. It is worse once an authorization
+    /// fallback policy is in place, because an anonymous request for an asset 302s to the login
+    /// page, which means the login page loads with no CSS and no JavaScript — precisely the
+    /// requests an anonymous visitor makes first.
+    /// </para>
     /// </remarks>
     /// <param name="app">The application builder.</param>
     public static WebApplication MapSharedWebAssets(this WebApplication app)

@@ -87,11 +87,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
+// Static files come first, before UseSharedWeb. That call runs UseRouting, and after
+// routing has matched an endpoint a later static-file middleware no longer serves the
+// request. Registering these in the other order still returns HTTP 200, so nothing looks
+// broken — but a .css request comes back as an HTML document, and with the fallback
+// authorization policy an anonymous one 302s to the sign-in page instead. That would
+// leave the sign-in page itself unstyled, since its CSS and JS are the first things an
+// anonymous visitor asks for.
+app.MapSharedWebAssets();
+app.UseStaticFiles();
+
 // Shared pipeline: exception handling first, then localization, routing, session,
 // authorization. Each host no longer hand-orders these.
 app.UseSharedWeb();
-app.MapSharedWebAssets();
-app.UseStaticFiles();
 
 app.MapControllerRoute(
     name: "default",

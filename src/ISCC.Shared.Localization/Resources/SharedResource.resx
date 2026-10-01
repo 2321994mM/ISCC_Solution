@@ -99,4 +99,52 @@
   <data name="Login_LoggedOut" xml:space="preserve">
     <value>You have been signed out.</value>
   </data>
+  <data name="Login_BrandLine" xml:space="preserve">
+    <value>Plant Quarantine Services - General Organization for Plant Quarantine</value>
+  </data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve">
+    <value>Username, e.g. ahmed.ali</value>
+  </data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve">
+    <value>Password, at least 6 characters</value>
+  </data>
+  <data name="Login_ForgotPassword" xml:space="preserve">
+    <value>Forgot your password?</value>
+  </data>
+  <data name="Login_VisualTitle" xml:space="preserve">
+    <value>Plant Quarantine Inspection System</value>
+  </data>
+  <data name="Login_VisualBody" xml:space="preserve">
+    <value>One portal for importers, committees and inspection stations.</value>
+  </data>
+  <data name="Portal_Name" xml:space="preserve">
+    <value>ISCC Portal</value>
+  </data>
+  <data name="Nav_Main" xml:space="preserve">
+    <value>Main navigation</value>
+  </data>
+  <data name="Nav_Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Nav_Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Nav_Farm" xml:space="preserve">
+    <value>Farm</value>
+  </data>
+  <data name="Nav_Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Nav_Committee" xml:space="preserve">
+    <value>Committee</value>
+  </data>
+  <data name="Nav_Station" xml:space="preserve">
+    <value>Station</value>
+  </data>
+  <data name="Logout_Title" xml:space="preserve">
+    <value>Sign out</value>
+  </data>
+  <data name="Login_Guest" xml:space="preserve">
+    <value>Not signed in</value>
+  </data>
 </root>

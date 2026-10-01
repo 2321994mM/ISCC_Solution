@@ -99,4 +99,52 @@
   <data name="Login_LoggedOut" xml:space="preserve">
     <value>تم تسجيل خروجك.</value>
   </data>
+  <data name="Login_BrandLine" xml:space="preserve">
+    <value>خدمات الحجر الزراعي - الهيئة العامة للحجر الزراعي</value>
+  </data>
+  <data name="Login_UsernamePlaceholder" xml:space="preserve">
+    <value>اسم المستخدم، مثال: ahmed.ali</value>
+  </data>
+  <data name="Login_PasswordPlaceholder" xml:space="preserve">
+    <value>كلمة السر، ٦ أحرف على الأقل</value>
+  </data>
+  <data name="Login_ForgotPassword" xml:space="preserve">
+    <value>هل نسيت كلمة السر؟</value>
+  </data>
+  <data name="Login_VisualTitle" xml:space="preserve">
+    <value>نظام الحجر الزراعي</value>
+  </data>
+  <data name="Login_VisualBody" xml:space="preserve">
+    <value>بوابة واحدة للمستوردين واللجان ومحطات الحجر الزراعي.</value>
+  </data>
+  <data name="Portal_Name" xml:space="preserve">
+    <value>بوابة الهيئة</value>
+  </data>
+  <data name="Nav_Main" xml:space="preserve">
+    <value>القائمة الرئيسية</value>
+  </data>
+  <data name="Nav_Dashboard" xml:space="preserve">
+    <value>الرئيسية</value>
+  </data>
+  <data name="Nav_Import" xml:space="preserve">
+    <value>الاستيراد</value>
+  </data>
+  <data name="Nav_Farm" xml:space="preserve">
+    <value>المزارع</value>
+  </data>
+  <data name="Nav_Export" xml:space="preserve">
+    <value>التصدير</value>
+  </data>
+  <data name="Nav_Committee" xml:space="preserve">
+    <value>اللجان</value>
+  </data>
+  <data name="Nav_Station" xml:space="preserve">
+    <value>المحطات</value>
+  </data>
+  <data name="Logout_Title" xml:space="preserve">
+    <value>تسجيل الخروج</value>
+  </data>
+  <data name="Login_Guest" xml:space="preserve">
+    <value>غير مسجل الدخول</value>
+  </data>
 </root>

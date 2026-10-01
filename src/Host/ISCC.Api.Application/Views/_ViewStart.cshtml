@@ -1,3 +1,14 @@
 @{
-    Layout = null;
+    Layout = "_Layout";
 }
+@*
+    Renders through ISCC.Shared.Web/Views/Shared/_Layout.cshtml.
+
+    It was "Layout = null" while the login page was standalone and carried its own inline
+    CSS, which bypassed the shared shell entirely. That hid the fact that no wwwroot existed
+    anywhere in the solution and that the layout — where the signed-in user's name and
+    outlet appear — had never been exercised by a real page.
+
+    MVC resolves _Layout by convention across application parts, so this picks up the shared
+    one rather than a per-host copy.
+*@

@@ -1,0 +1,22 @@
+@*
+    jQuery Unobtrusive Validation, loaded only by pages that want client-side validation.
+
+    Server-side validation is unaffected: [Required] on the model is enforced by the
+    framework regardless of whether these two files load. They only move the error from
+    a round trip to the browser, which is worth having on the sign-in form because it is
+    the one page every user sees.
+
+    Paths are /_shared/... because these files are embedded in ISCC.Shared.Web and served
+    by MapSharedWebAssets, not read from a host's wwwroot.
+
+    Note the underscores in the two jquery-validation directories. EmbeddedResourceFileProvider
+    turns a request path into a resource name by replacing each path separator with a dot and
+    leaving the segments otherwise untouched, while MSBuild derives the LogicalName by
+    substituting underscores for hyphens. So a folder named jquery-validation is embedded as
+    ...wwwroot.lib.jquery_validation..., and a request for .../lib/jquery-validation/... looks for
+    a resource that does not exist and 404s. The folder name has to match what MSBuild will
+    produce, which means no hyphens in directory names under wwwroot.
+*@
+<script src="/_shared/lib/jquery/dist/jquery.min.js"></script>
+<script src="/_shared/lib/jquery_validation/dist/jquery.validate.min.js"></script>
+<script src="/_shared/lib/jquery_validation_unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
