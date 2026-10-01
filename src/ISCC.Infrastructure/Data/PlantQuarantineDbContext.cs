@@ -6603,7 +6603,7 @@ public partial class PlantQuarantineDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK_Im_Constrain_chooes");
 
-            entity.ToTable("Im_choose_Constrain ");
+            entity.ToTable("Im_choose_Constrain");
 
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
