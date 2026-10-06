@@ -62,7 +62,9 @@ else
                         @switch (selectApproveId)
                         {
                             case 1:
-                                <td>@L["Im_List_Details"]</td>
+                                <td>
+                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
+                                </td>
                                 <td>
                                     @if (item.IsAccepted == false && item.Closed_Request == null)
                                     {
@@ -70,7 +72,7 @@ else
                                     }
                                     else if (item.IsAccepted == true && item.Closed_Request == null)
                                     {
-                                        <span>@L["Im_List_FormCommittee"]<br />@L["Im_List_ApprovedDone"]</span>
+                                        <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]<br />@L["Im_List_ApprovedDone"]</a>
                                     }
                                     else if (item.IsAccepted == null)
                                     {
@@ -78,44 +80,74 @@ else
                                     }
                                     else if (item.Closed_Request == true)
                                     {
-                                        <span>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</span>
+                                        <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</a>
                                     }
                                     else if (item.Closed_Request == false)
                                     {
                                         @item.Name_Final_Result
                                     }
                                 </td>
-                                <td>@L["Im_List_ShowResults"]</td>
+                                <td>
+                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
+                                </td>
                                 break;
                             case 2:
-                                <td>@L["Im_List_Details"]</td>
+                                <td>
+                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
+                                </td>
                                 <td>@L["Im_List_NotApproved"]</td>
-                                <td>@L["Im_List_ShowResults"]</td>
+                                <td>
+                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
+                                </td>
                                 break;
                             case 3:
-                                <td>@L["Im_List_Details"]</td>
+                                <td>
+                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
+                                </td>
                                 <td>@L["Im_List_NoAction"]</td>
-                                <td>@L["Im_List_ShowResults"]</td>
+                                <td>
+                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
+                                </td>
                                 break;
                             case 4:
-                                <td>@L["Im_List_Details"]</td>
+                                <td>
+                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
+                                </td>
                                 <td>@L["Im_List_Closed"]</td>
-                                <td>@L["Im_List_ShowResults"]</td>
+                                <td>
+                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
+                                </td>
                                 break;
                             case 5:
-                                <td>@L["Im_List_Details"]</td>
-                                <td>@L["Im_List_FormCommittee"]</td>
-                                <td>@L["Im_List_ShowResults"]</td>
+                                <td>
+                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
+                                </td>
+                                <td>
+                                    <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]</a>
+                                </td>
+                                <td>
+                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
+                                </td>
                                 break;
                             case 6:
-                                <td>@L["Im_List_Details"]</td>
-                                <td><span>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</span></td>
-                                <td>@L["Im_List_ShowResults"]</td>
+                                <td>
+                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
+                                </td>
+                                <td>
+                                    <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</a>
+                                </td>
+                                <td>
+                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
+                                </td>
                                 break;
                             case 7:
-                                <td>@L["Im_List_Details"]</td>
+                                <td>
+                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
+                                </td>
                                 <td>@item.Name_Final_Result</td>
-                                <td>@L["Im_List_ShowResults"]</td>
+                                <td>
+                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
+                                </td>
                                 break;
                             default:
                                 <td></td>
