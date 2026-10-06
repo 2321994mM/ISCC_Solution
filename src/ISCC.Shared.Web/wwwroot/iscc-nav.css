@@ -154,6 +154,72 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Open/close feedback
+   --------------------------------------------------------------------------- */
+
+/*
+  The disclosure headers (<summary>) are not anchors, so the a.nav-link hover and
+  focus-visible rules above never reach them: hovering a group did nothing, and keyboard
+  focus got no ring. Give them the same affordances as the leaf links.
+*/
+.side-nav details.nav-group > summary.nav-link:hover,
+.side-nav details.nav-group > summary.nav-link:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
+  outline: none;
+}
+
+.side-nav details.nav-group > summary.nav-link:focus-visible {
+  /* Same ring as a.nav-link:focus-visible, so keyboard users get one consistent focus
+     treatment across the whole tree. */
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .75);
+}
+
+/*
+  An open section gets a faint header tint and a full-opacity caret, so the open/closed
+  state can be read at a glance without hunting for the rotated glyph.
+*/
+.side-nav details.nav-group[open] > summary.nav-link {
+  background: rgba(255, 255, 255, .08);
+}
+
+.side-nav details.nav-group[open] > summary .nav-caret {
+  opacity: 1;
+}
+
+/*
+  Smooth the disclosure instead of snapping. interpolate-size is what lets a height of
+  auto animate; ::details-content is the pseudo-element it animates. Browsers without
+  either ignore the entire block and toggle instantly — the exact behaviour <details>
+  already had, so there is no regression on older clients.
+*/
+@supports selector(details::details-content) {
+  .side-nav details.nav-group {
+    interpolate-size: allow-keywords;
+  }
+
+  .side-nav details.nav-group::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition: content-visibility .22s allow-discrete, block-size .22s ease;
+  }
+
+  .side-nav details.nav-group[open]::details-content {
+    block-size: auto;
+  }
+}
+
+/*
+  prefers-reduced-motion: the caret transition and the disclosure animation are both
+  decorative; honouring the setting costs one line each.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .side-nav details.nav-group::details-content {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
    Not yet ported
    --------------------------------------------------------------------------- */
 
