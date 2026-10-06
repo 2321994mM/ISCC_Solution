@@ -56,13 +56,22 @@ public static class SharedWebServiceCollectionExtensions
 
             // Arabic is the default for these portals. The "ar" CultureInfo already
             // implies RTL layout, which the shared components read via [dir="rtl"].
-            // Accept-Language first, cookie second: an explicit header should beat a
-            // stale cookie.
+            //
+            // Deliberately ordered Query > Cookie > default, with NO Accept-Language
+            // provider. The previous order had Accept-Language second, which meant any
+            // browser set to English sent "en-US" and won on every request — the
+            // "ar" default above was unreachable in practice, and an English browser
+            // got an English portal with no way to change it.
+            //
+            // Browser language is a guess about preference; an in-app choice is not.
+            // Query first so an explicit selection beats a remembered one (this is
+            // also what makes ?culture=en useful for testing), then the cookie that
+            // remembers that selection, then Arabic. To switch language, a user picks
+            // it in the app and the cookie remembers it.
             options.RequestCultureProviders = new List<IRequestCultureProvider>
             {
                 new QueryStringRequestCultureProvider(),
-                new AcceptLanguageHeaderRequestCultureProvider(),
-                new CookieRequestCultureProvider()
+                new CookieRequestCultureProvider(),
             };
         });
 

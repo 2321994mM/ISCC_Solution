@@ -20,8 +20,8 @@ namespace ISCC.Shared.Web.Menu;
 /// fail at runtime with "partial view not found":
 /// </para>
 /// <list type="bullet">
-/// <item><c>&lt;partial name="_MenuList" /&gt;</c> â€” searched /Views/Home/ and /Views/Shared/</item>
-/// <item><c>&lt;partial name="Views/Shared/Components/Menu/_MenuList" /&gt;</c> â€” the path was
+/// <item><c>&lt;partial name="_MenuList" /&gt;</c> — searched /Views/Home/ and /Views/Shared/</item>
+/// <item><c>&lt;partial name="Views/Shared/Components/Menu/_MenuList" /&gt;</c> — the path was
 /// appended to those same folders, giving /Views/Home/Views/Shared/...</item>
 /// </list>
 /// <para>
@@ -114,18 +114,41 @@ public class MenuTagHelper : TagHelper
     }
 
     /// <summary>
-    /// Renders a leaf: a link when its area has been ported, an inert span when not.
+    /// Renders a leaf as a link.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Every leaf with a URL is a real link, whether or not its route exists yet.</b>
+    /// This used to gate on <see cref="MenuItem.IsImplemented"/>, rendering unported areas
+    /// as inert spans so clicking could not 404. That was the wrong trade: it made the menu
+    /// unusable as a navigation surface for the sake of keeping the console clean, and the
+    /// user asked to be able to reach every item.
+    /// </para>
+    /// <para>
+    /// So an item whose area has not been ported now navigates and gets a 404 from the
+    /// exception handler. That is a visible, recoverable failure and it tells you exactly
+    /// what is missing — arguably more useful than a greyed-out label that says nothing
+    /// beyond "not yet".
+    /// </para>
+    /// <para>
+    /// <see cref="MenuItem.IsImplemented"/> is still emitted as <c>data-implemented</c> on
+    /// the <c>&lt;li&gt;</c>, so the migration state is inspectable in the DOM and a test
+    /// can assert against it. It just no longer decides whether the link exists.
+    /// </para>
+    /// </remarks>
     /// <param name="item">The leaf.</param>
     /// <param name="node">The enclosing list item.</param>
     private void RenderLeaf(MenuItem item, TagBuilder node)
     {
-        if (item.IsImplemented && !string.IsNullOrEmpty(item.Href))
+        // Blank URLs and bare anchors ("#foo" appears in PR_Menu for the older tab-style
+        // screens) are not navigable targets, so those remain inert. Everything else links.
+        if (!string.IsNullOrWhiteSpace(item.Href) && !item.Href.StartsWith('#'))
         {
             var link = new TagBuilder("a");
             link.Attributes["class"] = "nav-link";
             link.Attributes["href"] = item.Href;
             link.Attributes["data-menu-id"] = item.MenuId.ToString(CultureInfo.InvariantCulture);
+            link.Attributes["data-implemented"] = item.IsImplemented ? "true" : "false";
             link.InnerHtml.AppendHtml(Text(item.Title));
             node.InnerHtml.AppendHtml(link);
             return;
@@ -145,7 +168,7 @@ public class MenuTagHelper : TagHelper
     /// <remarks>
     /// <c>&lt;details&gt;</c>/<c>&lt;summary&gt;</c> is a real disclosure control: keyboard
     /// operable and announced as expanded or collapsed by a screen reader. The legacy markup
-    /// was an <c>&lt;a href="#"&gt;</c> with a jQuery handler returning false â€” it looked like
+    /// was an <c>&lt;a href="#"&gt;</c> with a jQuery handler returning false — it looked like
     /// a link, took focus, and announced nothing when activated.
     /// </remarks>
     /// <param name="item">The branch.</param>
