@@ -159,6 +159,18 @@ a {
   font-weight: 800;
 }
 
+/* The language flip shows the target language's name next to a globe glyph, so it needs
+   auto width rather than the fixed square the logout icon uses. */
+.icon-button.language-toggle {
+  width: auto;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
 .user-chip {
   min-height: 42px;
   display: flex;

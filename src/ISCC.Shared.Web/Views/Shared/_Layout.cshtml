@@ -106,6 +106,15 @@
                                 <small>@outletName</small>
                             }
                         </span>
+                        @* Language flip, ported from the legacy /Base/ChangeLanguage toggle.
+                           The label names the language the button switches TO, which is the
+                           convention that keeps the control self-explaining in both scripts. *@
+                        <a class="icon-button language-toggle" asp-area="" asp-controller="Language"
+                           asp-action="ChangeLanguage" title="@L["Translate"]"
+                           aria-label="@L["Translate"]">
+                            <span aria-hidden="true">&#127760;</span>
+                            <span>@(isArabic ? "English" : "عربي")</span>
+                        </a>
                         <a class="icon-button" asp-area="" asp-controller="Account" asp-action="Logout"
                            title="@L["Logout_Title"]" aria-label="@L["Logout_Title"]">
                             &#8629;

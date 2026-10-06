@@ -239,6 +239,13 @@ public static class SharedWebServiceCollectionExtensions
         // Mirroring the resolved culture into the cookie makes the choice survive
         // navigation, error pages included.
         //
+        // Only the FIRST resolution needs persisting. Re-writing the cookie on every
+        // response where one is already present would churn a Set-Cookie header on every
+        // request — static assets included, which carry the cookie but never change it —
+        // and it would also stamp a second, stale value onto a language-flip response
+        // (LanguageController writes the new culture itself). So: bake the cookie only
+        // when the request arrived without one.
+        //
         // Must be registered AFTER UseRequestLocalization, or it captures the ambient
         // process culture rather than the one the request actually resolved to, and then
         // pins every visitor to whatever the machine was set to.
@@ -254,22 +261,25 @@ public static class SharedWebServiceCollectionExtensions
         // among them yet. It is correct from the next navigation onwards.
         app.Use(async (httpContext, next) =>
         {
-            var culture = CultureInfo.CurrentUICulture;
-
-            if (!string.IsNullOrEmpty(culture.Name))
+            if (!httpContext.Request.Cookies.ContainsKey(".AspNetCore.Culture"))
             {
-                httpContext.Response.Cookies.Append(
-                    ".AspNetCore.Culture",
-                    $"c={culture.Name}|uic={culture.Name}",
-                    new CookieOptions
-                    {
-                        Path = "/",
-                        HttpOnly = true,
-                        IsEssential = true,
-                        SameSite = SameSiteMode.Lax,
-                        // A year: the language choice is not a per-session preference.
-                        Expires = DateTimeOffset.UtcNow.AddYears(1)
-                    });
+                var culture = CultureInfo.CurrentUICulture;
+
+                if (!string.IsNullOrEmpty(culture.Name))
+                {
+                    httpContext.Response.Cookies.Append(
+                        ".AspNetCore.Culture",
+                        $"c={culture.Name}|uic={culture.Name}",
+                        new CookieOptions
+                        {
+                            Path = "/",
+                            HttpOnly = true,
+                            IsEssential = true,
+                            SameSite = SameSiteMode.Lax,
+                            // A year: the language choice is not a per-session preference.
+                            Expires = DateTimeOffset.UtcNow.AddYears(1)
+                        });
+                }
             }
 
             await next();

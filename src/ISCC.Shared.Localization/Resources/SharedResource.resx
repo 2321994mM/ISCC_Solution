@@ -153,4 +153,7 @@
   <data name="Menu_Expand" xml:space="preserve">
     <value>Show or hide this section</value>
   </data>
+  <data name="Translate" xml:space="preserve">
+    <value>Translate</value>
+  </data>
 </root>
