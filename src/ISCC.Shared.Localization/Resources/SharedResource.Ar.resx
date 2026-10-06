@@ -156,4 +156,106 @@
   <data name="Translate" xml:space="preserve">
     <value>ترجمة</value>
   </data>
+  <data name="Im_List_Title" xml:space="preserve">
+    <value>طلبات فحص الوارد</value>
+  </data>
+  <data name="Im_List_DateFrom" xml:space="preserve">
+    <value>بداية البحث</value>
+  </data>
+  <data name="Im_List_DateTo" xml:space="preserve">
+    <value>نهاية البحث</value>
+  </data>
+  <data name="Im_List_RequestStatus" xml:space="preserve">
+    <value>موقف الطلب</value>
+  </data>
+  <data name="Im_List_QuarantineStatus" xml:space="preserve">
+    <value>موقف الحجر</value>
+  </data>
+  <data name="Im_List_RequestNumber" xml:space="preserve">
+    <value>رقم الطلب</value>
+  </data>
+  <data name="Im_List_Company" xml:space="preserve">
+    <value>اسم الشركة</value>
+  </data>
+  <data name="Im_List_Search" xml:space="preserve">
+    <value>بحث</value>
+  </data>
+  <data name="Im_List_Choose" xml:space="preserve">
+    <value>اختر</value>
+  </data>
+  <data name="Im_List_All" xml:space="preserve">
+    <value>الكل</value>
+  </data>
+  <data name="Im_List_Approved" xml:space="preserve">
+    <value>الطلبات الموافقه عليه</value>
+  </data>
+  <data name="Im_List_NotApproved" xml:space="preserve">
+    <value>لم يتم الموافقة</value>
+  </data>
+  <data name="Im_List_NoAction" xml:space="preserve">
+    <value>لم يتم اتخاذ اجراء</value>
+  </data>
+  <data name="Im_List_Closed" xml:space="preserve">
+    <value>الطلب مغلق</value>
+  </data>
+  <data name="Im_List_Working" xml:space="preserve">
+    <value>موقف الحجر الطلب يعمل</value>
+  </data>
+  <data name="Im_List_NotWorking" xml:space="preserve">
+    <value>موقف الحجر الطلب لا يعمل</value>
+  </data>
+  <data name="Im_List_SelectStatus" xml:space="preserve">
+    <value>يجب اختيار موقف الطلب</value>
+  </data>
+  <data name="Im_List_NoData" xml:space="preserve">
+    <value>لا توجد بيانات للبحث</value>
+  </data>
+  <data name="Im_List_ColNo" xml:space="preserve">
+    <value>م</value>
+  </data>
+  <data name="Im_List_ColRequestNumber" xml:space="preserve">
+    <value>رقم الطلب</value>
+  </data>
+  <data name="Im_List_ColImporterType" xml:space="preserve">
+    <value>نوع المستورد</value>
+  </data>
+  <data name="Im_List_ColSupplier" xml:space="preserve">
+    <value>الشركة المورده</value>
+  </data>
+  <data name="Im_List_ColExport" xml:space="preserve">
+    <value>الشركة المصدرة</value>
+  </data>
+  <data name="Im_List_ColCreationDate" xml:space="preserve">
+    <value>تاريخ الإنشاء</value>
+  </data>
+  <data name="Im_List_ColDetails" xml:space="preserve">
+    <value>تفاصيل</value>
+  </data>
+  <data name="Im_List_ColCommittee" xml:space="preserve">
+    <value>موقف اللجنه</value>
+  </data>
+  <data name="Im_List_ColResults" xml:space="preserve">
+    <value>عرض النتائج</value>
+  </data>
+  <data name="Im_List_Details" xml:space="preserve">
+    <value>تفاصيل</value>
+  </data>
+  <data name="Im_List_ShowResults" xml:space="preserve">
+    <value>عرض النتائج</value>
+  </data>
+  <data name="Im_List_FormCommittee" xml:space="preserve">
+    <value>تشكيل لجنه</value>
+  </data>
+  <data name="Im_List_ApprovedDone" xml:space="preserve">
+    <value>تمت الموفقة</value>
+  </data>
+  <data name="Im_List_BackToSearch" xml:space="preserve">
+    <value>عودة للبحث</value>
+  </data>
+  <data name="Im_List_Prev" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Im_List_Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
 </root>

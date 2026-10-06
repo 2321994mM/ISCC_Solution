@@ -1,0 +1,156 @@
+@model ISCC.Application.ImCheckRequests.Dtos.ImCheckRequestListResult
+@using ISCC.Application.ImCheckRequests.Dtos
+@{
+    ViewData["PageHeading"] = L["Im_List_Title"];
+    var selectApproveId = (int)ViewBag.SelectApproveId;
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var dateFrom = ((DateTime)ViewBag.DateFrom).ToString("yyyy-MM-dd");
+    var dateEnd = ((DateTime)ViewBag.DateEnd).ToString("yyyy-MM-dd");
+    var finalResultListId = (int)ViewBag.FinalResultListId;
+    var checkRequestNumber = (string?)ViewBag.CheckRequestNumber ?? string.Empty;
+    var companyId = (long)ViewBag.CompanyId;
+
+    var totalPages = Model.TotalCount == 0 ? 1 : (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+    var currentPage = Model.PageNumber;
+}
+
+<p>
+    <a class="btn btn-outline-secondary btn-sm" asp-action="Index"
+       asp-route-dateFrom="@dateFrom"
+       asp-route-dateTo="@dateEnd" asp-route-selectApproveId="@selectApproveId"
+       asp-route-finalResultListId="@finalResultListId" asp-route-checkRequestNumber="@checkRequestNumber"
+       asp-route-companyId="@companyId">
+        &larr; @L["Im_List_BackToSearch"]
+    </a>
+</p>
+
+@if (Model.Items.Count == 0)
+{
+    <span>@L["Im_List_NoData"]</span>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr class="table-primary">
+                    <th>@L["Im_List_ColNo"]</th>
+                    <th>@L["Im_List_ColRequestNumber"]</th>
+                    <th>@L["Im_List_ColImporterType"]</th>
+                    <th>@L["Im_List_ColSupplier"]</th>
+                    <th>@L["Im_List_ColExport"]</th>
+                    <th>@L["Im_List_ColCreationDate"]</th>
+                    <th>@L["Im_List_ColDetails"]</th>
+                    <th>@L["Im_List_ColCommittee"]</th>
+                    <th>@L["Im_List_ColResults"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var rowNo = (Model.PageNumber - 1) * Model.PageSize;
+                }
+                @foreach (var item in Model.Items)
+                {
+                    rowNo++;
+                    <tr>
+                        <td>@rowNo</td>
+                        <td>@item.ImCheckRequest_Number</td>
+                        <td>@item.ImporterTypeName</td>
+                        <td>@item.ImporterName</td>
+                        <td>@item.ExportCountryName</td>
+                        <td>@(item.Creation_Date?.ToString("yyyy-MM-dd"))</td>
+                        @switch (selectApproveId)
+                        {
+                            case 1:
+                                <td>@L["Im_List_Details"]</td>
+                                <td>
+                                    @if (item.IsAccepted == false && item.Closed_Request == null)
+                                    {
+                                        @L["Im_List_NotApproved"]
+                                    }
+                                    else if (item.IsAccepted == true && item.Closed_Request == null)
+                                    {
+                                        <span>@L["Im_List_FormCommittee"]<br />@L["Im_List_ApprovedDone"]</span>
+                                    }
+                                    else if (item.IsAccepted == null)
+                                    {
+                                        @L["Im_List_NoAction"]
+                                    }
+                                    else if (item.Closed_Request == true)
+                                    {
+                                        <span>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</span>
+                                    }
+                                    else if (item.Closed_Request == false)
+                                    {
+                                        @item.Name_Final_Result
+                                    }
+                                </td>
+                                <td>@L["Im_List_ShowResults"]</td>
+                                break;
+                            case 2:
+                                <td>@L["Im_List_Details"]</td>
+                                <td>@L["Im_List_NotApproved"]</td>
+                                <td>@L["Im_List_ShowResults"]</td>
+                                break;
+                            case 3:
+                                <td>@L["Im_List_Details"]</td>
+                                <td>@L["Im_List_NoAction"]</td>
+                                <td>@L["Im_List_ShowResults"]</td>
+                                break;
+                            case 4:
+                                <td>@L["Im_List_Details"]</td>
+                                <td>@L["Im_List_Closed"]</td>
+                                <td>@L["Im_List_ShowResults"]</td>
+                                break;
+                            case 5:
+                                <td>@L["Im_List_Details"]</td>
+                                <td>@L["Im_List_FormCommittee"]</td>
+                                <td>@L["Im_List_ShowResults"]</td>
+                                break;
+                            case 6:
+                                <td>@L["Im_List_Details"]</td>
+                                <td><span>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</span></td>
+                                <td>@L["Im_List_ShowResults"]</td>
+                                break;
+                            case 7:
+                                <td>@L["Im_List_Details"]</td>
+                                <td>@item.Name_Final_Result</td>
+                                <td>@L["Im_List_ShowResults"]</td>
+                                break;
+                            default:
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                break;
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="@L["Im_List_Title"]">
+            <ul class="pagination">
+                <li class="page-item @(currentPage <= 1 ? "disabled" : null)">
+                    <a class="page-link" asp-action="Im_CheckRequest_List"
+                       asp-route-dateFrom="@dateFrom" asp-route-dateEnd="@dateEnd"
+                       asp-route-selectApproveId="@selectApproveId" asp-route-finalResultListId="@finalResultListId"
+                       asp-route-CheckRequest_Number="@checkRequestNumber" asp-route-Company_ID="@companyId"
+                       asp-route-page="@(currentPage - 1)">@L["Im_List_Prev"]</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">@currentPage / @totalPages</span>
+                </li>
+                <li class="page-item @(currentPage >= totalPages ? "disabled" : null)">
+                    <a class="page-link" asp-action="Im_CheckRequest_List"
+                       asp-route-dateFrom="@dateFrom" asp-route-dateEnd="@dateEnd"
+                       asp-route-selectApproveId="@selectApproveId" asp-route-finalResultListId="@finalResultListId"
+                       asp-route-CheckRequest_Number="@checkRequestNumber" asp-route-Company_ID="@companyId"
+                       asp-route-page="@(currentPage + 1)">@L["Im_List_Next"]</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}

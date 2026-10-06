@@ -1,0 +1,102 @@
+@using ISCC.Shared.Contracts
+@{
+    ViewData["PageHeading"] = L["Im_List_Title"];
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var companies = (IReadOnlyList<SelectOption>?)ViewBag.Companies ?? Array.Empty<SelectOption>();
+    var finalResults = (IReadOnlyList<SelectOption>?)ViewBag.FinalResults ?? Array.Empty<SelectOption>();
+    var selectApproveId = (int)ViewBag.SelectApproveId;
+    var finalResultListId = (int)ViewBag.FinalResultListId;
+    var checkRequestNumber = (string?)ViewBag.CheckRequestNumber ?? string.Empty;
+    var companyId = (long)ViewBag.CompanyId;
+    var dateFrom = ((DateTime)ViewBag.DateFrom).ToString("yyyy-MM-dd");
+    var dateTo = ((DateTime)ViewBag.DateTo).ToString("yyyy-MM-dd");
+    var statusOpen = selectApproveId is 6 or 7;
+}
+
+@if (ViewBag.Message is string message && !string.IsNullOrWhiteSpace(message))
+{
+    <div class="alert alert-warning" role="alert">@message</div>
+}
+
+<div class="card">
+    <div class="card-body">
+        @*
+            The search form. GET, not POST: the filter values live in the query string of the
+            results URL, exactly as the legacy window.open built them, so a results page can
+            be refreshed, bookmarked, and paged without resubmitting a form.
+        *@
+        <form method="get" action="@Url.Action("Im_CheckRequest_List")" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label" for="dateFrom">@L["Im_List_DateFrom"]</label>
+                <input class="form-control" type="date" id="dateFrom" name="dateFrom" value="@dateFrom" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="dateEnd">@L["Im_List_DateTo"]</label>
+                <input class="form-control" type="date" id="dateEnd" name="dateEnd" value="@dateTo" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="selectApprove">@L["Im_List_RequestStatus"]</label>
+                <select id="selectApprove" name="selectApproveId" class="form-select">
+                    <option value="0" selected="@(selectApproveId == 0 ? "selected" : null)">@L["Im_List_Choose"]</option>
+                    <option value="1" selected="@(selectApproveId == 1 ? "selected" : null)">@L["Im_List_All"]</option>
+                    <option value="5" selected="@(selectApproveId == 5 ? "selected" : null)">@L["Im_List_Approved"]</option>
+                    <option value="2" selected="@(selectApproveId == 2 ? "selected" : null)">@L["Im_List_NotApproved"]</option>
+                    <option value="3" selected="@(selectApproveId == 3 ? "selected" : null)">@L["Im_List_NoAction"]</option>
+                    <option value="4" selected="@(selectApproveId == 4 ? "selected" : null)">@L["Im_List_Closed"]</option>
+                    <option value="6" selected="@(selectApproveId == 6 ? "selected" : null)">@L["Im_List_Working"]</option>
+                    <option value="7" selected="@(selectApproveId == 7 ? "selected" : null)">@L["Im_List_NotWorking"]</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="FinalResultList">@L["Im_List_QuarantineStatus"]</label>
+                <select id="FinalResultList" name="FinalResultListId" class="form-select"
+                        @(statusOpen ? null : "disabled")>
+                    <option value="0" selected="@(finalResultListId == 0 ? "selected" : null)">@L["Im_List_Choose"]</option>
+                    @foreach (var option in finalResults)
+                    {
+                        <option value="@option.Value" selected="@(finalResultListId.ToString() == option.Value ? "selected" : null)">@option.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="Txt_CheckRequest_Number">@L["Im_List_RequestNumber"]</label>
+                <input class="form-control" type="text" id="Txt_CheckRequest_Number"
+                       name="CheckRequest_Number" value="@checkRequestNumber" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="Company_List">@L["Im_List_Company"]</label>
+                <select id="Company_List" name="Company_ID" class="form-select">
+                    <option value="0" selected="@(companyId == 0 ? "selected" : null)">----------</option>
+                    @foreach (var company in companies)
+                    {
+                        <option value="@company.Value" selected="@(companyId.ToString() == company.Value ? "selected" : null)">@company.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">@L["Im_List_Search"]</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@*
+    The only behaviour that needs scripting: the quarantine-status select is meaningful
+    only while a working/not-working request status (6/7) is chosen, so it stays disabled
+    otherwise. Options are server-rendered for the status chosen when this page was drawn;
+    picking 6/7 and searching once reloads the search page with that status's options.
+*@
+<script>
+    (function () {
+        const status = document.getElementById('selectApprove');
+        const finalResult = document.getElementById('FinalResultList');
+        function sync() {
+            finalResult.disabled = !(status.value === '6' || status.value === '7');
+            if (finalResult.disabled) {
+                finalResult.value = '0';
+            }
+        }
+        status.addEventListener('change', sync);
+        sync();
+    })();
+</script>

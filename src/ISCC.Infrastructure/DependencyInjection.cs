@@ -1,10 +1,12 @@
 using ISCC.Application.Auth;
+using ISCC.Application.ImCheckRequests;
 using ISCC.Application.Menu;
 using ISCC.Application.ReferenceData;
 using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Auth;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Data.Privilage;
+using ISCC.Infrastructure.ImCheckRequests;
 using ISCC.Infrastructure.Menu;
 using ISCC.Infrastructure.ReferenceData;
 using ISCC.Infrastructure.Repositories;
@@ -47,6 +49,12 @@ public static class DependencyInjection
         // <Feature>/ with Dtos/ beside it, the EF implementation sits here, and the
         // controller in the host consumes only the contract.
         services.AddScoped<IReferenceDataService, ReferenceDataService>();
+
+        // Import request list (menu 104, Phase 3.4). The first ported screen: a search form
+        // and a paged results list, both backed by Im_CheckRequest_Data. The list query
+        // stays a stored procedure (List_ImCheckRequest_Data) reached through raw SQL; the
+        // two dropdowns look up reference tables through the unit of work.
+        services.AddScoped<IImCheckRequestListService, ImCheckRequestListService>();
 
         // Authentication (Phase 3.2). Spans both databases: PR_User from dbPrivilage,
         // Outlet from PlantQuarantine_New.
