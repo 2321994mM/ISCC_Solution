@@ -1,4 +1,5 @@
 using ISCC.Application.Auth;
+using ISCC.Application.ExCheckRequests;
 using ISCC.Application.ImCheckRequests;
 using ISCC.Application.Menu;
 using ISCC.Application.ReferenceData;
@@ -6,6 +7,7 @@ using ISCC.Domain.Abstraction.IRepository;
 using ISCC.Infrastructure.Auth;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Data.Privilage;
+using ISCC.Infrastructure.ExCheckRequests;
 using ISCC.Infrastructure.ImCheckRequests;
 using ISCC.Infrastructure.Menu;
 using ISCC.Infrastructure.ReferenceData;
@@ -55,6 +57,11 @@ public static class DependencyInjection
         // stays a stored procedure (List_ImCheckRequest_Data) reached through raw SQL; the
         // two dropdowns look up reference tables through the unit of work.
         services.AddScoped<IImCheckRequestListService, ImCheckRequestListService>();
+
+        // Export request list (menu 100). The sibling of menu 104: a request-number search
+        // and a paged results list over the dbo.Ex_List database view, scoped by the user's
+        // examination stations and outlet. No stored procedure and no dropdowns.
+        services.AddScoped<IExCheckRequestListService, ExCheckRequestListService>();
 
         // Authentication (Phase 3.2). Spans both databases: PR_User from dbPrivilage,
         // Outlet from PlantQuarantine_New.

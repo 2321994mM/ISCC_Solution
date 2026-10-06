@@ -258,4 +258,100 @@
   <data name="Im_List_Next" xml:space="preserve">
     <value>التالي</value>
   </data>
+  <data name="Ex_List_Title" xml:space="preserve">
+    <value>طلبات فحص الصادر</value>
+  </data>
+  <data name="Ex_List_SearchByNumber" xml:space="preserve">
+    <value>البحث برقم الطلب</value>
+  </data>
+  <data name="Ex_List_SearchPlaceholder" xml:space="preserve">
+    <value>ابحث برقم الطلب</value>
+  </data>
+  <data name="Ex_List_Search" xml:space="preserve">
+    <value>بحث</value>
+  </data>
+  <data name="Ex_List_Clear" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Ex_List_ColNo" xml:space="preserve">
+    <value>م</value>
+  </data>
+  <data name="Ex_List_ColOutletExamination" xml:space="preserve">
+    <value>منفذ فحص</value>
+  </data>
+  <data name="Ex_List_ColOutletGenshi" xml:space="preserve">
+    <value>منفذ جشني</value>
+  </data>
+  <data name="Ex_List_ColRequestNumber" xml:space="preserve">
+    <value>رقم الطلب</value>
+  </data>
+  <data name="Ex_List_ColRequestData" xml:space="preserve">
+    <value>بيانات الطلب</value>
+  </data>
+  <data name="Ex_List_ColCommittee" xml:space="preserve">
+    <value>تشكيل اللجنه</value>
+  </data>
+  <data name="Ex_List_ColResults" xml:space="preserve">
+    <value>عرض النتائج</value>
+  </data>
+  <data name="Ex_List_OutletPrefix" xml:space="preserve">
+    <value>منفذ :</value>
+  </data>
+  <data name="Ex_List_StationPrefix" xml:space="preserve">
+    <value>محطة :</value>
+  </data>
+  <data name="Ex_List_Fees" xml:space="preserve">
+    <value>الرسوم</value>
+  </data>
+  <data name="Ex_List_EntityType" xml:space="preserve">
+    <value>نوع الجهة:</value>
+  </data>
+  <data name="Ex_List_EntityName" xml:space="preserve">
+    <value>اسم الجهة :</value>
+  </data>
+  <data name="Ex_List_Country" xml:space="preserve">
+    <value>الدولة :</value>
+  </data>
+  <data name="Ex_List_Date" xml:space="preserve">
+    <value>التاريخ :</value>
+  </data>
+  <data name="Ex_List_ApprovedNotPaid" xml:space="preserve">
+    <value>تمت الموافقة على الطلب ولم يتم الدفع</value>
+  </data>
+  <data name="Ex_List_FormCommittee" xml:space="preserve">
+    <value>تشكيل لجنه</value>
+  </data>
+  <data name="Ex_List_RequestRejected" xml:space="preserve">
+    <value>تم رفض الطلب</value>
+  </data>
+  <data name="Ex_List_Paid" xml:space="preserve">
+    <value>تم الدفع</value>
+  </data>
+  <data name="Ex_List_NoPositionTaken" xml:space="preserve">
+    <value>لم يتم اتخاذ موقف</value>
+  </data>
+  <data name="Ex_List_NotPaid" xml:space="preserve">
+    <value>لم يتم الدفع</value>
+  </data>
+  <data name="Ex_List_NoAction" xml:space="preserve">
+    <value>لم يتم اتخاذ اجراء</value>
+  </data>
+  <data name="Ex_List_ShowResults" xml:space="preserve">
+    <value>عرض النتائج</value>
+  </data>
+  <data name="Ex_List_PrintBarcode" xml:space="preserve">
+    <value>طباعة الباركود</value>
+  </data>
+  <data name="Ex_List_RequestStatement" xml:space="preserve">
+    <value>بيان طلب الفحص</value>
+  </data>
+  <data name="Ex_List_NoData" xml:space="preserve">
+    <value>لا توجد بيانات للبحث</value>
+  </data>
+  <data name="Ex_List_Prev" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Ex_List_Next" xml:space="preserve">
+    <value>التالي</value>
+  </data>
 </root>

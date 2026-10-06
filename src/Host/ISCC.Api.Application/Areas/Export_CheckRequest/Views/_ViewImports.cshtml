@@ -1,0 +1,16 @@
+@using ISCC.Api.Application
+@using ISCC.Api.Application.Controllers
+@using ISCC.Application.ExCheckRequests.Dtos
+@using ISCC.Shared.Contracts
+@using ISCC.Shared.Localization
+@using ISCC.Shared.Web
+@using ISCC.Infrastructure.Auth
+@using Microsoft.Extensions.Localization
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@*
+    The Area's own _ViewImports, mirroring the Im_CheckRequests area: same shape as the
+    portal root one, plus the Dtos import needed by the results table's model. The resource
+    file name must stay SharedResource.resx, because IStringLocalizer<T> resolves the file
+    from T's type name.
+*@
+@inject IStringLocalizer<SharedResource> L

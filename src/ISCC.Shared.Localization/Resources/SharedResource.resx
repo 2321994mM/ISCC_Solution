@@ -258,4 +258,100 @@
   <data name="Im_List_Next" xml:space="preserve">
     <value>Next</value>
   </data>
+  <data name="Ex_List_Title" xml:space="preserve">
+    <value>Export inspection requests</value>
+  </data>
+  <data name="Ex_List_SearchByNumber" xml:space="preserve">
+    <value>Search by request number</value>
+  </data>
+  <data name="Ex_List_SearchPlaceholder" xml:space="preserve">
+    <value>Search by request number</value>
+  </data>
+  <data name="Ex_List_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Ex_List_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Ex_List_ColNo" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="Ex_List_ColOutletExamination" xml:space="preserve">
+    <value>Examination outlet</value>
+  </data>
+  <data name="Ex_List_ColOutletGenshi" xml:space="preserve">
+    <value>Genshi outlet</value>
+  </data>
+  <data name="Ex_List_ColRequestNumber" xml:space="preserve">
+    <value>Request number</value>
+  </data>
+  <data name="Ex_List_ColRequestData" xml:space="preserve">
+    <value>Request data</value>
+  </data>
+  <data name="Ex_List_ColCommittee" xml:space="preserve">
+    <value>Form committee</value>
+  </data>
+  <data name="Ex_List_ColResults" xml:space="preserve">
+    <value>Show results</value>
+  </data>
+  <data name="Ex_List_OutletPrefix" xml:space="preserve">
+    <value>Outlet:</value>
+  </data>
+  <data name="Ex_List_StationPrefix" xml:space="preserve">
+    <value>Station:</value>
+  </data>
+  <data name="Ex_List_Fees" xml:space="preserve">
+    <value>Fees</value>
+  </data>
+  <data name="Ex_List_EntityType" xml:space="preserve">
+    <value>Entity type:</value>
+  </data>
+  <data name="Ex_List_EntityName" xml:space="preserve">
+    <value>Entity name:</value>
+  </data>
+  <data name="Ex_List_Country" xml:space="preserve">
+    <value>Country:</value>
+  </data>
+  <data name="Ex_List_Date" xml:space="preserve">
+    <value>Date:</value>
+  </data>
+  <data name="Ex_List_ApprovedNotPaid" xml:space="preserve">
+    <value>Approved, payment pending</value>
+  </data>
+  <data name="Ex_List_FormCommittee" xml:space="preserve">
+    <value>Form committee</value>
+  </data>
+  <data name="Ex_List_RequestRejected" xml:space="preserve">
+    <value>Request rejected</value>
+  </data>
+  <data name="Ex_List_Paid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="Ex_List_NoPositionTaken" xml:space="preserve">
+    <value>No position taken</value>
+  </data>
+  <data name="Ex_List_NotPaid" xml:space="preserve">
+    <value>Not paid</value>
+  </data>
+  <data name="Ex_List_NoAction" xml:space="preserve">
+    <value>No action taken</value>
+  </data>
+  <data name="Ex_List_ShowResults" xml:space="preserve">
+    <value>Show results</value>
+  </data>
+  <data name="Ex_List_PrintBarcode" xml:space="preserve">
+    <value>Print barcode</value>
+  </data>
+  <data name="Ex_List_RequestStatement" xml:space="preserve">
+    <value>Inspection statement</value>
+  </data>
+  <data name="Ex_List_NoData" xml:space="preserve">
+    <value>No data for this search</value>
+  </data>
+  <data name="Ex_List_Prev" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Ex_List_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
 </root>

@@ -1,0 +1,210 @@
+@model ISCC.Application.ExCheckRequests.Dtos.ExCheckRequestListResult
+@using ISCC.Application.ExCheckRequests.Dtos
+@{
+    ViewData["PageHeading"] = L["Ex_List_Title"];
+    var search = (string?)ViewBag.Search ?? string.Empty;
+    var currentPage = Model.PageNumber;
+    var totalCount = (long)ViewBag.TotalResults;
+    var totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling(totalCount / (double)Model.PageSize);
+}
+
+@*
+    The search form, as in the legacy screen: a single request-number field. GET, not POST,
+    so the filter value lives in the query string of the results URL and a page can be
+    refreshed, bookmarked and paged without resubmitting a form.
+*@
+<form method="get" action="@Url.Action("Index")" class="filter-form mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="Search">@L["Ex_List_SearchByNumber"]</label>
+            <input type="text" class="form-control" id="Search" name="Search"
+                   placeholder="@L["Ex_List_SearchPlaceholder"]" value="@search" />
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">@L["Ex_List_Search"]</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">@L["Ex_List_Clear"]</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <span>@L["Ex_List_NoData"]</span>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr class="table-primary">
+                    <th>@L["Ex_List_ColNo"]</th>
+                    <th>@L["Ex_List_ColOutletExamination"]</th>
+                    <th>@L["Ex_List_ColOutletGenshi"]</th>
+                    <th>@L["Ex_List_ColRequestNumber"]</th>
+                    <th>@L["Ex_List_ColRequestData"]</th>
+                    <th>@L["Ex_List_ColCommittee"]</th>
+                    <th>@L["Ex_List_ColResults"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    // The legacy screen numbered rows 1..pageSize on every page.
+                    var rowNo = 0;
+                }
+                @foreach (var item in Model.Items)
+                {
+                    rowNo++;
+                    <tr>
+                        <td>@rowNo</td>
+                        <td>
+                            @if (item.Outlet_Examination_Name != null)
+                            {
+                                <span>@L["Ex_List_OutletPrefix"]@item.Outlet_Examination_Name</span>
+                            }
+                            else if (item.Station_Examination_Name != null)
+                            {
+                                <span>@L["Ex_List_StationPrefix"]@item.Station_Examination_Name</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.Outlet_Genshi_Name != null)
+                            {
+                                <span>@L["Ex_List_OutletPrefix"]@item.Outlet_Genshi_Name</span>
+                            }
+                            else if (item.Station_Genshi_Name != null)
+                            {
+                                <span>@L["Ex_List_StationPrefix"]@item.Station_Genshi_Name</span>
+                            }
+                        </td>
+                        <td style="text-align:center">
+                            <a href='/Export_CheckRequest/EX_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Station_Examination_ID=@item.Station_Examination_ID&Outlet_Examination_ID=@item.Outlet_Examination_ID&Outlet_Genshi_ID=@item.Outlet_Genshi_ID&Station_Genshi_ID=@item.Station_Genshi_ID'>@item.ImCheckRequest_Number</a>
+                            <br /><br /><a href='/Committees/Ex_FeesTotalResult/IndexNew?Ex_CheckRequest_ID=@item.Ex_CheckRequest_ID'>@L["Ex_List_Fees"]</a>
+                        </td>
+                        <td style="width:150px;">
+                            <span>@L["Ex_List_EntityType"] @item.ImporterTypeName</span><br />
+                            <span>@L["Ex_List_EntityName"] @item.ImporterName</span><br />
+                            <span>@L["Ex_List_Country"] @item.ExportCountryName</span><br />
+                            <span>@L["Ex_List_Date"] @item.Creation_Date?.ToString("dd/MM/yyyy")</span>
+                        </td>
+                        @if (item.IsAccepted == true && item.IsPaid == null)
+                        {
+                            <td>
+                                <span>@L["Ex_List_ApprovedNotPaid"]</span><br />
+                                <a href='/Committees/Ex_Committee/Index?requestId=@item.Ex_CheckRequest_ID&Outlet_Examination_ID=@item.Outlet_Examination_ID&Station_Examination_ID=@item.Station_Examination_ID&Outlet_Genshi_ID=@item.Outlet_Genshi_ID&Station_Genshi_ID=@item.Station_Genshi_ID'> @L["Ex_List_FormCommittee"] </a>
+                            </td>
+                        }
+                        else if (item.IsAccepted == false)
+                        {
+                            <td>@L["Ex_List_RequestRejected"]</td>
+                        }
+                        else if (item.IsPaid == true && item.Closed_Request == 0)
+                        {
+                            <td>
+                                <span>@L["Ex_List_Paid"]</span><br />
+                                <a href='/Committees/Ex_Committee/Index?requestId=@item.Ex_CheckRequest_ID&Outlet_Examination_ID=@item.Outlet_Examination_ID&Station_Examination_ID=@item.Station_Examination_ID&Outlet_Genshi_ID=@item.Outlet_Genshi_ID&Station_Genshi_ID=@item.Station_Genshi_ID'>@L["Ex_List_FormCommittee"]</a><br />
+                                @if (!string.IsNullOrWhiteSpace(item.Final_Result_Name))
+                                {
+                                    <span>@item.Final_Result_Name</span>
+                                }
+                                else
+                                {
+                                    <span>@L["Ex_List_NoPositionTaken"]</span>
+                                }
+                            </td>
+                        }
+                        else if (item.IsPaid == true && item.Closed_Request == 0 && item.Final_Result_ID == 0)
+                        {
+                            <td>
+                                <span>@L["Ex_List_Paid"]</span><br />
+                                <a href='/Committees/Ex_Committee/Index?requestId=@item.Ex_CheckRequest_ID&Outlet_Examination_ID=@item.Outlet_Examination_ID&Station_Examination_ID=@item.Station_Examination_ID&Outlet_Genshi_ID=@item.Outlet_Genshi_ID&Station_Genshi_ID=@item.Station_Genshi_ID'>@L["Ex_List_FormCommittee"]</a><br />
+                                @if (!string.IsNullOrWhiteSpace(item.Final_Result_Name))
+                                {
+                                    <span>@item.Final_Result_Name</span>
+                                }
+                                else
+                                {
+                                    <span>@L["Ex_List_NoPositionTaken"]</span>
+                                }
+                            </td>
+                        }
+                        else if (item.IsAccepted == null && item.IsPaid == null && item.Closed_Request == 0 && item.Final_Result_ID == 0)
+                        {
+                            <td>
+                                <span>@L["Ex_List_NotPaid"]</span><br /><br />
+                                @if (!string.IsNullOrWhiteSpace(item.Final_Result_Name))
+                                {
+                                    <span>@L["Ex_List_NoAction"]</span>
+                                }
+                                else
+                                {
+                                    <span>@L["Ex_List_NoPositionTaken"]</span>
+                                }
+                            </td>
+                        }
+                        else if (item.IsPaid == true && item.Closed_Request > 0 && item.Final_Result_ID > 0)
+                        {
+                            <td>
+                                @if (item.Final_Result_ID != 11)
+                                {
+                                    <span>@L["Ex_List_Paid"]</span><br />
+                                    <a href='/Committees/Ex_Committee/Index?requestId=@item.Ex_CheckRequest_ID&Outlet_Examination_ID=@item.Outlet_Examination_ID&Station_Examination_ID=@item.Station_Examination_ID&Outlet_Genshi_ID=@item.Outlet_Genshi_ID&Station_Genshi_ID=@item.Station_Genshi_ID'>@L["Ex_List_FormCommittee"]</a>
+                                }<br />
+                                @if (!string.IsNullOrWhiteSpace(item.Final_Result_Name))
+                                {
+                                    <span>@item.Final_Result_Name</span>
+                                }
+                                else
+                                {
+                                    <span>@L["Ex_List_NoPositionTaken"]</span>
+                                }
+                            </td>
+                        }
+                        else if (item.IsPaid == false)
+                        {
+                            <td>
+                                <span>@L["Ex_List_NotPaid"]</span><br />
+                                <a href='/Committees/Ex_Committee/Index?requestId=@item.Ex_CheckRequest_ID&Outlet_Examination_ID=@item.Outlet_Examination_ID&Station_Examination_ID=@item.Station_Examination_ID&Outlet_Genshi_ID=@item.Outlet_Genshi_ID&Station_Genshi_ID=@item.Station_Genshi_ID'>@L["Ex_List_FormCommittee"]</a>
+                            </td>
+                        }
+                        else
+                        {
+                            <td style='color: red;font-weight: 700;'>
+                                <span>@L["Ex_List_NoAction"]</span>
+                            </td>
+                        }
+                        <td>
+                            <div>
+                                <a href='/Export_CheckRequest_New/EX_Committee_Final_Result/Index?requestId=@item.Ex_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Ex_List_ShowResults"]</a>
+                            </div>
+                            <div>
+                                <a href='/Export_CheckRequest_New/EX_Committee_Final_Result/Print_Barcode?Ex_CheckRequest_ID=@item.Ex_CheckRequest_ID'>@L["Ex_List_PrintBarcode"]</a>
+                            </div>
+                            <div>
+                                <a href='/Export_CheckRequest/EX_CheckRequestCertificate/Index?ExCheckRequest_Number=@item.ImCheckRequest_Number'>@L["Ex_List_RequestStatement"]</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="@L["Ex_List_Title"]">
+            <ul class="pagination">
+                <li class="page-item @(currentPage <= 1 ? "disabled" : null)">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-CurrentPage="@(currentPage - 1)" asp-route-Search="@search">@L["Ex_List_Prev"]</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">@currentPage / @totalPages</span>
+                </li>
+                <li class="page-item @(currentPage >= totalPages ? "disabled" : null)">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-CurrentPage="@(currentPage + 1)" asp-route-Search="@search">@L["Ex_List_Next"]</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
