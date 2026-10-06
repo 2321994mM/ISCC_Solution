@@ -75,7 +75,7 @@ Every number in this document was produced by reading the legacy source, not est
 | 0.3/0.4 | Legacy `EF/`, `ViewModels/`, old `src/` | ⏸ deliberately **kept** as migration reference; not deleted |
 | — | Restructure: `Domain/Abstraction/{IRepository,IService}`, 3 hosts → `src/Host/` | ✅ done (`470b657`) — **still current** |
 | 1.3 | `ICmsContentService` (6 controllers share it) | ⏪ reverted with Phase 2 |
-| 1.5 | Localization wired, language switcher implemented | ⏪ reverted (`CultureController` deleted); `Shared.Localization` project survives |
+| 1.5 | Localization wired, language switcher implemented | ⏪ reverted (`CultureController` deleted); `Shared.Localization` survives — **re-implemented on the 3.3 branch** as `LanguageController` at `/Base/ChangeLanguage` |
 | 2.1 | `HomeController` | ⏪ reverted |
 | 2.2 | `NewsController` (+ fixed 150/200 truncation, fixed NRE → 404) | ⏪ reverted |
 | 2.3 | `OfficesController` | ⏪ reverted |
@@ -298,8 +298,10 @@ cascading drop-down round trip.
 
 Verified live against `PlantQuarantine_New` after the first Phase 2 slice: 9 pages
 return HTTP 200, `/Offices/Index` renders 32 office cards with 50 map embeds,
-`/News/Index?ID=7` renders 12 cards, and `lang`/`dir` follow the negotiated culture
-(`ar`/`rtl` by default, `en`/`ltr` on `Accept-Language: en`).
+`/News/Index?ID=7` renders 12 cards, and `lang`/`dir` follow the resolved culture
+(`ar`/`rtl` by default; `en`/`ltr` via `?culture=en` or the `/Base/ChangeLanguage`
+toggle — `Accept-Language` no longer switches, per the provider order
+Query > Cookie > default `ar`).
 
 Build: **0 errors, 0 warnings**. The AutoMapper advisory `NU1903` is gone.
 
@@ -446,7 +448,7 @@ Port in this order — each is independently verifiable, all anonymous, all read
 | 2.9 | `dashBoardController` | 127 | 13 tables, 4 heavy aggregates |
 | 2.10 | `ErrorController` | 16 | — |
 | 2.11 | `_Layout.cshtml`, `_ViewStart`, `_ViewImports`, 10 active CSS + 12 JS | — | dedupe the 8 Bootstrap versions |
-| 2.12 | Language switcher (legacy has `href=""` — never implemented) | — | new |
+| 2.12 | Language switcher | ✅ done on the 3.3 branch | Legacy `BaseController.ChangeLanguage` → shared `LanguageController`; the `/Base/ChangeLanguage` URL is kept, it flips the `.AspNetCore.Culture` cookie and bounces to a local referer only |
 
 ### Phase 3 — Authentication 🔴 gates Phases 4 & 5
 
