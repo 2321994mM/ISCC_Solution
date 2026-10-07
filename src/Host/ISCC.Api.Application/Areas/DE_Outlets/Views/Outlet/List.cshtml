@@ -1,0 +1,138 @@
+@using ISCC.Shared.Contracts
+@{
+    ViewData["PageHeading"] = L["DE_Outlets_Outlet_Title"];
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var items = (IEnumerable<dynamic>?)ViewBag.Items ?? Enumerable.Empty<dynamic>();
+    var totalCount = (int)ViewBag.TotalCount;
+    var pageNumber = (int)ViewBag.PageNumber;
+    var pageSize = (int)ViewBag.PageSize;
+    var totalPages = (int)ViewBag.TotalPages;
+    var searchAr = (string?)ViewBag.SearchAr ?? string.Empty;
+    var searchEn = (string?)ViewBag.SearchEn ?? string.Empty;
+    var generalAdminId = (byte)ViewBag.GeneralAdminId;
+}
+
+<p>
+    <a class="btn btn-outline-secondary btn-sm" asp-action="Index"
+       asp-route-searchAr="@searchAr" asp-route-searchEn="@searchEn"
+       asp-route-generalAdminId="@generalAdminId">
+        &larr; @L["Common_BackToSearch"]
+    </a>
+</p>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!items.Any())
+{
+    <div class="alert alert-info">@L["Common_NoData"]</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>@L["Common_No"]</th>
+                    <th>@L["DE_Outlets_Outlet_ArName"]</th>
+                    <th>@L["DE_Outlets_Outlet_EnName"]</th>
+                    <th>@L["DE_Outlets_Outlet_GeneralAdmin"]</th>
+                    <th>@L["DE_Outlets_Outlet_IsExport"]</th>
+                    <th>@L["DE_Outlets_Outlet_IsActive"]</th>
+                    <th>@L["DE_Outlets_Outlet_IsDisplay"]</th>
+                    <th>@L["DE_Outlets_Outlet_CentersCount"]</th>
+                    <th>@L["Common_Actions"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var rowNo = (pageNumber - 1) * pageSize;
+                }
+                @foreach (var item in items)
+                {
+                    rowNo++;
+                    <tr>
+                        <td>@rowNo</td>
+                        <td>@item.ArName</td>
+                        <td>@item.EnName</td>
+                        <td>@item.GrAdminName</td>
+                        <td>
+                            @{
+                                var exportText = item.IsExport switch
+                                {
+                                    1 => L["DE_Outlets_ExportType_Export"],
+                                    2 => L["DE_Outlets_ExportType_Import"],
+                                    3 => L["DE_Outlets_ExportType_Both"],
+                                    _ => item.IsExport.ToString()
+                                };
+                            }
+                            @exportText
+                        </td>
+                        <td>
+                            <span class="badge @(item.IsActive ? "bg-success" : "bg-danger")">
+                                @(item.IsActive ? L["Common_Active"] : L["Common_Inactive"])
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge @(item.IsDisplay == 1 ? "bg-success" : "bg-secondary")">
+                                @(item.IsDisplay == 1 ? L["Common_Yes"] : L["Common_No"])
+                            </span>
+                        </td>
+                        <td>@item.CenterCount</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id" title="@L["Common_Edit"]">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a class="btn btn-outline-info" asp-action="Details" asp-route-id="@item.Id" title="@L["Common_Details"]">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form method="post" asp-action="Delete" asp-route-id="@item.Id" style="display:inline;" onsubmit="return confirm('@L["Common_ConfirmDelete"]');">
+                                    <button class="btn btn-outline-danger" type="submit" title="@L["Common_Delete"]">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="@L["DE_Outlets_Outlet_Title"]">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(pageNumber <= 1 ? "disabled" : null)">
+                    <a class="page-link" asp-action="List"
+                       asp-route-searchAr="@searchAr" asp-route-searchEn="@searchEn"
+                       asp-route-generalAdminId="@generalAdminId" asp-route-page="@(pageNumber - 1)"
+                       asp-route-pageSize="@pageSize">@L["Common_Prev"]</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">@pageNumber / @totalPages</span>
+                </li>
+                <li class="page-item @(pageNumber >= totalPages ? "disabled" : null)">
+                    <a class="page-link" asp-action="List"
+                       asp-route-searchAr="@searchAr" asp-route-searchEn="@searchEn"
+                       asp-route-generalAdminId="@generalAdminId" asp-route-page="@(pageNumber + 1)"
+                       asp-route-pageSize="@pageSize">@L["Common_Next"]</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}

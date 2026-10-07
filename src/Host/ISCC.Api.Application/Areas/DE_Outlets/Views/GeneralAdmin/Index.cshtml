@@ -1,0 +1,51 @@
+@using ISCC.Shared.Contracts
+@{
+    ViewData["PageHeading"] = L["DE_Outlets_GeneralAdmin_Title"];
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var searchAr = (string?)ViewBag.SearchAr ?? string.Empty;
+    var searchEn = (string?)ViewBag.SearchEn ?? string.Empty;
+}
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@L["DE_Outlets_GeneralAdmin_Search"]</h5>
+        <a class="btn btn-primary btn-sm" asp-action="Create">@L["Common_AddNew"]</a>
+    </div>
+    <div class="card-body">
+        <form method="get" action="@Url.Action("List")" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="searchAr">@L["DE_Outlets_GeneralAdmin_SearchAr"]</label>
+                <input class="form-control" type="text" id="searchAr" name="searchAr" value="@searchAr" placeholder="@L["DE_Outlets_GeneralAdmin_SearchArPlaceholder"]" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="searchEn">@L["DE_Outlets_GeneralAdmin_SearchEn"]</label>
+                <input class="form-control" type="text" id="searchEn" name="searchEn" value="@searchEn" placeholder="@L["DE_Outlets_GeneralAdmin_SearchEnPlaceholder"]" />
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">@L["Common_Search"]</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">@L["Common_Clear"]</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (ViewBag.TotalCount != null)
+{
+    <partial name="_ResultsTable" />
+}

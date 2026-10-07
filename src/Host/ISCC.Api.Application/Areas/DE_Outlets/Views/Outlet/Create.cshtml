@@ -1,0 +1,175 @@
+@model ISCC.Infrastructure.Data.Generated.Outlet
+@using ISCC.Shared.Contracts
+@{
+    ViewData["PageHeading"] = L["DE_Outlets_Outlet_Create"];
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var generalAdmins = (IReadOnlyList<SelectOption>?)ViewBag.GeneralAdmins ?? Array.Empty<SelectOption>();
+    var contactTypes = (IReadOnlyList<SelectOption>?)ViewBag.ContactTypes ?? Array.Empty<SelectOption>();
+    var portTypes = (IReadOnlyList<SelectOption>?)ViewBag.PortTypes ?? Array.Empty<SelectOption>();
+}
+
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">@L["DE_Outlets_Outlet_Create"]</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" asp-action="Create" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" asp-for="ArName">@L["DE_Outlets_Outlet_ArName"] <span class="text-danger">*</span></label>
+                <input class="form-control" type="text" asp-for="ArName" required />
+                <span class="text-danger" asp-validation-for="ArName"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="EnName">@L["DE_Outlets_Outlet_EnName"] <span class="text-danger">*</span></label>
+                <input class="form-control" type="text" asp-for="EnName" />
+                <span class="text-danger" asp-validation-for="EnName"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="AddressAr">@L["DE_Outlets_Outlet_AddressAr"]</label>
+                <input class="form-control" type="text" asp-for="AddressAr" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="AddressEn">@L["DE_Outlets_Outlet_AddressEn"]</label>
+                <input class="form-control" type="text" asp-for="AddressEn" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="GrAdminId">@L["DE_Outlets_Outlet_GeneralAdmin"] <span class="text-danger">*</span></label>
+                <select class="form-select" asp-for="GrAdminId" required>
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var admin in generalAdmins)
+                    {
+                        <option value="@admin.Value" selected="@(Model.GrAdminId.ToString() == admin.Value ? "selected" : null)">@admin.Text(culture)</option>
+                    }
+                </select>
+                <span class="text-danger" asp-validation-for="GrAdminId"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="SupervisorId">@L["DE_Outlets_Outlet_Supervisor"]</label>
+                <input class="form-control" type="number" asp-for="SupervisorId" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="IdHr">@L["DE_Outlets_Outlet_IdHr"]</label>
+                <input class="form-control" type="number" asp-for="IdHr" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="IsExport">@L["DE_Outlets_Outlet_IsExport"] <span class="text-danger">*</span></label>
+                <select class="form-select" asp-for="IsExport" required>
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var pt in portTypes)
+                    {
+                        <option value="@pt.Value" selected="@(Model.IsExport.ToString() == pt.Value ? "selected" : null)">@pt.Text(culture)</option>
+                    }
+                </select>
+                <span class="text-danger" asp-validation-for="IsExport"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="PortNationalId">@L["DE_Outlets_Outlet_PortNational"]</label>
+                <input class="form-control" type="number" asp-for="PortNationalId" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" asp-for="IsActive">@L["DE_Outlets_Outlet_IsActive"]</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="IsActive" checked="@Model.IsActive" />
+                    <label class="form-check-label" asp-for="IsActive">@L["Common_Active"]</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" asp-for="IsDisplay">@L["DE_Outlets_Outlet_IsDisplay"]</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="IsDisplay" checked="@(Model.IsDisplay == 1)" />
+                    <label class="form-check-label" asp-for="IsDisplay">@L["Common_Display"]</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">@L["DE_Outlets_Outlet_Contacts"]</label>
+                <div id="contactsContainer">
+                    <div class="contact-row row g-2 mb-2">
+                        <div class="col-md-4">
+                            <select class="form-select contact-type" name="Contacts[0].ContactTypeId">
+                                <option value="">@L["Common_SelectContactType"]</option>
+                                @foreach (var ct in contactTypes)
+                                {
+                                    <option value="@ct.Value">@ct.Text(culture)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control contact-value" type="text" name="Contacts[0].Value" placeholder="@L["DE_Outlets_Outlet_ContactValue"]" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-sm remove-contact w-100" disabled>@L["Common_Remove"]</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="addContact">@L["Common_AddContact"] <i class="bi bi-plus"></i></button>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">@L["Common_Save"]</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">@L["Common_Cancel"]</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            let contactIndex = 1;
+            const container = document.getElementById('contactsContainer');
+            const addBtn = document.getElementById('addContact');
+
+            addBtn.addEventListener('click', function () {
+                const div = document.createElement('div');
+                div.className = 'contact-row row g-2 mb-2';
+                div.innerHTML = `
+                    <div class="col-md-4">
+                        <select class="form-select contact-type" name="Contacts[${contactIndex}].ContactTypeId">
+                            <option value="">@L["Common_SelectContactType"]</option>
+                            @foreach (var ct in contactTypes)
+                            {
+                                <text><option value="@ct.Value">@ct.Text(culture)</option></text>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input class="form-control contact-value" type="text" name="Contacts[${contactIndex}].Value" placeholder="@L["DE_Outlets_Outlet_ContactValue"]" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger btn-sm remove-contact w-100">@L["Common_Remove"]</button>
+                    </div>
+                `;
+                container.appendChild(div);
+                updateRemoveButtons();
+                contactIndex++;
+            });
+
+            container.addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-contact') && !e.target.disabled) {
+                    e.target.closest('.contact-row').remove();
+                    updateRemoveButtons();
+                }
+            });
+
+            function updateRemoveButtons() {
+                const rows = container.querySelectorAll('.contact-row');
+                rows.forEach((row, i) => {
+                    const btn = row.querySelector('.remove-contact');
+                    btn.disabled = rows.length === 1;
+                    // Update name attributes to maintain sequential indexing
+                    row.querySelector('select').name = `Contacts[${i}].ContactTypeId`;
+                    row.querySelector('input').name = `Contacts[${i}].Value`;
+                });
+            }
+
+            updateRemoveButtons();
+        })();
+    </script>
+}

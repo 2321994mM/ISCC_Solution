@@ -71,6 +71,7 @@ public static class DependencyInjection
         // Navigation (Phase 3.3). Read-only over dbPrivilage's RBAC tables. Replaces the
         // three legacy menu stored procedures and the per-node Html.Action fan-out that
         // called them, which cost one round trip per menu node on every page view.
+        services.AddMemoryCache();
         services.AddScoped<IMenuService, MenuService>();
 
         return services;

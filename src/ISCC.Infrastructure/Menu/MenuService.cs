@@ -3,6 +3,7 @@ using ISCC.Application.Menu;
 using ISCC.Application.Menu.Dtos;
 using ISCC.Infrastructure.Data.Privilage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ISCC.Infrastructure.Menu;
 
@@ -20,6 +21,10 @@ namespace ISCC.Infrastructure.Menu;
 /// <c>[OutputCache]</c> — so the cost of a page view grew with the size of the user's menu
 /// instead of staying constant.
 /// </para>
+/// <para>
+/// <b>Caching.</b> The menu is per-user but read-only; we cache the assembled tree for
+/// 5 minutes per user/language to eliminate the DB round-trip on every page load.
+/// </para>
 /// </remarks>
 public class MenuService : IMenuService
 {
@@ -34,12 +39,15 @@ public class MenuService : IMenuService
     private const int StaffPortalApplicationCategoryId = 1;
 
     private readonly PrivilageDbContext _context;
+    private readonly IMemoryCache _cache;
 
     /// <summary>Creates the service.</summary>
     /// <param name="context">The <c>dbPrivilage</c> context.</param>
-    public MenuService(PrivilageDbContext context)
+    /// <param name="cache">In-memory cache for assembled menu trees.</param>
+    public MenuService(PrivilageDbContext context, IMemoryCache cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     /// <inheritdoc />
@@ -48,12 +56,13 @@ public class MenuService : IMenuService
     {
         var isArabic = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName
             .StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+        var cacheKey = $"menu:{userId}:{(isArabic ? "ar" : "en")}";
 
-        // Both language columns come back and the choice is made here, not with a CASE in
-        // SQL. That keeps one round trip regardless of language, puts the rule in one
-        // readable place instead of three stored procedures, and fixes a real legacy defect:
-        // GetMenuUser accepted a @Language parameter and never referenced it, so leaf
-        // titles were always Arabic regardless of the user's language.
+        if (_cache.TryGetValue(cacheKey, out IReadOnlyList<MenuNode>? cached))
+        {
+            return cached!;
+        }
+
         var rows = await (
             from prv in _context.PrGroupModuleMenuPrivilages.AsNoTracking()
             join grp in _context.PrGroups.AsNoTracking() on prv.PrGroupId equals grp.Id
@@ -107,7 +116,11 @@ public class MenuService : IMenuService
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return BuildTree(rows);
+        var tree = BuildTree(rows);
+
+        _cache.Set(cacheKey, tree, TimeSpan.FromMinutes(5));
+
+        return tree;
     }
 
     /// <summary>
