@@ -1,0 +1,11 @@
+@using ISCC.Api.Application
+@using ISCC.Shared.Contracts
+@using ISCC.Shared.Localization
+@using ISCC.Shared.Web
+@using Microsoft.Extensions.Localization
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@*
+    The Area's own _ViewImports. Same shape as the DE_Outlets one.
+    The resource file name must stay SharedResource.resx, because IStringLocalizer<T> resolves the file from T's type name.
+*@
+@inject IStringLocalizer<SharedResource> L

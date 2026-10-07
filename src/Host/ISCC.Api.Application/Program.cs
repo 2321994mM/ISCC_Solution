@@ -2,9 +2,17 @@ using ISCC.Application;
 using ISCC.Infrastructure;
 using ISCC.Shared.Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Constraints;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register custom route constraint for 'byte'
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.ConstraintMap.Add("byte", typeof(IntRouteConstraint));
+});
 
 // Local, git-ignored overrides (real connection strings etc.).
 if (File.Exists("appsettings.Local.json"))

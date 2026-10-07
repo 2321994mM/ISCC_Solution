@@ -354,4 +354,346 @@
   <data name="Ex_List_Next" xml:space="preserve">
     <value>التالي</value>
   </data>
+  <data name="Common_Actions" xml:space="preserve">
+    <value>إجراءات</value>
+  </data>
+  <data name="Common_Active" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="Common_AddContact" xml:space="preserve">
+    <value>إضافة اتصال</value>
+  </data>
+  <data name="Common_AddNew" xml:space="preserve">
+    <value>إضافة جديد</value>
+  </data>
+  <data name="Common_All" xml:space="preserve">
+    <value>الكل</value>
+  </data>
+  <data name="Common_BackToSearch" xml:space="preserve">
+    <value>العودة للبحث</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Common_Clear" xml:space="preserve">
+    <value>مسح</value>
+  </data>
+  <data name="Common_ConfirmDelete" xml:space="preserve">
+    <value>هل أنت متأكد من الحذف؟</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Common_DeletedSuccessfully" xml:space="preserve">
+    <value>تم الحذف بنجاح</value>
+  </data>
+  <data name="Common_Details" xml:space="preserve">
+    <value>تفاصيل</value>
+  </data>
+  <data name="Common_Display" xml:space="preserve">
+    <value>عرض</value>
+  </data>
+  <data name="Common_DuplicateData" xml:space="preserve">
+    <value>هذا السجل موجود من قبل</value>
+  </data>
+  <data name="Common_Edit" xml:space="preserve">
+    <value>تعديل</value>
+  </data>
+  <data name="Common_ErrorOccurred" xml:space="preserve">
+    <value>حدث خطأ...حاول مرة اخرى!</value>
+  </data>
+  <data name="Common_ExportExcel" xml:space="preserve">
+    <value>تصدير Excel</value>
+  </data>
+  <data name="Common_Inactive" xml:space="preserve">
+    <value>غير فعال</value>
+  </data>
+  <data name="Common_Next" xml:space="preserve">
+    <value>التالى</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>لا</value>
+  </data>
+  <data name="Common_NoData" xml:space="preserve">
+    <value>لا توجد بيانات</value>
+  </data>
+  <data name="Common_NotFound" xml:space="preserve">
+    <value>هذا السجل غير موجود!</value>
+  </data>
+  <data name="Common_Prev" xml:space="preserve">
+    <value>السابق</value>
+  </data>
+  <data name="Common_RelatedData" xml:space="preserve">
+    <value>لايمكن الحذف للإرتباط ببيانات اخرى</value>
+  </data>
+  <data name="Common_Remove" xml:space="preserve">
+    <value>إزالة</value>
+  </data>
+  <data name="Common_RequiredData" xml:space="preserve">
+    <value>تأكد من البيانات المطلوبة</value>
+  </data>
+  <data name="Common_Save" xml:space="preserve">
+    <value>حفظ</value>
+  </data>
+  <data name="Common_SavedSuccessfully" xml:space="preserve">
+    <value>تم الحفظ بنجاح</value>
+  </data>
+  <data name="Common_Search" xml:space="preserve">
+    <value>بحث</value>
+  </data>
+  <data name="Common_Select" xml:space="preserve">
+    <value>اختر</value>
+  </data>
+  <data name="Common_SelectContactType" xml:space="preserve">
+    <value>اختر نوع الاتصال</value>
+  </data>
+  <data name="Common_Update" xml:space="preserve">
+    <value>تحديث</value>
+  </data>
+  <data name="Common_UpdatedSuccessfully" xml:space="preserve">
+    <value>تم التحديث بنجاح</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>نعم</value>
+  </data>
+  <data name="DE_Outlets_ExportType_Both" xml:space="preserve">
+    <value>تصدير واستيراد</value>
+  </data>
+  <data name="DE_Outlets_ExportType_Export" xml:space="preserve">
+    <value>تصدير</value>
+  </data>
+  <data name="DE_Outlets_ExportType_Import" xml:space="preserve">
+    <value>استيراد</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_AddressAr" xml:space="preserve">
+    <value>العنوان بالعربية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_AddressEn" xml:space="preserve">
+    <value>العنوان بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Admin" xml:space="preserve">
+    <value>المسؤول</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_ArName" xml:space="preserve">
+    <value>الاسم بالعربية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_ContactCount" xml:space="preserve">
+    <value>عدد الاتصالات</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Contacts" xml:space="preserve">
+    <value>الاتصالات</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_ContactValue" xml:space="preserve">
+    <value>قيمة الاتصال</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Create" xml:space="preserve">
+    <value>إضافة جهة عامة</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Edit" xml:space="preserve">
+    <value>تعديل جهة عامة</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_EnName" xml:space="preserve">
+    <value>الاسم بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Search" xml:space="preserve">
+    <value>بحث فى الجهات العامة</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchAr" xml:space="preserve">
+    <value>الاسم بالعربية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchArPlaceholder" xml:space="preserve">
+    <value>أدخل الاسم بالعربية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchEn" xml:space="preserve">
+    <value>الاسم بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchEnPlaceholder" xml:space="preserve">
+    <value>أدخل الاسم بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Title" xml:space="preserve">
+    <value>الجهات العامة</value>
+  </data>
+  <data name="DE_Outlets_Outlet_AddressAr" xml:space="preserve">
+    <value>العنوان بالعربية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_AddressEn" xml:space="preserve">
+    <value>العنوان بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ArName" xml:space="preserve">
+    <value>الاسم بالعربية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_CentersCount" xml:space="preserve">
+    <value>عدد المراكز</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Contacts" xml:space="preserve">
+    <value>الاتصالات</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ContactValue" xml:space="preserve">
+    <value>قيمة الاتصال</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Create" xml:space="preserve">
+    <value>إضافة منفذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Edit" xml:space="preserve">
+    <value>تعديل منفذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_EnName" xml:space="preserve">
+    <value>الاسم بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_GeneralAdmin" xml:space="preserve">
+    <value>الجهة العامة</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IdHr" xml:space="preserve">
+    <value>رقم HR</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IsActive" xml:space="preserve">
+    <value>فعال</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IsDisplay" xml:space="preserve">
+    <value>معروض</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IsExport" xml:space="preserve">
+    <value>نوع التصدير</value>
+  </data>
+  <data name="DE_Outlets_Outlet_PortNational" xml:space="preserve">
+    <value>الجنسية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Search" xml:space="preserve">
+    <value>بحث فى المنافذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchAr" xml:space="preserve">
+    <value>الاسم بالعربية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchArPlaceholder" xml:space="preserve">
+    <value>أدخل اسم المنفذ بالعربية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchEn" xml:space="preserve">
+    <value>الاسم بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchEnPlaceholder" xml:space="preserve">
+    <value>أدخل اسم المنفذ بالإنجليزية</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Supervisor" xml:space="preserve">
+    <value>المشرف</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Title" xml:space="preserve">
+    <value>المنافذ</value>
+  </data>
+  <data name="DE_Item_Data_Item_Title" xml:space="preserve">
+    <value>كائنات حية وغير حية</value>
+  </data>
+  <data name="DE_Item_Data_Item_Search" xml:space="preserve">
+    <value>بحث فى الأصناف</value>
+  </data>
+  <data name="DE_Item_Data_Item_SearchArPlaceholder" xml:space="preserve">
+    <value>أدخل الاسم بالعربية</value>
+  </data>
+  <data name="DE_Item_Data_Item_SearchEnPlaceholder" xml:space="preserve">
+    <value>أدخل الاسم بالإنجليزية</value>
+  </data>
+  <data name="DE_Item_Data_Item_Create" xml:space="preserve">
+    <value>إضافة صنف</value>
+  </data>
+  <data name="DE_Item_Data_Item_Edit" xml:space="preserve">
+    <value>تعديل صنف</value>
+  </data>
+  <data name="DE_Item_Data_Item_ItemType" xml:space="preserve">
+    <value>انواع الاصناف</value>
+  </data>
+  <data name="DE_Item_Data_Item_MainClassification" xml:space="preserve">
+    <value>تصنيف الأساسى</value>
+  </data>
+  <data name="DE_Item_Data_Item_SecondaryClassification" xml:space="preserve">
+    <value>التصنيف الثانوى</value>
+  </data>
+  <data name="DE_Item_Data_Item_Group" xml:space="preserve">
+    <value>المجموعة</value>
+  </data>
+  <data name="DE_Item_Data_Item_Kingdom" xml:space="preserve">
+    <value>المملكة</value>
+  </data>
+  <data name="DE_Item_Data_Item_Phylum" xml:space="preserve">
+    <value>الشعبة</value>
+  </data>
+  <data name="DE_Item_Data_Item_Order" xml:space="preserve">
+    <value>الرتبة</value>
+  </data>
+  <data name="DE_Item_Data_Item_Family" xml:space="preserve">
+    <value>العائلة</value>
+  </data>
+  <data name="DE_Item_Data_Item_IsKnown" xml:space="preserve">
+    <value>معروف</value>
+  </data>
+  <data name="DE_Item_Data_Item_ArName" xml:space="preserve">
+    <value>الاسم بالعربية</value>
+  </data>
+  <data name="DE_Item_Data_Item_EnName" xml:space="preserve">
+    <value>الاسم بالإنجليزية</value>
+  </data>
+  <data name="DE_Item_Data_Item_ScientificName" xml:space="preserve">
+    <value>الاسم العلمى</value>
+  </data>
+  <data name="DE_Item_Data_Item_ItemCode" xml:space="preserve">
+    <value>كود الصنف</value>
+  </data>
+  <data name="DE_Item_Data_Item_DescriptionAr" xml:space="preserve">
+    <value>الوصف بالعربية</value>
+  </data>
+  <data name="DE_Item_Data_Item_DescriptionEn" xml:space="preserve">
+    <value>الوصف بالإنجليزية</value>
+  </data>
+  <data name="DE_Item_Data_Item_Image" xml:space="preserve">
+    <value>الصورة</value>
+  </data>
+  <data name="DE_Item_Data_Item_DownloadFile" xml:space="preserve">
+    <value>تحميل الملف</value>
+  </data>
+  <data name="DE_Item_Data_Item_PlantInEgypt" xml:space="preserve">
+    <value>يزرع فى مصر</value>
+  </data>
+  <data name="DE_Item_Data_Item_ForbiddenStatus" xml:space="preserve">
+    <value>حالة المنع</value>
+  </data>
+  <data name="DE_Item_Data_Item_ForbiddenReason" xml:space="preserve">
+    <value>سبب المنع</value>
+  </data>
+  <data name="DE_Item_Data_Item_Allowed" xml:space="preserve">
+    <value>مسموح</value>
+  </data>
+  <data name="DE_Item_Data_Item_NotAllowed" xml:space="preserve">
+    <value>ممنوع</value>
+  </data>
+  <data name="DE_Item_Data_Item_Agriculture17" xml:space="preserve">
+    <value>زراعة 17</value>
+  </data>
+  <data name="DE_Item_Data_Item_PlantPart" xml:space="preserve">
+    <value>أجزاء النبات</value>
+  </data>
+  <data name="DE_Item_Data_Item_PartsCount" xml:space="preserve">
+    <value>عدد الأجزاء</value>
+  </data>
+  <data name="DE_Item_Data_Item_Parts" xml:space="preserve">
+    <value>أجزاء النبات</value>
+  </data>
+  <data name="DE_Item_Data_Item_AddPart" xml:space="preserve">
+    <value>إضافة جزء</value>
+  </data>
+  <data name="DE_Item_Data_Item_EditPart" xml:space="preserve">
+    <value>تعديل جزء</value>
+  </data>
+  <data name="DE_Item_Data_Item_SubPartType" xml:space="preserve">
+    <value>نوع الجزء</value>
+  </data>
+  <data name="DE_Item_Data_Item_SubPart" xml:space="preserve">
+    <value>الجزء</value>
+  </data>
+  <data name="DE_Item_Data_Item_InvalidImage" xml:space="preserve">
+    <value>يجب أن يكون الملف صورة بصيغة jpg أو jpeg أو png</value>
+  </data>
+  <data name="DE_Item_Data_Item_ExcelWorksheet" xml:space="preserve">
+    <value>الأصناف</value>
+  </data>
 </root>

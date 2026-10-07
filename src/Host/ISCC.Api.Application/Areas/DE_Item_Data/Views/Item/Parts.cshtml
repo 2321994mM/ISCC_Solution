@@ -1,0 +1,191 @@
+@using ISCC.Shared.Contracts
+@{
+    ViewData["PageHeading"] = L["DE_Item_Data_Item_Parts"];
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var itemInfo = ViewBag.ItemInfo; // { Id, NameAr, NameEn, ItemTypeId }
+    var itemId = (long)itemInfo.Id;
+    var parts = (IEnumerable<dynamic>?)ViewBag.Parts ?? Enumerable.Empty<dynamic>();
+    var partTypes = (IReadOnlyList<SelectOption>?)ViewBag.PartTypes ?? Array.Empty<SelectOption>();
+    var subParts = (IReadOnlyList<SelectListItem>?)ViewBag.SubParts ?? Array.Empty<SelectListItem>();
+    var editPartId = (long?)ViewBag.EditPartId;
+    var editSubPartTypeId = (string?)ViewBag.EditSubPartTypeId;
+    var editSubPartId = (string?)ViewBag.EditSubPartId;
+    var editAllowed = (bool?)ViewBag.EditAllowed ?? true; // legacy default: checked
+    var editing = editPartId.HasValue;
+    // Filter carried from the list.
+    var searchAr = (string?)ViewBag.SearchAr ?? string.Empty;
+    var searchEn = (string?)ViewBag.SearchEn ?? string.Empty;
+    var itemTypeId = (byte?)ViewBag.ItemTypeId;
+    var groupId = (int?)ViewBag.GroupId;
+    var familyId = (int?)ViewBag.FamilyId;
+    var partUrl = editing
+        ? Url.Action("EditPart", new { id = editPartId.GetValueOrDefault() })
+        : Url.Action("AddPart", new { itemId });
+}
+
+<p>
+    <a class="btn btn-outline-secondary btn-sm" asp-action="List"
+       asp-route-searchAr="@searchAr" asp-route-searchEn="@searchEn"
+       asp-route-itemTypeId="@itemTypeId" asp-route-groupId="@groupId" asp-route-familyId="@familyId">
+        &larr; @L["Common_BackToSearch"]
+    </a>
+</p>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0">@L["DE_Item_Data_Item_Parts"] - @itemInfo.NameAr (@itemInfo.NameEn)</h5>
+    </div>
+    <div class="card-body">
+        @if (!parts.Any())
+        {
+            <div class="alert alert-info mb-0">@L["Common_NoData"]</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@L["DE_Item_Data_Item_SubPartType"]</th>
+                            <th>@L["DE_Item_Data_Item_SubPart"]</th>
+                            <th>@L["DE_Item_Data_Item_Allowed"]</th>
+                            <th>@L["Common_Details"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var part in parts)
+                        {
+                            <tr>
+                                <td>@part.Id</td>
+                                <td>@(part.SubPartTypeName ?? "-")</td>
+                                <td>@part.SubPartName</td>
+                                <td>
+                                    @if (part.IsAllowed)
+                                    {
+                                        <span class="badge bg-success">@L["DE_Item_Data_Item_Allowed"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@L["DE_Item_Data_Item_NotAllowed"]</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <a class="btn btn-outline-primary btn-sm"
+                                           asp-action="Parts" asp-route-itemId="@itemId" asp-route-partId="@part.Id"
+                                           asp-route-fAr="@searchAr" asp-route-fEn="@searchEn"
+                                           asp-route-fType="@itemTypeId" asp-route-fGroup="@groupId" asp-route-fFamily="@familyId">
+                                            @L["Common_Edit"]
+                                        </a>
+                                        <form method="post" asp-action="DeletePart" asp-route-id="@part.Id"
+                                              style="display:inline;"
+                                              onsubmit="return confirm('@L["Common_ConfirmDelete"]');">
+                                            <input type="hidden" name="itemId" value="@itemId" />
+                                            <input type="hidden" name="fAr" value="@searchAr" />
+                                            <input type="hidden" name="fEn" value="@searchEn" />
+                                            <input type="hidden" name="fType" value="@itemTypeId" />
+                                            <input type="hidden" name="fGroup" value="@groupId" />
+                                            <input type="hidden" name="fFamily" value="@familyId" />
+                                            <button class="btn btn-outline-danger btn-sm" type="submit">@L["Common_Delete"]</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">@(editing ? L["DE_Item_Data_Item_EditPart"] : L["DE_Item_Data_Item_AddPart"])</h5>
+    </div>
+    <div class="card-body">
+        @* One form for both modes: a route-less edit URL would drop the {id}, so the action
+           URL is built explicitly and the antiforgery token is emitted by hand. *@
+        <form method="post" action="@partUrl" class="row g-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="itemId" value="@itemId" />
+            @if (editing)
+            {
+                <input type="hidden" name="id" value="@editPartId" />
+            }
+            <input type="hidden" name="fAr" value="@searchAr" />
+            <input type="hidden" name="fEn" value="@searchEn" />
+            <input type="hidden" name="fType" value="@itemTypeId" />
+            <input type="hidden" name="fGroup" value="@groupId" />
+            <input type="hidden" name="fFamily" value="@familyId" />
+
+            <div class="col-md-4">
+                <label class="form-label" for="SubPartTypeId">@L["DE_Item_Data_Item_SubPartType"] <span class="text-danger">*</span></label>
+                <select class="form-select" id="SubPartTypeId" name="subPartTypeId" required>
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var type in partTypes)
+                    {
+                        <option value="@type.Value" selected="@(editSubPartTypeId == type.Value ? "selected" : null)">@type.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="SubPartId">@L["DE_Item_Data_Item_SubPart"] <span class="text-danger">*</span></label>
+                <select class="iscc-select iscc-select2" id="SubPartId" name="subPartId" required
+                        data-iscc-select2="true"
+                        data-placeholder="@L["Common_Select"]" data-allow-clear="true"
+                        data-ajax-url="@Url.Action("SubPartOptions", new { itemTypeId = itemInfo.ItemTypeId })"
+                        data-ajax-param="subPartTypeId"
+                        data-depends-on="SubPartTypeId">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var sub in subParts)
+                    {
+                        <option value="@sub.Value" selected="@(editSubPartId == sub.Value ? "selected" : null)">@sub.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="IsAllowed">@L["DE_Item_Data_Item_Allowed"]</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="IsAllowed" name="isAllowed" value="true" checked="@editAllowed" />
+                    <label class="form-check-label" for="IsAllowed">@L["DE_Item_Data_Item_PlantPart"]</label>
+                </div>
+            </div>
+            <div class="col-md-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@L["Common_Save"]</button>
+                @if (editing)
+                {
+                    <a class="btn btn-outline-secondary"
+                       asp-action="Parts" asp-route-itemId="@itemId"
+                       asp-route-fAr="@searchAr" asp-route-fEn="@searchEn"
+                       asp-route-fType="@itemTypeId" asp-route-fGroup="@groupId" asp-route-fFamily="@familyId">
+                        @L["Common_Cancel"]
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="/_shared/lib/select2/css/select2.min.css" />
+}
+@section Scripts {
+    <iscc-scripts jquery="true" select2="true" components="false" />
+}

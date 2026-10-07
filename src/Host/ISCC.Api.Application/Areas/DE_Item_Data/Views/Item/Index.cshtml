@@ -1,0 +1,14 @@
+@{
+    ViewData["PageHeading"] = L["DE_Item_Data_Item_Title"];
+}
+
+@* Landing page for the menu entry DE_Item_Data/Item/Index - the search card only.
+   Results render on List, so there is no Index -> List -> Index redirect loop. *@
+<partial name="_SearchForm" />
+
+@section Styles {
+    <link rel="stylesheet" href="/_shared/lib/select2/css/select2.min.css" />
+}
+@section Scripts {
+    <iscc-scripts jquery="true" select2="true" components="false" />
+}

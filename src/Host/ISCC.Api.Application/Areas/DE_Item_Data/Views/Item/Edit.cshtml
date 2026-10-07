@@ -1,0 +1,237 @@
+@model ISCC.Infrastructure.Data.Generated.Item
+@using ISCC.Shared.Contracts
+@{
+    ViewData["PageHeading"] = L["DE_Item_Data_Item_Edit"];
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var itemTypes = (IReadOnlyList<SelectOption>?)ViewBag.ItemTypes ?? Array.Empty<SelectOption>();
+    var kingdoms = (IReadOnlyList<SelectOption>?)ViewBag.Kingdoms ?? Array.Empty<SelectOption>();
+    var mainClasses = (IReadOnlyList<SelectOption>?)ViewBag.MainClasses ?? Array.Empty<SelectOption>();
+    var secClasses = (IReadOnlyList<SelectOption>?)ViewBag.SecClasses ?? Array.Empty<SelectOption>();
+    var phylums = (IReadOnlyList<SelectOption>?)ViewBag.Phylums ?? Array.Empty<SelectOption>();
+    var orders = (IReadOnlyList<SelectOption>?)ViewBag.Orders ?? Array.Empty<SelectOption>();
+    var groups = (IReadOnlyList<SelectListItem>?)ViewBag.Groups ?? Array.Empty<SelectListItem>();
+    var families = (IReadOnlyList<SelectListItem>?)ViewBag.Families ?? Array.Empty<SelectListItem>();
+    var mainClassId = (string?)ViewBag.MainClassId;
+    var secClassId = (string?)ViewBag.SecClassId;
+    var phylumId = (string?)ViewBag.PhylumId;
+    var orderId = (string?)ViewBag.OrderId;
+    var kingdomId = (string?)ViewBag.KingdomId;
+    var hasPicture = (bool?)ViewBag.HasPicture == true;
+    // Filter the user came from - carried back on save so the redirect lands on List.
+    var fAr = (string?)ViewBag.SearchAr;
+    var fEn = (string?)ViewBag.SearchEn;
+    var fType = (byte?)ViewBag.ItemTypeId;
+    var fGroup = (int?)ViewBag.GroupId;
+    var fFamily = (int?)ViewBag.FamilyId;
+}
+
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">@L["DE_Item_Data_Item_Edit"]</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" asp-action="Edit" asp-route-id="@Model.Id" enctype="multipart/form-data" class="row g-3">
+            @* The original filter, posted back so save/cancel return to the same list view. *@
+            <input type="hidden" name="fAr" value="@fAr" />
+            <input type="hidden" name="fEn" value="@fEn" />
+            <input type="hidden" name="fType" value="@fType" />
+            <input type="hidden" name="fGroup" value="@fGroup" />
+            <input type="hidden" name="fFamily" value="@fFamily" />
+
+            <div class="col-12">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            </div>
+
+            @* Chain A: type -> main -> secondary -> group. Only ItemTypeId and GroupId are
+               stored; the middle two exist purely to walk the chain. *@
+            <div class="col-md-3">
+                <label class="form-label" asp-for="ItemTypeId">@L["DE_Item_Data_Item_ItemType"] <span class="text-danger">*</span></label>
+                <select class="form-select" asp-for="ItemTypeId" required>
+                    <option value="">@L["Common_Select"]</option>
+                    @* LoadCascadeAsync keeps type 2 in the list when it is this item's own type,
+                       so saving here can never orphan the item back to an invisible type. *@
+                    @foreach (var type in itemTypes)
+                    {
+                        <option value="@type.Value" selected="@(Model.ItemTypeId?.ToString() == type.Value ? "selected" : null)">@type.Text(culture)</option>
+                    }
+                </select>
+                <span class="text-danger" asp-validation-for="ItemTypeId"></span>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="MainClassId">@L["DE_Item_Data_Item_MainClassification"]</label>
+                <select class="form-select" id="MainClassId" name="MainClassId">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var main in mainClasses)
+                    {
+                        <option value="@main.Value" selected="@(mainClassId == main.Value ? "selected" : null)">@main.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="SecClassId">@L["DE_Item_Data_Item_SecondaryClassification"]</label>
+                <select class="form-select" id="SecClassId" name="SecClassId">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var sec in secClasses)
+                    {
+                        <option value="@sec.Value" selected="@(secClassId == sec.Value ? "selected" : null)">@sec.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <iscc-select2 asp-for="GroupId" asp-items="groups"
+                              label="@L["DE_Item_Data_Item_Group"]"
+                              placeholder="@L["Common_Select"]"
+                              allow-clear="true"
+                              ajax-url="@Url.Action("GroupOptions")"
+                              ajax-param="secClassId"
+                              depends-on="SecClassId"
+                              required="true" />
+                <span class="text-danger" asp-validation-for="GroupId"></span>
+            </div>
+
+            @* Chain B: kingdom -> phylum -> order -> family. Same idea; FamilyId is the FK. *@
+            <div class="col-md-3">
+                <label class="form-label" for="KingdomId">@L["DE_Item_Data_Item_Kingdom"]</label>
+                <select class="form-select" id="KingdomId" name="KingdomId">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var kingdom in kingdoms)
+                    {
+                        <option value="@kingdom.Value" selected="@(kingdomId == kingdom.Value ? "selected" : null)">@kingdom.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="PhylumId">@L["DE_Item_Data_Item_Phylum"]</label>
+                <select class="form-select" id="PhylumId" name="PhylumId">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var phylum in phylums)
+                    {
+                        <option value="@phylum.Value" selected="@(phylumId == phylum.Value ? "selected" : null)">@phylum.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="OrderId">@L["DE_Item_Data_Item_Order"]</label>
+                <select class="form-select" id="OrderId" name="OrderId">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var order in orders)
+                    {
+                        <option value="@order.Value" selected="@(orderId == order.Value ? "selected" : null)">@order.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <iscc-select2 asp-for="FamilyId" asp-items="families"
+                              label="@L["DE_Item_Data_Item_Family"]"
+                              placeholder="@L["Common_Select"]"
+                              allow-clear="true"
+                              ajax-url="@Url.Action("FamilyOptions")"
+                              ajax-param="orderId"
+                              depends-on="OrderId"
+                              required="true" />
+                <span class="text-danger" asp-validation-for="FamilyId"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label" asp-for="NameAr">@L["DE_Item_Data_Item_ArName"] <span class="text-danger">*</span></label>
+                <input class="form-control" type="text" asp-for="NameAr" required />
+                <span class="text-danger" asp-validation-for="NameAr"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="NameEn">@L["DE_Item_Data_Item_EnName"] <span class="text-danger">*</span></label>
+                <input class="form-control" type="text" asp-for="NameEn" required />
+                <span class="text-danger" asp-validation-for="NameEn"></span>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" asp-for="ScientificName">@L["DE_Item_Data_Item_ScientificName"]</label>
+                <input class="form-control" type="text" asp-for="ScientificName" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label" asp-for="ItemCode">@L["DE_Item_Data_Item_ItemCode"]</label>
+                <input class="form-control" type="text" asp-for="ItemCode" maxlength="3" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" asp-for="IsPlantInEgypt">@L["DE_Item_Data_Item_PlantInEgypt"]</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="IsPlantInEgypt" checked="@Model.IsPlantInEgypt" />
+                    <label class="form-check-label" asp-for="IsPlantInEgypt">@L["Common_Yes"]</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" asp-for="IsKnownItem">@L["DE_Item_Data_Item_IsKnown"]</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="IsKnownItem" checked="@Model.IsKnownItem" />
+                    <label class="form-check-label" asp-for="IsKnownItem">@L["Common_Yes"]</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" asp-for="IsForbidden">@L["DE_Item_Data_Item_ForbiddenStatus"]</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="IsForbidden" checked="@Model.IsForbidden" />
+                    <label class="form-check-label" asp-for="IsForbidden">@L["DE_Item_Data_Item_NotAllowed"]</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" asp-for="Agriculture17">@L["DE_Item_Data_Item_Agriculture17"]</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="Agriculture17" checked="@Model.Agriculture17" />
+                    <label class="form-check-label" asp-for="Agriculture17">@L["Common_Yes"]</label>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label" asp-for="DescreptionAr">@L["DE_Item_Data_Item_DescriptionAr"] <span class="text-danger">*</span></label>
+                <textarea class="form-control" asp-for="DescreptionAr" rows="3" required></textarea>
+                <span class="text-danger" asp-validation-for="DescreptionAr"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="DescreptionEn">@L["DE_Item_Data_Item_DescriptionEn"] <span class="text-danger">*</span></label>
+                <textarea class="form-control" asp-for="DescreptionEn" rows="3" required></textarea>
+                <span class="text-danger" asp-validation-for="DescreptionEn"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label" for="Picture1">@L["DE_Item_Data_Item_Image"]</label>
+                @if (hasPicture)
+                {
+                    <div class="mb-1">
+                        <a href="@Url.Action("GetImage", new { path1 = Model.Picture })" target="_blank">@L["DE_Item_Data_Item_DownloadFile"]</a>
+                    </div>
+                }
+                <input class="form-control" type="file" id="Picture1" name="Picture1" accept=".jpg,.jpeg,.png" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="ForbiddenReason">@L["DE_Item_Data_Item_ForbiddenReason"]</label>
+                <textarea class="form-control" asp-for="ForbiddenReason" rows="2"></textarea>
+                <span class="text-danger" asp-validation-for="ForbiddenReason"></span>
+            </div>
+
+            <div class="col-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@L["Common_Save"]</button>
+                <a class="btn btn-outline-secondary"
+                   asp-action="List"
+                   asp-route-searchAr="@fAr" asp-route-searchEn="@fEn"
+                   asp-route-itemTypeId="@fType" asp-route-groupId="@fGroup" asp-route-familyId="@fFamily">
+                    @L["Common_Cancel"]
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="/_shared/lib/select2/css/select2.min.css" />
+}
+@section Scripts {
+    <iscc-scripts jquery="true" select2="true" components="false" />
+    <partial name="_CascadeScripts" />
+}

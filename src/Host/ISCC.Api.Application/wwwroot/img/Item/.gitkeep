@@ -1,0 +1,3 @@
+# Uploaded item pictures land here (Item.Picture stores "/img/Item/<file>").
+# The folder must exist before the host starts, otherwise IWebHostEnvironment.WebRootPath
+# is null and UseStaticFiles has no web root to serve from.

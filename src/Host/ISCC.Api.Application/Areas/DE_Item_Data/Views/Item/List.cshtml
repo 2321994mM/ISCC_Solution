@@ -1,0 +1,267 @@
+@using ISCC.Shared.Contracts
+@{
+    ViewData["PageHeading"] = L["DE_Item_Data_Item_Title"];
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var items = (IEnumerable<dynamic>?)ViewBag.Items ?? Enumerable.Empty<dynamic>();
+    var totalCount = (int)ViewBag.TotalCount;
+    var pageNumber = (int)ViewBag.PageNumber;
+    var pageSize = (int)ViewBag.PageSize;
+    var totalPages = (int)ViewBag.TotalPages;
+    var searchAr = (string?)ViewBag.SearchAr ?? string.Empty;
+    var searchEn = (string?)ViewBag.SearchEn ?? string.Empty;
+    var itemTypeId = (byte?)ViewBag.ItemTypeId;
+    var groupId = (int?)ViewBag.GroupId;
+    var familyId = (int?)ViewBag.FamilyId;
+}
+
+@* The same search card as Index, repopulated - no back-link round trip. *@
+<partial name="_SearchForm" />
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @success
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted">@totalCount</span>
+    <button type="button" class="btn btn-outline-success btn-sm" id="btnExcel">@L["Common_ExportExcel"]</button>
+</div>
+
+@if (!items.Any())
+{
+    <div class="alert alert-info" role="alert">@L["Common_NoData"]</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>@L["DE_Item_Data_Item_ItemType"]</th>
+                    <th>@L["DE_Item_Data_Item_MainClassification"]</th>
+                    <th>@L["DE_Item_Data_Item_Group"]</th>
+                    <th>@L["DE_Item_Data_Item_Family"]</th>
+                    <th>@L["DE_Item_Data_Item_ArName"]</th>
+                    <th>@L["DE_Item_Data_Item_EnName"]</th>
+                    <th>@L["DE_Item_Data_Item_ScientificName"]</th>
+                    <th>@L["DE_Item_Data_Item_ItemCode"]</th>
+                    <th>@L["DE_Item_Data_Item_Image"]</th>
+                    <th>@L["DE_Item_Data_Item_PlantInEgypt"]</th>
+                    <th>@L["DE_Item_Data_Item_IsKnown"]</th>
+                    <th>@L["DE_Item_Data_Item_ForbiddenStatus"]</th>
+                    <th>@L["DE_Item_Data_Item_Agriculture17"]</th>
+                    <th>@L["DE_Item_Data_Item_PlantPart"]</th>
+                    <th>@L["Common_Details"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in items)
+                {
+                    <tr>
+                        <td>@(item.ItemTypeName ?? "-")</td>
+                        <td>@(item.MainClassName ?? "-")</td>
+                        <td>@(item.GroupName ?? "-")</td>
+                        <td>@(item.FamilyName ?? "-")</td>
+                        <td>@item.NameAr</td>
+                        <td>@item.NameEn</td>
+                        <td><em>@item.ScientificName</em></td>
+                        <td>@item.ItemCode</td>
+                        <td>
+                            @if (item.Picture != null)
+                            {
+                                <a href="@Url.Action("GetImage", new { path1 = item.Picture })" target="_blank">@L["DE_Item_Data_Item_DownloadFile"]</a>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>@(item.IsPlantInEgypt == true ? L["Common_Yes"].Value : L["Common_No"].Value)</td>
+                        <td>@(item.IsKnownItem == true ? L["Common_Yes"].Value : L["Common_No"].Value)</td>
+                        <td>
+                            @if (item.IsForbidden)
+                            {
+                                <span class="badge bg-danger">@L["DE_Item_Data_Item_NotAllowed"]</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">@L["DE_Item_Data_Item_Allowed"]</span>
+                            }
+                        </td>
+                        <td>@(item.Agriculture17 == true ? L["Common_Yes"].Value : L["Common_No"].Value)</td>
+                        <td>
+                            <a asp-action="Parts" asp-route-itemId="@item.Id"
+                               asp-route-fAr="@searchAr" asp-route-fEn="@searchEn"
+                               asp-route-fType="@itemTypeId" asp-route-fGroup="@groupId" asp-route-fFamily="@familyId">
+                                @L["DE_Item_Data_Item_PlantPart"]
+                            </a>
+                            @if (item.PartsCount > 0)
+                            {
+                                <span class="badge bg-secondary">@item.PartsCount</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <a class="btn btn-outline-primary btn-sm"
+                                   asp-action="Edit" asp-route-id="@item.Id"
+                                   asp-route-fAr="@searchAr" asp-route-fEn="@searchEn"
+                                   asp-route-fType="@itemTypeId" asp-route-fGroup="@groupId" asp-route-fFamily="@familyId">
+                                    @L["Common_Edit"]
+                                </a>
+                                <a class="btn btn-outline-secondary btn-sm"
+                                   asp-action="Parts" asp-route-itemId="@item.Id"
+                                   asp-route-fAr="@searchAr" asp-route-fEn="@searchEn"
+                                   asp-route-fType="@itemTypeId" asp-route-fGroup="@groupId" asp-route-fFamily="@familyId">
+                                    @L["DE_Item_Data_Item_Parts"]
+                                </a>
+                                <form method="post" asp-action="Delete" asp-route-id="@item.Id"
+                                      style="display:inline;"
+                                      onsubmit="return confirm('@L["Common_ConfirmDelete"]');">
+                                    <input type="hidden" name="fAr" value="@searchAr" />
+                                    <input type="hidden" name="fEn" value="@searchEn" />
+                                    <input type="hidden" name="fType" value="@itemTypeId" />
+                                    <input type="hidden" name="fGroup" value="@groupId" />
+                                    <input type="hidden" name="fFamily" value="@familyId" />
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">@L["Common_Delete"]</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="@L["DE_Item_Data_Item_Title"]">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(pageNumber <= 1 ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="List" asp-route-page="@(pageNumber - 1)" asp-route-pageSize="@pageSize"
+                       asp-route-searchAr="@searchAr" asp-route-searchEn="@searchEn"
+                       asp-route-itemTypeId="@itemTypeId" asp-route-groupId="@groupId" asp-route-familyId="@familyId">
+                        &laquo;
+                    </a>
+                </li>
+                @for (var p = 1; p <= totalPages; p++)
+                {
+                    <li class="page-item @(p == pageNumber ? "active" : "")">
+                        <a class="page-link"
+                           asp-action="List" asp-route-page="@p" asp-route-pageSize="@pageSize"
+                           asp-route-searchAr="@searchAr" asp-route-searchEn="@searchEn"
+                           asp-route-itemTypeId="@itemTypeId" asp-route-groupId="@groupId" asp-route-familyId="@familyId">
+                            @p
+                        </a>
+                    </li>
+                }
+                <li class="page-item @(pageNumber >= totalPages ? "disabled" : "")">
+                    <a class="page-link"
+                       asp-action="List" asp-route-page="@(pageNumber + 1)" asp-route-pageSize="@pageSize"
+                       asp-route-searchAr="@searchAr" asp-route-searchEn="@searchEn"
+                       asp-route-itemTypeId="@itemTypeId" asp-route-groupId="@groupId" asp-route-familyId="@familyId">
+                        &raquo;
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+
+@*
+    Excel export: fetch the filtered rows as JSON, drop them into the hidden table, then run
+    the legacy btoa data-URI trick from the jtable page. The worksheet name is the only
+    thing Excel sees from us; the columns are the same ones the list shows, as NAMES not ids.
+*@
+<table id="excelTable" border="1" style="display:none">
+    <thead>
+        <tr>
+            <th>@L["DE_Item_Data_Item_ItemType"]</th>
+            <th>@L["DE_Item_Data_Item_MainClassification"]</th>
+            <th>@L["DE_Item_Data_Item_Group"]</th>
+            <th>@L["DE_Item_Data_Item_Family"]</th>
+            <th>@L["DE_Item_Data_Item_ArName"]</th>
+            <th>@L["DE_Item_Data_Item_EnName"]</th>
+            <th>@L["DE_Item_Data_Item_ScientificName"]</th>
+            <th>@L["DE_Item_Data_Item_ItemCode"]</th>
+            <th>@L["DE_Item_Data_Item_Image"]</th>
+            <th>@L["DE_Item_Data_Item_PlantInEgypt"]</th>
+            <th>@L["DE_Item_Data_Item_ForbiddenReason"]</th>
+            <th>@L["DE_Item_Data_Item_PlantPart"]</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@{
+    // In a <script> block Razor's HTML encoder would turn & into &amp; and the Arabic
+    // worksheet name into numeric entities (script content is NOT entity-decoded), so the
+    // URL goes out raw. Url.Action already percent-encodes the query values.
+    var exportUrl = Url.Action("AllItem", new { searchAr, searchEn, itemTypeId, groupId, familyId }) ?? Url.Action("AllItem");
+    var worksheetName = (L["DE_Item_Data_Item_ExcelWorksheet"].Value ?? "Worksheet").Replace("'", "\\'");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="/_shared/lib/select2/css/select2.min.css" />
+}
+@section Scripts {
+    <iscc-scripts jquery="true" select2="true" components="false" />
+    <script>
+        (function () {
+            'use strict';
+
+            var tableToExcel = (function () {
+                var uri = 'data:application/vnd.ms-excel;base64,'
+                    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
+                    , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))); }
+                    , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }); };
+                return function (table, name) {
+                    if (!table.nodeType) { table = document.getElementById(table); }
+                    var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML };
+                    window.location.href = uri + base64(format(template, ctx));
+                };
+            })();
+
+            function escapeHtml(value) {
+                if (value === null || value === undefined) { return ''; }
+                return String(value).replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
+            var button = document.getElementById('btnExcel');
+            if (button) {
+                button.addEventListener('click', function () {
+                    button.disabled = true;
+                    fetch('@Html.Raw(exportUrl)')
+                        .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
+                        .then(function (rows) {
+                            var body = document.querySelector('#excelTable tbody');
+                            body.innerHTML = rows.map(function (d) {
+                                return '<tr>'
+                                    + '<td>' + escapeHtml(d.itemType) + '</td>'
+                                    + '<td>' + escapeHtml(d.mainClass) + '</td>'
+                                    + '<td>' + escapeHtml(d.group) + '</td>'
+                                    + '<td>' + escapeHtml(d.family) + '</td>'
+                                    + '<td>' + escapeHtml(d.nameAr) + '</td>'
+                                    + '<td>' + escapeHtml(d.nameEn) + '</td>'
+                                    + '<td>' + escapeHtml(d.scientificName) + '</td>'
+                                    + '<td>' + escapeHtml(d.itemCode) + '</td>'
+                                    + '<td>' + escapeHtml(d.picture) + '</td>'
+                                    + '<td>' + (d.plantInEgypt === true || d.plantInEgypt === 'true' ? '1' : '0') + '</td>'
+                                    + '<td>' + escapeHtml(d.forbiddenReason) + '</td>'
+                                    + '<td>' + escapeHtml((d.plantParts || []).join(', ')) + '</td>'
+                                    + '</tr>';
+                            }).join('');
+                            tableToExcel('excelTable', '@Html.Raw(worksheetName)');
+                        })
+                        .catch(function (err) { console.error('Excel export failed', err); })
+                        .then(function () { button.disabled = false; });
+                });
+            }
+        })();
+    </script>
+}

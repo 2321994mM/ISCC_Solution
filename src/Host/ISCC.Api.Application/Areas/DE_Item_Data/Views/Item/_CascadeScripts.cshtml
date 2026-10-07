@@ -1,0 +1,118 @@
+@*
+    Page-side wiring for the two classification chains on Create/Edit.
+
+    iscc-components.js already handles the last hop of each chain (SecClassId -> Group and
+    OrderId -> Family) through the iscc-select2 tag helper's depends-on/ajax-* attributes.
+    This partial fetches the intermediate levels (plain selects driven here) so that every
+    level ends in a PLAIN .trigger('change') - the plain trigger is what makes both this
+    page's own handlers and components.js's cascade bindings fire reliably; the components
+    script's internal 'change.select2' namespaced trigger never crosses component boundaries.
+
+    Chain: ItemTypeId -> MainClassId -> SecClassId -> [Group, select2]
+           KingdomId  -> PhylumId    -> OrderId     -> [Family, select2]
+*@
+@{
+    var selectPrompt = (L["Common_Select"].Value ?? "Select").Replace("'", "\\'");
+}
+
+<script>
+    (function () {
+        'use strict';
+
+        var PROMPT = '@Html.Raw(selectPrompt)';
+
+        function resetToPrompt(select) {
+            select.empty().append($('<option></option>').val('').text(PROMPT));
+        }
+
+        // Loads url?paramName=value into #selectId, then fires a plain change so the next
+        // level (page handler or components.js) reacts. With no parent value the children
+        // are simply cleared, which is what the cascade needs mid-walk.
+        function fill(selectId, url, paramName, parentValue) {
+            var $sel = $('#' + selectId);
+            $sel.prop('disabled', true);
+            resetToPrompt($sel);
+
+            var done = function () {
+                $sel.prop('disabled', false).trigger('change');
+            };
+
+            if (!parentValue) {
+                done();
+                return;
+            }
+
+            var target = url + (url.indexOf('?') === -1 ? '?' : '&')
+                + paramName + '=' + encodeURIComponent(parentValue);
+
+            fetch(target, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
+                .then(function (list) {
+                    (list || []).forEach(function (option) {
+                        $sel.append($('<option></option>').val(String(option.id)).text(option.text));
+                    });
+                })
+                .catch(function (err) { console.error('Failed loading options for ' + selectId, err); })
+                .then(done);
+        }
+
+        function clearChain(selectId) {
+            var $sel = $('#' + selectId);
+            resetToPrompt($sel).trigger('change');
+        }
+
+        $('#ItemTypeId').on('change', function () {
+            var value = $(this).val();
+            if (value) {
+                fill('MainClassId', '@Url.Action("MainClassOptions")', 'itemTypeId', value);
+            } else {
+                clearChain('MainClassId');
+            }
+        });
+
+        $('#MainClassId').on('change', function () {
+            var value = $(this).val();
+            if (value) {
+                fill('SecClassId', '@Url.Action("SecClassOptions")', 'mainClassId', value);
+            } else {
+                clearChain('SecClassId');
+            }
+        });
+
+        $('#KingdomId').on('change', function () {
+            var value = $(this).val();
+            if (value) {
+                fill('PhylumId', '@Url.Action("PhylumOptions")', 'kingdomId', value);
+            } else {
+                clearChain('PhylumId');
+            }
+        });
+
+        $('#PhylumId').on('change', function () {
+            var value = $(this).val();
+            if (value) {
+                fill('OrderId', '@Url.Action("OrderOptions")', 'phylumId', value);
+            } else {
+                clearChain('OrderId');
+            }
+        });
+
+        // The reason field only matters while the item is forbidden (mirrors the legacy page).
+        function syncForbidden() {
+            $('#ForbiddenReason').prop('required', $('#IsForbidden').is(':checked'));
+        }
+        $('#IsForbidden').on('change', syncForbidden);
+        syncForbidden();
+
+        // Legacy input hygiene: no digits typed into the Arabic name, no Arabic typed into
+        // the English name. Keypress only, exactly like the old page - paste was never filtered.
+        $('#NameAr').on('keypress', function (e) {
+            var ch = String.fromCharCode(e.which || 0);
+            if (ch >= '0' && ch <= '9') { e.preventDefault(); }
+        });
+        $('#NameEn').on('keypress', function (e) {
+            var ch = String.fromCharCode(e.which || 0);
+            if (ch >= '\u0600' && ch <= '\u06FF') { e.preventDefault(); }
+        });
+    })();
+</script>

@@ -1,0 +1,90 @@
+@using ISCC.Shared.Contracts
+@*
+    The search card shared by Index and List. Both actions put the same ViewBag keys
+    (SearchAr, SearchEn, ItemTypeId, GroupId, FamilyId), so the form re-populates itself
+    wherever it renders and posts to List. Group/Family are server-rendered select2 lists -
+    the filter is independent values, there is no cascade to walk here.
+*@
+@{
+    var culture = (string?)ViewData["Culture"] ?? "ar";
+    var searchAr = (string?)ViewBag.SearchAr ?? string.Empty;
+    var searchEn = (string?)ViewBag.SearchEn ?? string.Empty;
+    var itemTypes = (IReadOnlyList<SelectOption>?)ViewBag.ItemTypes ?? Array.Empty<SelectOption>();
+    var groups = (IReadOnlyList<SelectOption>?)ViewBag.Groups ?? Array.Empty<SelectOption>();
+    var families = (IReadOnlyList<SelectOption>?)ViewBag.Families ?? Array.Empty<SelectOption>();
+    var selectedType = (byte?)ViewBag.ItemTypeId;
+    var selectedGroup = (int?)ViewBag.GroupId;
+    var selectedFamily = (int?)ViewBag.FamilyId;
+}
+
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@L["DE_Item_Data_Item_Search"]</h5>
+        <a class="btn btn-primary btn-sm"
+           asp-action="Create"
+           asp-route-fAr="@searchAr" asp-route-fEn="@searchEn"
+           asp-route-fType="@selectedType" asp-route-fGroup="@selectedGroup" asp-route-fFamily="@selectedFamily">
+            @L["Common_AddNew"]
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="get" action="@Url.Action("List")" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label" for="searchAr">@L["DE_Item_Data_Item_ArName"]</label>
+                <input class="form-control" type="text" id="searchAr" name="searchAr" value="@searchAr"
+                       placeholder="@L["DE_Item_Data_Item_SearchArPlaceholder"]" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="searchEn">@L["DE_Item_Data_Item_EnName"]</label>
+                <input class="form-control" type="text" id="searchEn" name="searchEn" value="@searchEn"
+                       placeholder="@L["DE_Item_Data_Item_SearchEnPlaceholder"]" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="itemTypeId">@L["DE_Item_Data_Item_ItemType"]</label>
+                <select class="form-select" id="itemTypeId" name="itemTypeId">
+                    <option value="">@L["Common_All"]</option>
+                    @foreach (var type in itemTypes)
+                    {
+                        <option value="@type.Value" selected="@(selectedType?.ToString() == type.Value ? "selected" : null)">@type.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="groupId">@L["DE_Item_Data_Item_Group"]</label>
+                <select class="iscc-select iscc-select2" id="groupId" name="groupId"
+                        data-iscc-select2="true"
+                        data-placeholder="@L["Common_Select"]" data-allow-clear="true">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var group in groups)
+                    {
+                        <option value="@group.Value" selected="@(selectedGroup?.ToString() == group.Value ? "selected" : null)">@group.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="familyId">@L["DE_Item_Data_Item_Family"]</label>
+                <select class="iscc-select iscc-select2" id="familyId" name="familyId"
+                        data-iscc-select2="true"
+                        data-placeholder="@L["Common_Select"]" data-allow-clear="true">
+                    <option value="">@L["Common_Select"]</option>
+                    @foreach (var family in families)
+                    {
+                        <option value="@family.Value" selected="@(selectedFamily?.ToString() == family.Value ? "selected" : null)">@family.Text(culture)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@L["Common_Search"]</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">@L["Common_Clear"]</a>
+            </div>
+        </form>
+    </div>
+</div>

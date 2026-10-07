@@ -354,4 +354,346 @@
   <data name="Ex_List_Next" xml:space="preserve">
     <value>Next</value>
   </data>
+  <data name="Common_Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Common_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Common_AddContact" xml:space="preserve">
+    <value>Add Contact</value>
+  </data>
+  <data name="Common_AddNew" xml:space="preserve">
+    <value>Add New</value>
+  </data>
+  <data name="Common_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Common_BackToSearch" xml:space="preserve">
+    <value>Back to Search</value>
+  </data>
+  <data name="Common_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Common_ConfirmDelete" xml:space="preserve">
+    <value>Are you sure you want to delete?</value>
+  </data>
+  <data name="Common_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common_DeletedSuccessfully" xml:space="preserve">
+    <value>Deleted successfully</value>
+  </data>
+  <data name="Common_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Common_Display" xml:space="preserve">
+    <value>Display</value>
+  </data>
+  <data name="Common_DuplicateData" xml:space="preserve">
+    <value>This record already exists</value>
+  </data>
+  <data name="Common_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Common_ErrorOccurred" xml:space="preserve">
+    <value>An error occurred, try again!</value>
+  </data>
+  <data name="Common_ExportExcel" xml:space="preserve">
+    <value>Export to Excel</value>
+  </data>
+  <data name="Common_Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Common_Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Common_NoData" xml:space="preserve">
+    <value>No data found</value>
+  </data>
+  <data name="Common_NotFound" xml:space="preserve">
+    <value>This record does not exist!</value>
+  </data>
+  <data name="Common_Prev" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Common_RelatedData" xml:space="preserve">
+    <value>Cannot delete: it is linked to other data</value>
+  </data>
+  <data name="Common_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Common_RequiredData" xml:space="preserve">
+    <value>Check the required data</value>
+  </data>
+  <data name="Common_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Common_SavedSuccessfully" xml:space="preserve">
+    <value>Saved successfully</value>
+  </data>
+  <data name="Common_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Common_Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="Common_SelectContactType" xml:space="preserve">
+    <value>Select contact type</value>
+  </data>
+  <data name="Common_Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Common_UpdatedSuccessfully" xml:space="preserve">
+    <value>Updated successfully</value>
+  </data>
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="DE_Outlets_ExportType_Both" xml:space="preserve">
+    <value>Export and Import</value>
+  </data>
+  <data name="DE_Outlets_ExportType_Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="DE_Outlets_ExportType_Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_AddressAr" xml:space="preserve">
+    <value>Arabic Address</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_AddressEn" xml:space="preserve">
+    <value>English Address</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Admin" xml:space="preserve">
+    <value>Admin</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_ArName" xml:space="preserve">
+    <value>Arabic Name</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_ContactCount" xml:space="preserve">
+    <value>Contacts Count</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Contacts" xml:space="preserve">
+    <value>Contacts</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_ContactValue" xml:space="preserve">
+    <value>Contact value</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Create" xml:space="preserve">
+    <value>Add General Admin</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Edit" xml:space="preserve">
+    <value>Edit General Admin</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_EnName" xml:space="preserve">
+    <value>English Name</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_IsActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Search" xml:space="preserve">
+    <value>Search General Admins</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchAr" xml:space="preserve">
+    <value>Arabic Name</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchArPlaceholder" xml:space="preserve">
+    <value>Enter Arabic name</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchEn" xml:space="preserve">
+    <value>English Name</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_SearchEnPlaceholder" xml:space="preserve">
+    <value>Enter English name</value>
+  </data>
+  <data name="DE_Outlets_GeneralAdmin_Title" xml:space="preserve">
+    <value>General Admins</value>
+  </data>
+  <data name="DE_Outlets_Outlet_AddressAr" xml:space="preserve">
+    <value>Arabic Address</value>
+  </data>
+  <data name="DE_Outlets_Outlet_AddressEn" xml:space="preserve">
+    <value>English Address</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ArName" xml:space="preserve">
+    <value>Arabic Name</value>
+  </data>
+  <data name="DE_Outlets_Outlet_CentersCount" xml:space="preserve">
+    <value>Centers Count</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Contacts" xml:space="preserve">
+    <value>Contacts</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ContactValue" xml:space="preserve">
+    <value>Contact value</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Create" xml:space="preserve">
+    <value>Add Outlet</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Edit" xml:space="preserve">
+    <value>Edit Outlet</value>
+  </data>
+  <data name="DE_Outlets_Outlet_EnName" xml:space="preserve">
+    <value>English Name</value>
+  </data>
+  <data name="DE_Outlets_Outlet_GeneralAdmin" xml:space="preserve">
+    <value>General Admin</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IdHr" xml:space="preserve">
+    <value>HR ID</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IsActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IsDisplay" xml:space="preserve">
+    <value>Displayed</value>
+  </data>
+  <data name="DE_Outlets_Outlet_IsExport" xml:space="preserve">
+    <value>Export Type</value>
+  </data>
+  <data name="DE_Outlets_Outlet_PortNational" xml:space="preserve">
+    <value>Nationality</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Search" xml:space="preserve">
+    <value>Search Outlets</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchAr" xml:space="preserve">
+    <value>Arabic Name</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchArPlaceholder" xml:space="preserve">
+    <value>Enter outlet Arabic name</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchEn" xml:space="preserve">
+    <value>English Name</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SearchEnPlaceholder" xml:space="preserve">
+    <value>Enter outlet English name</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Supervisor" xml:space="preserve">
+    <value>Supervisor</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Title" xml:space="preserve">
+    <value>Outlets</value>
+  </data>
+  <data name="DE_Item_Data_Item_Title" xml:space="preserve">
+    <value>Living and Non-Living Organisms</value>
+  </data>
+  <data name="DE_Item_Data_Item_Search" xml:space="preserve">
+    <value>Search Items</value>
+  </data>
+  <data name="DE_Item_Data_Item_SearchArPlaceholder" xml:space="preserve">
+    <value>Enter Arabic name</value>
+  </data>
+  <data name="DE_Item_Data_Item_SearchEnPlaceholder" xml:space="preserve">
+    <value>Enter English name</value>
+  </data>
+  <data name="DE_Item_Data_Item_Create" xml:space="preserve">
+    <value>Add Item</value>
+  </data>
+  <data name="DE_Item_Data_Item_Edit" xml:space="preserve">
+    <value>Edit Item</value>
+  </data>
+  <data name="DE_Item_Data_Item_ItemType" xml:space="preserve">
+    <value>Item Type</value>
+  </data>
+  <data name="DE_Item_Data_Item_MainClassification" xml:space="preserve">
+    <value>Main Classification</value>
+  </data>
+  <data name="DE_Item_Data_Item_SecondaryClassification" xml:space="preserve">
+    <value>Secondary Classification</value>
+  </data>
+  <data name="DE_Item_Data_Item_Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="DE_Item_Data_Item_Kingdom" xml:space="preserve">
+    <value>Kingdom</value>
+  </data>
+  <data name="DE_Item_Data_Item_Phylum" xml:space="preserve">
+    <value>Phylum</value>
+  </data>
+  <data name="DE_Item_Data_Item_Order" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="DE_Item_Data_Item_Family" xml:space="preserve">
+    <value>Family</value>
+  </data>
+  <data name="DE_Item_Data_Item_IsKnown" xml:space="preserve">
+    <value>Known</value>
+  </data>
+  <data name="DE_Item_Data_Item_ArName" xml:space="preserve">
+    <value>Arabic Name</value>
+  </data>
+  <data name="DE_Item_Data_Item_EnName" xml:space="preserve">
+    <value>English Name</value>
+  </data>
+  <data name="DE_Item_Data_Item_ScientificName" xml:space="preserve">
+    <value>Scientific Name</value>
+  </data>
+  <data name="DE_Item_Data_Item_ItemCode" xml:space="preserve">
+    <value>Item Code</value>
+  </data>
+  <data name="DE_Item_Data_Item_DescriptionAr" xml:space="preserve">
+    <value>Arabic Description</value>
+  </data>
+  <data name="DE_Item_Data_Item_DescriptionEn" xml:space="preserve">
+    <value>English Description</value>
+  </data>
+  <data name="DE_Item_Data_Item_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="DE_Item_Data_Item_DownloadFile" xml:space="preserve">
+    <value>Download File</value>
+  </data>
+  <data name="DE_Item_Data_Item_PlantInEgypt" xml:space="preserve">
+    <value>Planted in Egypt</value>
+  </data>
+  <data name="DE_Item_Data_Item_ForbiddenStatus" xml:space="preserve">
+    <value>Forbidden Status</value>
+  </data>
+  <data name="DE_Item_Data_Item_ForbiddenReason" xml:space="preserve">
+    <value>Forbidden Reason</value>
+  </data>
+  <data name="DE_Item_Data_Item_Allowed" xml:space="preserve">
+    <value>Allowed</value>
+  </data>
+  <data name="DE_Item_Data_Item_NotAllowed" xml:space="preserve">
+    <value>Not Allowed</value>
+  </data>
+  <data name="DE_Item_Data_Item_Agriculture17" xml:space="preserve">
+    <value>Agriculture 17</value>
+  </data>
+  <data name="DE_Item_Data_Item_PlantPart" xml:space="preserve">
+    <value>Plant Parts</value>
+  </data>
+  <data name="DE_Item_Data_Item_PartsCount" xml:space="preserve">
+    <value>Parts Count</value>
+  </data>
+  <data name="DE_Item_Data_Item_Parts" xml:space="preserve">
+    <value>Plant Parts</value>
+  </data>
+  <data name="DE_Item_Data_Item_AddPart" xml:space="preserve">
+    <value>Add Part</value>
+  </data>
+  <data name="DE_Item_Data_Item_EditPart" xml:space="preserve">
+    <value>Edit Part</value>
+  </data>
+  <data name="DE_Item_Data_Item_SubPartType" xml:space="preserve">
+    <value>Part Type</value>
+  </data>
+  <data name="DE_Item_Data_Item_SubPart" xml:space="preserve">
+    <value>Part</value>
+  </data>
+  <data name="DE_Item_Data_Item_InvalidImage" xml:space="preserve">
+    <value>The file must be an image (jpg, jpeg or png)</value>
+  </data>
+  <data name="DE_Item_Data_Item_ExcelWorksheet" xml:space="preserve">
+    <value>Items</value>
+  </data>
 </root>
