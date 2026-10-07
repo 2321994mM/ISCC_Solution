@@ -98,7 +98,7 @@ public class GeneralAdminController : BaseController
                     g.AddressEn,
                     g.IsActive,
                     g.AdminId,
-                    ContactCount = g.HagrContacts.Count(hc => hc.OutlitAdmin == 13 && hc.IsActive && hc.UserDeletionId == null)
+                    ContactCount = Db.HagrContacts.Count(hc => hc.ContactOwnerId == g.Id && hc.OutlitAdmin == 13 && hc.IsActive && hc.UserDeletionId == null)
                 })
                 .ToListAsync(cancellationToken);
 
@@ -225,7 +225,6 @@ public class GeneralAdminController : BaseController
             if (ModelState.IsValid)
             {
                 var existing = await Db.GeneralAdmins
-                    .Include(g => g.HagrContacts)
                     .FirstOrDefaultAsync(g => g.Id == id && g.UserDeletionId == null, cancellationToken);
 
                 if (existing == null)
