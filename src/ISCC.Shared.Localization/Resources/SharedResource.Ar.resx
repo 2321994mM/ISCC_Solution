@@ -702,4 +702,52 @@
   <data name="Im_CheckRequestDetails_NoData" xml:space="preserve">
     <value>لا يوجد بيانات لهذا الطلب.</value>
   </data>
+  <data name="ImCommittee_FinalResult_Title" xml:space="preserve">
+    <value>نتيجة لجان الوارد</value>
+  </data>
+  <data name="ImCommittee_FinalResult_NoData" xml:space="preserve">
+    <value>لا يوجد بيانات لهذا الطلب.</value>
+  </data>
+  <data name="ImCommittee_FinalResult_StartDate" xml:space="preserve">
+    <value>تاريخ البدء</value>
+  </data>
+  <data name="ImCommittee_FinalResult_ArrivalPort" xml:space="preserve">
+    <value>ميناء الوصول</value>
+  </data>
+  <data name="ImCommittee_FinalResult_PortType" xml:space="preserve">
+    <value>نوع الميناء</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Gov" xml:space="preserve">
+    <value>المحافظة</value>
+  </data>
+  <data name="ImCommittee_FinalResult_CountLots" xml:space="preserve">
+    <value>عدد اللوطات</value>
+  </data>
+  <data name="ImCommittee_FinalResult_FinalResults" xml:space="preserve">
+    <value>النتائج النهائية</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Date" xml:space="preserve">
+    <value>التاريخ</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Employee" xml:space="preserve">
+    <value>الموظف</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Result" xml:space="preserve">
+    <value>النتيجة</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Visas" xml:space="preserve">
+    <value>التأشيرات</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Visa" xml:space="preserve">
+    <value>التأشيرة</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Gross" xml:space="preserve">
+    <value>الوزن الإجمالي</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Net" xml:space="preserve">
+    <value>الوزن الصافي</value>
+  </data>
+  <data name="ImCommittee_FinalResult_Lot" xml:space="preserve">
+    <value>اللوط</value>
+  </data>
 </root>
