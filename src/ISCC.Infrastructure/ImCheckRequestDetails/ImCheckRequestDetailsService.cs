@@ -44,9 +44,12 @@ public class ImCheckRequestDetailsService : IImCheckRequestDetailsService
     private static string? Pick(string? arabic, string? english) =>
         IsArabic ? arabic ?? english : english ?? arabic;
 
+    // Every sequence in PlantQuarantine_New is bigint, so the value must be read back as
+    // long. Reading it as decimal throws InvalidCastException (Int64 -> Decimal) the moment
+    // the reader materialises the row.
     private decimal NextSequenceValue(string sequence) =>
-        (decimal)_db.Database
-            .SqlQueryRaw<decimal>($"SELECT NEXT VALUE FOR dbo.{sequence} AS value")
+        _db.Database
+            .SqlQueryRaw<long>($"SELECT NEXT VALUE FOR dbo.{sequence} AS value")
             .AsEnumerable()
             .First();
 
