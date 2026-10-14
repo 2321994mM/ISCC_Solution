@@ -43,6 +43,19 @@ public interface IImCommitteeFinalResultService
     /// <summary>Lot result-status dropdown ("Name / يوجد اجراء آخر" pairs, plus the constant first row).</summary>
     Task<IReadOnlyList<CustomOption>> GetLotStatusesAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Visa dropdown (legacy <c>Im_Visa_Data / Visa_AddEDIT</c>): every
+    /// <c>Im_Visa</c> not soft-deleted, ordered by display name.
+    /// </summary>
+    Task<IReadOnlyList<CustomOptionLongId>> GetVisaOptionsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Final-result dropdown (legacy <c>Im_FinalResult_Data / FinalResult_AddEDIT</c>):
+    /// <c>Im_Final_Result</c> rows whose <c>Status</c> matches the request's accepted flag
+    /// (<c>FinalResult</c> 1/6 → true, otherwise false), ordered by display name.
+    /// </summary>
+    Task<IReadOnlyList<CustomOptionLongId>> GetFinalResultOptionsAsync(int finalResult, CancellationToken cancellationToken);
+
     /// <summary>Soft-deletes a committee's non-admin employee row and writes a log row.</summary>
     Task<bool> DeleteCommitteeEmployeeAsync(long requestId, long committeeId, long employeeId, short userId, CancellationToken cancellationToken);
 

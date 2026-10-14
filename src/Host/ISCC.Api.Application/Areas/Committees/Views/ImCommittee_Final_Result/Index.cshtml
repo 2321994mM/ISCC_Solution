@@ -1,76 +1,1668 @@
 @model ImCommittee_Final_ResultDTO
+@*
+    "نتيجة لجان الوارد" — import committee final result.
+
+    Ported from PlantQuar.WEB/Areas/Committees/Views/ImCommittee_Final_Result/Index.cshtml.
+    Every section of the legacy page is reproduced here: the message header, the customs
+    certificate block, the per-item/per-lot tables, the three committee-result tables
+    (فحص / سحب / معالجة), the quarantine standing ("موقف الحجر") table, the visa block,
+    the final-result block, the report links and all four modals.
+
+    The markup is rebuilt on the current design system (Bootstrap 5 + jQuery/select2 from the
+    shared bundle) instead of the legacy Bootstrap 3 / jQuery UI / timepicker / jtable stack,
+    because those libraries are no longer part of the portal. The element ids and the
+    toggle-* class names are kept identical to the legacy page so every bit of the original
+    JavaScript keeps working.
+
+    A note on the cross-area lookups: the legacy page called
+    DE_Import/Im_Visa_Data/Visa_AddEDIT, DE_Import/Im_FinalResult_Data/FinalResult_AddEDIT and
+    Imges/Downlood_Imge/Get_Downlood_Imge. Those areas are not ported yet, so the three verbs
+    are served by this controller (same names) and the script points at them via @Url.Action.
+    When those areas land, only the Url.Action calls below need to change.
+
+    Committee-formation form (Save_Committe / Save_Employee / SaveCommittee, the shift grid,
+    the employee search): the legacy view only carried the JS for it — the matching controls
+    (#CommitteeType_ID, #Next1, #ShiftsAddEdit, ...) were never rendered on this page, they
+    live on the orphaned ImCommittee_New/Index. That dead script is deliberately not ported.
+*@
 @{
     ViewData["PageHeading"] = L["ImCommittee_FinalResult_Title"];
+
+    if (Model is null)
+    {
+        return;
+    }
+
+    var fullname = ViewBag.Fullname as string;
+    var committeeType = Convert.ToInt32(ViewBag.CommitteeTypeLst_Value ?? 0);
 }
 
-@if (Model is null)
-{
-    <div class="alert alert-warning">
-        @L["ImCommittee_FinalResult_NoData"]
+@section Styles {
+    <link rel="stylesheet" href="/_shared/lib/select2/css/select2.min.css" />
+    <style>
+        @@media screen and (min-width: 768px) {
+            .modal-dialog {
+                left: 0% !important;
+            }
+        }
+
+        #imCommitteeResult th {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        #imCommitteeResult td {
+            font-size: 12px;
+            text-align: center;
+        }
+
+        #imCommitteeResult table, #imCommitteeResult table td, #imCommitteeResult table th {
+            border: 1px solid black !important;
+            border-collapse: collapse;
+            word-break: keep-all;
+        }
+
+        .modal-header {
+            background-color: #1e7c80;
+            color: white;
+        }
+
+        .modal-content {
+            color: #167479;
+        }
+
+        .display-none {
+            display: none;
+        }
+
+        .style-but {
+            height: auto !important;
+            color: white;
+            background-color: #1e7c80;
+            border: 2px solid #1e8084;
+            box-shadow: 0 4px #1d9fa5;
+            outline: none;
+            margin-top: 5px;
+        }
+
+        .tapp-title {
+            background-color: #1e7c80;
+            color: #fff;
+            padding: 5px 12px;
+            display: inline-block;
+        }
+
+        .tab .nav-tabs {
+            border-bottom: 1px solid #1e7c80;
+        }
+
+        .tab .nav-tabs > li > a,
+        .tab .nav-tabs button {
+            color: #1e7c80;
+        }
+
+        .tab .nav-tabs .active a,
+        .tab .nav-tabs .active button {
+            background-color: #1e7c80 !important;
+            color: #fff !important;
+        }
+
+        #popup td, #popup th {
+            padding: 4px 8px;
+        }
+
+        .padding-left-50 {
+            padding-left: 50px !important;
+        }
+
+        .labelspan {
+            color: #888;
+        }
+
+        .red {
+            color: red;
+        }
+    </style>
+}
+
+<div id="imCommitteeResult">
+
+    @* ============================ بيانات الرسالة ============================ *@
+    <div class="row">
+        <label class="tapp-title">بيانات الرسالة</label>
     </div>
-    return;
-}
+    <br />
+    <div class="row">
+        <div class="col-md-6">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>رقم الطلب/</label>
+                </div>
+                <div class="col-md-9">
+                    <a href="/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@Model.ImCheckRequest_Number&Outlet_ID=@Model.OutLet_ID">@Model.ImCheckRequest_Number</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>تاريخ الطلب/</label>
+                </div>
+                <div class="col-md-9">
+                    <input type="text" value="@Model.StartDate" readonly class="form-control" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <br />
 
-<section class="mb-4">
-    <h3>@Model.ImCheckRequest_Number - @Model.OutLet_Name</h3>
-    <dl class="row">
-        <dt>@L["ImCommittee_FinalResult_StartDate"]</dt>
-        <dd>@Model.StartDate</dd>
-        <dt>@L["ImCommittee_FinalResult_ArrivalPort"]</dt>
-        <dd>@Model.ArrivePortName</dd>
-        <dt>@L["ImCommittee_FinalResult_PortType"]</dt>
-        <dd>@Model.ArrivePortType</dd>
-        <dt>@L["ImCommittee_FinalResult_Gov"]</dt>
-        <dd>@Model.govNameAR</dd>
-        <dt>@L["ImCommittee_FinalResult_CountLots"]</dt>
-        <dd>@Model.Count_Lots</dd>
-    </dl>
+    @* ======================== بيانات الشهادة الجمركية ======================== *@
+    <div class="row">
+        <label class="tapp-title">بيانات الشهادة الجمركية</label>
+        <label hidden id="Lbl_ID_Lot"></label>
+    </div>
+    <br />
 
-    @if (Model.FinalResults?.Count > 0)
+    @if (Model.CustomsMessages != null)
     {
-        <h4>@L["ImCommittee_FinalResult_FinalResults"]</h4>
-        <table class="table">
-            <thead><tr><th>@L["ImCommittee_FinalResult_Date"]</th><th>@L["ImCommittee_FinalResult_Employee"]</th><th>@L["ImCommittee_FinalResult_Result"]</th></tr></thead>
-            <tbody>
-            @foreach (var r in Model.FinalResults)
-            {
-                <tr><td>@r.DateFinalResult</td><td>@r.Final_Result_Employee_Name</td><td>@r.Final_Result_Name</td></tr>
-            }
-            </tbody>
-        </table>
-    }
-
-    @if (Model.CheckRequest_Visa?.Count > 0)
-    {
-        <h4>@L["ImCommittee_FinalResult_Visas"]</h4>
-        <table class="table">
-            <thead><tr><th>@L["ImCommittee_FinalResult_Date"]</th><th>@L["ImCommittee_FinalResult_Employee"]</th><th>@L["ImCommittee_FinalResult_Visa"]</th></tr></thead>
-            <tbody>
-            @foreach (var v in Model.CheckRequest_Visa)
-            {
-                <tr><td>@v.Date_Visa</td><td>@v.Visa_Result_Employee_Name</td><td>@v.Visa_Result_Name</td></tr>
-            }
-            </tbody>
-        </table>
-    }
-</section>
-
-@foreach (var itemGroup in Model.itemsWithConstrains ?? Enumerable.Empty<Items_checkReq_New>())
-{
-    <section class="mb-4">
-        <h4>@($"{itemGroup.ItemShortNameAr} / {itemGroup.ItemName_Ar}")</h4>
-        <p>
-            @itemGroup.qualitiveGroupName, @itemGroup.InitiatorCountry,
-            @L["ImCommittee_FinalResult_Gross"]: @itemGroup.GrossWeight,
-            @L["ImCommittee_FinalResult_Net"]: @itemGroup.Net_Weight
-        </p>
-
-        @foreach (var lot in itemGroup.ItemCategories_lots ?? Enumerable.Empty<categories_lots_New>())
+        for (int cm = 0; cm < Model.CustomsMessages.Count(); cm++)
         {
-            <div class="border p-3 mb-2">
-                <strong>@L["ImCommittee_FinalResult_Lot"] #@lot.Lot_Number — @lot.categoryName</strong>
-                (@lot.packageType, @lot.packageMaterialName, @lot.ContainerNumber)
+            <div class="row" style="margin-bottom:5px;">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6"><label>رقم الشهادة الجمركية</label></div>
+                        <div class="col-md-6">
+                            <input type="text" value="@Model.CustomsMessages[cm].Customs_Certificate_Number" readonly class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6"><label>تاريخ الشهادة</label></div>
+                        <div class="col-md-6">
+                            @if (Model.CustomsMessages[cm].Certification_Date != null)
+                            {
+                                <input type="text" value="@Model.CustomsMessages[cm].Certification_Date.Value.ToString("dd/MM/yyyy")" readonly class="form-control" />
+                            }
+                            else
+                            {
+                                <input type="text" value="لا يوجد تاريخ الشهادة" readonly class="form-control" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom:5px;">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6"><label>تاريخ الشحن</label></div>
+                        <div class="col-md-6">
+                            @if (Model.CustomsMessages[cm].Shipment_Date != null)
+                            {
+                                <input type="text" value="@Model.CustomsMessages[cm].Shipment_Date.Value.ToString("dd/MM/yyyy")" readonly class="form-control" />
+                            }
+                            else
+                            {
+                                <input type="text" value="لا يوجد تاريخ الشحن" readonly class="form-control" />
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6"><label>تاريخ الوصول</label></div>
+                        <div class="col-md-6">
+                            @if (Model.CustomsMessages[cm].Arrival_Date != null)
+                            {
+                                <input type="text" value="@Model.CustomsMessages[cm].Arrival_Date.Value.ToString("dd/MM/yyyy")" readonly class="form-control" />
+                            }
+                            else
+                            {
+                                <input type="text" value="لا يوجد تاريخ وصول" readonly class="form-control" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-bottom:5px;">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6"><label>رقم الشهادة لكل منتج</label></div>
+                        <div class="col-md-6">
+                            <input type="text" value="@Model.CustomsMessages[cm].Certificate_Number_Each_Product" readonly class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <input id="fullnameID" type="hidden" value="@fullname" />
+                <div class="col-md-6">
+                    <div class="row" style="margin-bottom:5px;">
+                        <div class="col-md-6"><label>رقم المنافيست</label></div>
+                        <div class="col-md-6">
+                            <input type="text" value="@Model.CustomsMessages[cm].Manifest_Number" readonly class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom:5px;">
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6"><label>التوكيل الملاحي</label></div>
+                        <div class="col-md-6">
+                            <input type="text" value="@Model.CustomsMessages[cm].Shipping_Agency_Name" readonly class="form-control" />
+                        </div>
+                    </div>
+                </div>
             </div>
         }
-    </section>
+    }
+
+    <hr />
+
+    @* ============================== النباتات ============================== *@
+    <div class="form-box" id="lagnaDiv">
+        <div class="tab" role="tabpanel">
+            <ul class="row nav nav-tabs" role="tablist">
+                <li role="presentation" class="nav-item">
+                    <a class="nav-link active" href="#link" role="tab" data-bs-toggle="tab">بيانات الرسالة</a>
+                </li>
+            </ul>
+            <div class="tab-content tabs" style="background-color:whitesmoke !important;">
+                <div role="tabpanel" class="tab-pane fade show active" id="link">
+                    <div id="MessageData" style="padding:10px;">
+                        <div class="row">
+                            <div class="col-md-12">
+
+                                @if (Model.itemsWithConstrains != null)
+                                {
+                                    for (int i = 0; i < Model.itemsWithConstrains.Count(); i++)
+                                    {
+                                        var item = Model.itemsWithConstrains[i];
+                                        <table id="itemTable" class="table" style="border: 5px solid #1f6c6f !important;">
+                                            <tbody>
+                                                <tr style="background-color: rgb(77,158,151); color:#fff; font-weight:bold; font-size:16px;" class="toggle-div-@i">
+                                                    <td colspan="12" style="font-size:inherit">النبات</td>
+                                                </tr>
+                                                <tr class="toggle-div-@i">
+                                                    <th style="background-color: rgb(77,158,151) !important;">أسم النبات</th>
+                                                    <th style="background-color: rgb(77,158,151) !important;">النوع(مجموعة نوعية/نبات)</th>
+                                                    <th style="background-color: rgb(77,158,151) !important;" colspan="2">الاسم المختصر</th>
+                                                    <th style="background-color: rgb(77,158,151) !important;" colspan="2">دولة المنشأ</th>
+                                                    <th style="background-color: rgb(77,158,151) !important;" colspan="2">الوزن الإجمالي</th>
+                                                    <th style="background-color: rgb(77,158,151) !important;">الوزن الصافي</th>
+                                                    <th colspan="3" style="background-color: rgb(77,158,151) !important;">النبات</th>
+                                                </tr>
+                                                <tr class="toggle-div-@i">
+                                                    <td>@item.ItemName_Ar</td>
+                                                    <td>@item.qualitiveGroupName</td>
+                                                    <td colspan="2">@item.ItemShortNameAr</td>
+                                                    <td colspan="2">@item.InitiatorCountry</td>
+                                                    <td colspan="2">@item.GrossWeight</td>
+                                                    <td>@item.Net_Weight</td>
+                                                    <td colspan="3">
+                                                        <input id="Lot_@i" class="style-but" type="button" onClick="reply_click2(this)" value="بيانات اللوط" style="background-color:#CE9461 !important;" />
+                                                    </td>
+                                                </tr>
+                                                <tr style="background-color:#CE9461 !important; color:rgb(255,255,255); font-weight:bold; font-size:16px;" class="display-none toggle-div2-Lot_@i">
+                                                    <td colspan="12" style="font-size:inherit">بيانات اللوط</td>
+                                                </tr>
+                                                <tr class="display-none toggle-div2-Lot_@i">
+                                                    <th style="background-color:#CE9461 !important">رقم اللوط</th>
+                                                    <th hidden style="background-color:#CE9461 !important">أسم الصنف</th>
+                                                    <th style="background-color:#CE9461 !important">وزن إجمالي</th>
+                                                    <th style="background-color:#CE9461 !important">وزن صافي</th>
+                                                    <th style="background-color:#CE9461 !important">عدد العبوات</th>
+                                                    <th style="background-color:#CE9461 !important">وزن العبوات</th>
+                                                    <th style="background-color:#CE9461 !important">طريقة الفحص</th>
+                                                    <th style="background-color:#CE9461 !important">اضافة</th>
+                                                    <th colspan="2" style="background-color:#CE9461 !important">رقم الحاوية</th>
+                                                    <th colspan="2" style="background-color:#CE9461 !important">التفاصيل</th>
+                                                    <th style="background-color:#CE9461 !important">موقف الحجر</th>
+                                                </tr>
+
+                                                @for (int m = 0; m < item.ItemCategories_lots.Count(); m++)
+                                                {
+                                                    var lot = item.ItemCategories_lots[m];
+                                                    <tr class="display-none toggle-div2-Lot_@i">
+                                                        <td>@lot.Lot_Number</td>
+                                                        <td class="hidden">@lot.categoryName</td>
+                                                        <td>@lot.GrossWeight</td>
+                                                        <td>@lot.Net_Weight</td>
+                                                        <td>@lot.Package_Count</td>
+                                                        <td>@lot.Package_Weight</td>
+                                                        <td></td>
+                                                        <td>
+                                                            <input id="Lot_Result_@lot.ID_Lot" class="style-but" type="button" onClick="reply_click6(this)" value="النتائج السابقة" style="background-color:#c1b88c!important" />
+                                                        </td>
+                                                        <td colspan="2">
+                                                            <button type="button" class="quickview3 style-but" data-bs-toggle="modal"
+                                                                    data-bs-target="#mymodalemanexamination"
+                                                                    data-containernumber="@lot.ContainerNumber"
+                                                                    data-contid="@lot.containerName"
+                                                                    data-containerstypeid="@lot.containerType"
+                                                                    data-shipholdnumber="@lot.ShipholdNumber"
+                                                                    data-navigationalnumber="@lot.NavigationalNumber"
+                                                                    data-totalweight="@lot.Total_Weight">
+                                                                تفاصيل الحاوية
+                                                            </button>
+                                                        </td>
+                                                        <td colspan="2">
+                                                            <button type="button" class="quickview1 style-but" data-bs-toggle="modal"
+                                                                    data-bs-target="#mymodalemanexamination"
+                                                                    data-grossweight="@lot.GrossWeight"
+                                                                    data-netweight="@lot.Net_Weight"
+                                                                    data-packagecount="@lot.Package_Count"
+                                                                    data-packageweight="@lot.Package_Weight"
+                                                                    data-ordertext="@lot.Order_TextLot"
+                                                                    data-recorded="@lot.RecordedOrNot"
+                                                                    data-packagetype="@lot.packageType"
+                                                                    data-reasonentry="@lot.Reason_Entry"
+                                                                    data-size="@lot.Size"
+                                                                    data-basedweight="@lot.Based_Weight"
+                                                                    data-pckgematerial="@lot.packageMaterialName"
+                                                                    data-packagebasedweight="@lot.Package_Based_Weight"
+                                                                    data-packagenetweight="@lot.Package_Net_Weight"
+                                                                    data-unitsnumber="@lot.Units_Number"
+                                                                    data-subpartname="@item.subPartName"
+                                                                    data-itemcat="@lot.categoryName"
+                                                                    data-itemcatgroup="@lot.ItemCategoryGroup"
+                                                                    data-grower_number="@lot.Grower_Number"
+                                                                    data-number_wooden_package="@lot.Number_Wooden_Package"
+                                                                    data-shipmentpolicynumber="@lot.Waybill">
+                                                                تفاصيل اللوط
+                                                            </button>
+                                                        </td>
+                                                        <td>
+                                                            <input class="style-but" id="stonestand_@lot.ID_Lot" type="button"
+                                                                   onClick="reply_click6(this)" value="موقف الحجر" style="background-color:#8e3200cc!important;" />
+                                                        </td>
+                                                    </tr>
+
+                                                    bool finalResultLotInsert;
+                                                    {
+                                                        // Ported from the legacy inline block: a lot becomes eligible for a
+                                                        // quarantine standing only after its inspection and/or sample
+                                                        // committee work is complete.
+                                                        bool resultLotCommitteeResult = false;
+                                                        bool resultLotCommitteeSample = false;
+                                                        int committeeResultFa7s = 0;
+                                                        int committeeResultSample = 0;
+
+                                                        var inspection = lot.Lot_Committee_Result ?? new List<Committee_Result_Lot>();
+                                                        var samples = lot.List_Lot_Committee_Sample ?? new List<Committee_Sample_Lot>();
+
+                                                        if (committeeType == 11 || committeeType == 0)
+                                                        {
+                                                            if (inspection.Count > 0)
+                                                            {
+                                                                for (int b = 0; b < inspection.Count; b++)
+                                                                {
+                                                                    committeeResultFa7s = 1;
+                                                                    if (inspection.Where(a => a.ResultTypes_Name != null).Any())
+                                                                    {
+                                                                        var confirms = inspection[b].List_Committee_Result_Conferm ?? new List<Committee_Result_Lot_Conferm>();
+                                                                        if (confirms.Where(a => a.User_Deletion_Id == null && a.User_Deletion_Date == null).Count() > 0)
+                                                                        {
+                                                                            if (confirms.Where(a => a.IsAccepted == null && a.User_Deletion_Id == null && a.User_Deletion_Date == null).Any())
+                                                                            {
+                                                                                resultLotCommitteeResult = false;
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                resultLotCommitteeResult = true;
+                                                                            }
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            resultLotCommitteeResult = true;
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if (committeeType == 13 || committeeType == 0)
+                                                        {
+                                                            if (samples.Count > 0)
+                                                            {
+                                                                committeeResultSample = 2;
+                                                                if (samples.Where(a => a.IsAccepted != null).Any())
+                                                                {
+                                                                    if (samples.Where(a => (a.List_Committee_Sample_Conferm ?? new List<Committee_Sample_Conferm>()).Count() > 0).Any())
+                                                                    {
+                                                                        if (samples.Where(a => a.IsAccepted == null).Any())
+                                                                        {
+                                                                            resultLotCommitteeSample = false;
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            resultLotCommitteeSample = true;
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        if (samples.Where(a => a.IsAccepted != null).Any())
+                                                                        {
+                                                                            resultLotCommitteeSample = true;
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if (committeeResultFa7s == 1 && committeeResultSample == 2)
+                                                        {
+                                                            finalResultLotInsert = resultLotCommitteeResult == resultLotCommitteeSample && resultLotCommitteeSample;
+                                                        }
+                                                        else if (committeeResultFa7s == 1)
+                                                        {
+                                                            finalResultLotInsert = resultLotCommitteeResult;
+                                                        }
+                                                        else
+                                                        {
+                                                            finalResultLotInsert = false;
+                                                        }
+                                                    }
+
+                                                    @* ---------------- نتيجة الفحص (معاينة) ---------------- *@
+                                                    if (committeeType == 11 || committeeType == 0)
+                                                    {
+                                                        var inspection = lot.Lot_Committee_Result ?? new List<Committee_Result_Lot>();
+                                                        if (inspection.Count() > 0)
+                                                        {
+                                                            <tr style="background-color:#c1b88c !important; color:rgb(255,255,255); font-weight:bold; font-size:16px;"
+                                                                class="display-none toggle-div6-Lot_Result_@lot.ID_Lot">
+                                                                <td colspan="12" style="font-size:inherit">
+                                                                    <input id="Lot_Result_@lot.ID_Lot" class="style-but" type="button" onClick="reply_click50(this)" value="نتيجة معاينة لوط رقم : @lot.Lot_Number اضغط هنا" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr class="display-none toggle-div16-Lot_Result_@lot.ID_Lot">
+                                                                <th colspan="6" style="background-color:#c1b88c!important">نتيجة المعاينة أدمن</th>
+                                                                <th colspan="1" style="background-color:#c1b88c!important">طريقة فحص اللجنة للوط</th>
+                                                                <th colspan="5" style="background-color:#c1b88c!important">نتيجة معاينة المساعد</th>
+                                                            </tr>
+                                                            for (int a = 0; a < inspection.Count(); a++)
+                                                            {
+                                                                var adminResult = inspection[a];
+                                                                var infections = adminResult.List_Im_CommitteeResult_Infection ?? new List<List_Im_CommitteeResult_Infection>();
+                                                                var attachments = lot.AttachmentData_Im_CommitteeResult_Infection;
+                                                                var adminConfirms = adminResult.List_Committee_Result_Conferm;
+                                                                <tr class="display-none toggle-div16-Lot_Result_@lot.ID_Lot">
+                                                                    <td colspan="6">
+                                                                        <div class="row">
+                                                                            @if (adminResult.ResultTypes_Name != null)
+                                                                            {
+                                                                                <div class="col-md-6">@adminResult.ResultTypes_Name</div>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <div class="col-md-6">لا توجد نتيجة</div>
+                                                                            }
+                                                                            <div class="col-md-6">
+                                                                                <button type="button" class="quickview4 style-but" data-bs-toggle="modal"
+                                                                                        data-bs-target="#mymodalemanexamination"
+                                                                                        data-delegationdate="@(adminResult.Delegation_Date?.ToString("dd/MM/yyyy"))"
+                                                                                        data-status="@adminResult.Status"
+                                                                                        data-isfinishedall="@adminResult.IsFinishedAll"
+                                                                                        data-employeeid="@adminResult.EmployeeId"
+                                                                                        data-employeename="@adminResult.Employee_Name"
+                                                                                        data-starttime="@adminResult.StartTime"
+                                                                                        data-endtime="@adminResult.EndTime"
+                                                                                        data-notes="@adminResult.Notes">
+                                                                                    تفاصيل
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        @if (infections.Count() > 0)
+                                                                        {
+                                                                            <div class="row" style="margin-top:20px;">
+                                                                                <div class="col-md-12">
+                                                                                    <table id="popup">
+                                                                                        <thead>
+                                                                                            <tr>
+                                                                                                <th hidden="hidden">الرقم</th>
+                                                                                                <th hidden="hidden">رقم الافة</th>
+                                                                                                <th hidden="hidden">رقم النتيجة</th>
+                                                                                                <th>اسم الافة</th>
+                                                                                                <th>اسم الافة العلمى</th>
+                                                                                                <th>تفاصيل</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            @for (int c = 0; c < infections.Count(); c++)
+                                                                                            {
+                                                                                                var inf = infections[c];
+                                                                                                <tr>
+                                                                                                    <td hidden="hidden">@inf.ID</td>
+                                                                                                    <td hidden="hidden">@inf.Item_ID</td>
+                                                                                                    <td hidden="hidden">@inf.Im_CommitteeResult_ID</td>
+                                                                                                    <td>@inf.Item_Name</td>
+                                                                                                    <td>@inf.Scientific_Name</td>
+                                                                                                    <td style="padding-bottom:10px;">
+                                                                                                        <button type="button" class="quickview6 style-but" data-bs-toggle="modal"
+                                                                                                                data-bs-target="#mymodalemanexamination"
+                                                                                                                data-itemname="@inf.Item_Name"
+                                                                                                                data-mainname="@inf.Main_Classification_Name"
+                                                                                                                data-secondaryname="@inf.Secondary_Classification_Name"
+                                                                                                                data-groupname="@inf.Group_Name"
+                                                                                                                data-kingdomname="@inf.KingdomName"
+                                                                                                                data-phylumsub="@inf.PhylumSubphylumName"
+                                                                                                                data-famliyname="@inf.FamliyName"
+                                                                                                                data-scientificname="@inf.Scientific_Name"
+                                                                                                                data-description="@inf.Description"
+                                                                                                                data-isplantegypt="@inf.Is_Plant_Egypt"
+                                                                                                                data-isforbidden="@inf.Is_Forbidden"
+                                                                                                                data-isforbiddenreason="@inf.Is_Forbidden_Reason"
+                                                                                                                data-isknownitem="@inf.Is_Known_Item"
+                                                                                                                data-ordername="@inf.Order_Name"
+                                                                                                                data-picture="@inf.Picture">
+                                                                                                            تفاصيل الآفة
+                                                                                                        </button>
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                            }
+                                                                                        </tbody>
+                                                                                    </table>
+                                                                                </div>
+                                                                            </div>
+                                                                            <br />
+                                                                            <div class="col-md-4">
+                                                                                @if (attachments != null)
+                                                                                {
+                                                                                    for (int cc = 0; cc < attachments.Count(); cc++)
+                                                                                    {
+                                                                                        var att = attachments[cc];
+                                                                                        string imageSrc = att.AttachmentPath_Binary != null
+                                                                                            ? string.Format("data:image/png;base64,{0}", Convert.ToBase64String(att.AttachmentPath_Binary))
+                                                                                            : string.Empty;
+                                                                                        <button type="button" class="quickview7 style-but" data-bs-toggle="modal"
+                                                                                                data-bs-target="#mymodalemanexamination"
+                                                                                                data-picture="@imageSrc">
+                                                                                            الصورة
+                                                                                        </button>
+                                                                                    }
+                                                                                }
+                                                                            </div>
+                                                                        }
+                                                                    </td>
+                                                                    <td colspan="1">
+                                                                        @if (adminResult.IS_Total is true && (adminResult.IS_TotalAndroid is null || adminResult.IS_TotalAndroid is true))
+                                                                        {
+                                                                            <label>كلي</label>
+                                                                        }
+                                                                        else if (adminResult.IS_Total is false || adminResult.IS_TotalAndroid is false)
+                                                                        {
+                                                                            <label>جزئي</label>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <label>لم يتم العمل علي هذا اللوط</label>
+                                                                        }
+                                                                    </td>
+                                                                    <td colspan="5">
+                                                                        @if (adminConfirms != null && adminConfirms.Count > 0)
+                                                                        {
+                                                                            for (int b = 0; b < adminConfirms.Count(); b++)
+                                                                            {
+                                                                                var cf = adminConfirms[b];
+                                                                                <div class="row">
+                                                                                    @if (cf.User_Deletion_Id == null)
+                                                                                    {
+                                                                                        if (cf.IsAccepted == true)
+                                                                                        {
+                                                                                            <div class="col-md-10">موافق</div>
+                                                                                            <div class="col-md-10">من قبل @cf.Employee_Name</div>
+                                                                                        }
+                                                                                        else if (cf.IsAccepted == false)
+                                                                                        {
+                                                                                            <div class="col-md-10">غير موافق</div>
+                                                                                            <div class="col-md-10">من قبل @cf.Employee_Name</div>
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            <div class="col-md-10">
+                                                                                                <label>لم يتم العمل عليها</label>
+                                                                                                <div class="col-md-10">من قبل @cf.Employee_Name</div>
+                                                                                                <input type="button" value="حذف المساعد" onclick="btn_Delete_click(this)" class="style-but" data-assigned-id="@(adminResult.Committee_ID)_@(cf.EmployeeId)" autocomplete="off" />
+                                                                                            </div>
+                                                                                        }
+                                                                                        <div class="col-md-10">@cf.Employee_Name</div>
+                                                                                        <div class="col-md-10">@cf.Date</div>
+                                                                                        <div class="col-md-10">@cf.Notes</div>
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <div class="col-md-10">تم حذف المساعد</div>
+                                                                                        <div class="col-md-10">@cf.Employee_Name</div>
+                                                                                        <div class="col-md-10">من قبل @cf.Employee_Name_Conferm</div>
+                                                                                        <div class="col-md-10">فى تاريخ @cf.User_Deletion_Date</div>
+                                                                                    }
+                                                                                </div>
+                                                                            }
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="row"><div class="col-md-10">لا يوجد مساعدين للجنة</div></div>
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <tr style="background-color:#c1b88c !important; color:rgb(255,255,255); font-weight:bold; font-size:16px;"
+                                                                class="display-none toggle-div6-Lot_Result_@lot.ID_Lot">
+                                                                <td colspan="12" style="font-size:inherit">لاتوجد معاينة</td>
+                                                            </tr>
+                                                        }
+                                                    }
+
+                                                    @* ---------------- نتيجة السحب ---------------- *@
+                                                    if (committeeType == 13 || committeeType == 0)
+                                                    {
+                                                        var samples = lot.List_Lot_Committee_Sample ?? new List<Committee_Sample_Lot>();
+                                                        if (samples.Count() > 0)
+                                                        {
+                                                            <tr style="background-color:#c1b88c !important; color:rgb(255,255,255); font-weight:bold; font-size:16px;"
+                                                                class="display-none toggle-div6-Lot_Result_@lot.ID_Lot">
+                                                                <td colspan="12" style="font-size:inherit">
+                                                                    <input id="Lot_Result_@lot.ID_Lot" class="style-but" type="button" onClick="reply_click_display_Sample(this)" value="نتيجة سحب لوط رقم : @lot.Lot_Number اضغط هنا" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr class="display-none toggle-div51-Lot_Result_@lot.ID_Lot">
+                                                                <th colspan="2" style="background-color:#c1b88c !important;">باركود</th>
+                                                                <th colspan="2" style="background-color:#c1b88c !important;">نوع التحاليل</th>
+                                                                <th colspan="2" style="background-color:#c1b88c !important;">نتيجة سحب الادمن</th>
+                                                                <th colspan="2" style="background-color:#c1b88c !important;">نتيجة سحب المساعد</th>
+                                                                <th colspan="4" style="background-color:#c1b88c !important;">موقف المعمل</th>
+                                                            </tr>
+                                                            for (int s = 0; s < samples.Count(); s++)
+                                                            {
+                                                                var sample = samples[s];
+                                                                var sampleConfirms = sample.List_Committee_Sample_Conferm;
+                                                                <tr class="display-none toggle-div51-Lot_Result_@lot.ID_Lot">
+                                                                    <td colspan="2">
+                                                                        <a href="/LaboratoryResult/LaboratoryResult_Report/Index?barcode=@sample.Sample_BarCode">@sample.Sample_BarCode</a>
+                                                                    </td>
+                                                                    <td colspan="2">
+                                                                        <div class="row"><div class="col-md-12"><span class="labelspan">التحليل</span></div></div>
+                                                                        <div class="row"><div class="col-md-12"><span>@sample.Analysis_Name</span></div></div>
+                                                                        <div class="row"><div class="col-md-12"><span class="labelspan">المعمل</span></div></div>
+                                                                        <div class="row"><div class="col-md-12"><span>@sample.Lab_Name</span></div></div>
+                                                                    </td>
+                                                                    <td colspan="2">
+                                                                        <button type="button" class="quickview5 style-but" data-bs-toggle="modal"
+                                                                                data-bs-target="#mymodalemanexamination"
+                                                                                data-delegationdate="@(sample.Delegation_Date?.ToString("dd/MM/yyyy"))"
+                                                                                data-status="@sample.Status"
+                                                                                data-isfinishedall="@sample.IsFinishedAll"
+                                                                                data-samplesize="@sample.SampleSize"
+                                                                                data-samplesatio="@sample.SampleRatio"
+                                                                                data-withdrawdate="@sample.WithdrawDate"
+                                                                                data-employeename="@sample.Employee_Name"
+                                                                                data-notes="@sample.Notes"
+                                                                                data-sylalkhatimanumber="@sample.Syl_ALkhatima_Number">
+                                                                            تفاصيل
+                                                                        </button>
+                                                                    </td>
+                                                                    <td colspan="2">
+                                                                        @if (sampleConfirms != null && sampleConfirms.Count() > 0)
+                                                                        {
+                                                                            for (int sc = 0; sc < sampleConfirms.Count(); sc++)
+                                                                            {
+                                                                                var cf = sampleConfirms[sc];
+                                                                                <div class="row">
+                                                                                    @if (cf.User_Deletion_Id == null)
+                                                                                    {
+                                                                                        if (cf.IsAccepted == true)
+                                                                                        {
+                                                                                            <div class="col-md-6">موافق</div>
+                                                                                            <div class="col-md-6">@cf.Employee_Name</div>
+                                                                                            <hr />
+                                                                                        }
+                                                                                        else if (cf.IsAccepted == false)
+                                                                                        {
+                                                                                            <div class="col-md-6">غير موافق</div>
+                                                                                            <div class="col-md-6">@cf.Employee_Name</div>
+                                                                                            <hr />
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            <div class="col-md-12">
+                                                                                                <div class="col-md-4">لم يتم العمل عليها</div>
+                                                                                                <div class="col-md-4">@cf.Employee_Name</div>
+                                                                                                <div class="col-md-4">
+                                                                                                    <input type="button" value="حذف المساعد" onclick="btn_Delete_click(this)" class="style-but" data-assigned-id="@(sample.Committee_ID)_@(cf.EmployeeId)" autocomplete="off" />
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <hr />
+                                                                                        }
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <div class="col-md-10">تم حذف المساعد</div>
+                                                                                        <div class="col-md-10">@cf.Employee_Name</div>
+                                                                                        <div class="col-md-10">من قبل @cf.Employee_Name_Conferm</div>
+                                                                                        <div class="col-md-10">فى تاريخ @cf.User_Deletion_Date</div>
+                                                                                    }
+                                                                                    <div class="col-md-6"></div>
+                                                                                </div>
+                                                                            }
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="row"><div class="col-md-10">لا يوجد مساعدين للجنة</div></div>
+                                                                        }
+                                                                    </td>
+                                                                    <td colspan="4">
+                                                                        @if (sample.IsAccepted != null)
+                                                                        {
+                                                                            if (sample.IsAccepted == true)
+                                                                            {
+                                                                                <div class="col-md-6">مقبول</div>
+                                                                            }
+                                                                            else if (sample.IsAccepted == false)
+                                                                            {
+                                                                                <div class="col-md-6">مرفوض</div>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <div class="col-md-6">لا توجد نتائج</div>
+                                                                            }
+                                                                            <div class="col-md-6">@sample.RejectReason_Ar</div>
+                                                                            <div class="col-md-6">
+                                                                                <input type="button" value="تحميل الملف" class="style-but" onclick="btndownload_click(this)" data-assigned-id="@sample.Imge_SampleLabResult" />
+                                                                            </div>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="col-md-6">لا توجد نتائج</div>
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <tr style="background-color:#c1b88c !important; color:rgb(255,255,255); font-weight:bold; font-size:16px;"
+                                                                class="display-none toggle-div6-Lot_Result_@lot.ID_Lot">
+                                                                <td colspan="12" style="font-size:inherit">لا يوجد سحب</td>
+                                                            </tr>
+                                                        }
+                                                    }
+
+                                                    @* ---------------- نتيجة المعالجة ---------------- *@
+                                                    if (committeeType == 14 || committeeType == 0)
+                                                    {
+                                                        var treatments = lot.List_Treatment ?? new List<List_Treatment_Data>();
+                                                        if (treatments.Count() > 0)
+                                                        {
+                                                            <tr style="background-color:#c1b88c; color:rgb(255,255,255); font-weight:bold; font-size:16px;"
+                                                                class="display-none toggle-div6-Lot_Result_@lot.ID_Lot">
+                                                                <td colspan="12" style="font-size:inherit">
+                                                                    <input id="Lot_Result_@lot.ID_Lot" class="style-but" type="button" onClick="reply_click55(this)" value="نتيجة معالجة لوط رقم : @lot.Lot_Number اضغط هنا" />
+                                                                </td>
+                                                            </tr>
+                                                            <tr class="display-none toggle-div55-Lot_Result_@lot.ID_Lot">
+                                                                <th colspan="1" style="background-color:#c1b88c!important">نوع المعالجة</th>
+                                                                <th colspan="1" style="background-color:#c1b88c!important">طريقة المعالجة</th>
+                                                                <th colspan="2" style="background-color:#c1b88c!important">مادة المعالجة</th>
+                                                                <th colspan="2" style="background-color:#c1b88c!important">اللإجراءات</th>
+                                                                <th colspan="2" style="background-color:#c1b88c!important">نتيجة معالجة الادمن</th>
+                                                                <th colspan="2" style="background-color:#c1b88c!important">نتيجة معالجة المساعد</th>
+                                                                <th colspan="2" style="background-color:#c1b88c!important">موقف اللجنة</th>
+                                                            </tr>
+                                                            for (int t = 0; t < treatments.Count(); t++)
+                                                            {
+                                                                var treatment = treatments[t];
+                                                                var treatmentConfirms = treatment.List_Treatment_Confirm;
+                                                                <tr class="display-none toggle-div55-Lot_Result_@lot.ID_Lot">
+                                                                    <td colspan="1"><div class="row"><div class="col-md-12"><span>@treatment.TreatmentType_Name</span></div></div></td>
+                                                                    <td colspan="1"><div class="row"><div class="col-md-12"><span>@treatment.TreatmentMethod_Name</span></div></div></td>
+                                                                    <td colspan="2"><div class="row"><div class="col-md-12"><span>@treatment.TreatmentMat_Name</span></div></div></td>
+                                                                    <td colspan="2"><div class="row"><div class="col-md-12"><span>@treatment.Procedures</span></div></div></td>
+                                                                    <td colspan="2">
+                                                                        <button type="button" class="quickview_Treatment style-but" data-bs-toggle="modal"
+                                                                                data-bs-target="#mymodalemanexamination"
+                                                                                data-companyname="@treatment.Company_Name"
+                                                                                data-stationid="@treatment.Station_ID"
+                                                                                data-stationplace="@Model.ArrivePortName"
+                                                                                data-treatmentmatname="@treatment.TreatmentMat_Name"
+                                                                                data-size="@treatment.Size"
+                                                                                data-treatmentmatamount="@treatment.TreatmentMat_Amount"
+                                                                                data-thedose="@treatment.TheDose"
+                                                                                data-exposureday="@treatment.Exposure_Day"
+                                                                                data-exposurehour="@treatment.Exposure_Hour"
+                                                                                data-exposureminute="@treatment.Exposure_Minute"
+                                                                                data-temperature="@treatment.Temperature"
+                                                                                data-employeename="@treatment.Employee_Name"
+                                                                                data-notes="@treatment.Note"
+                                                                                data-thermalsealnumber="@treatment.ThermalSealNumber">
+                                                                            تفاصيل
+                                                                        </button>
+                                                                    </td>
+                                                                    <td colspan="2">
+                                                                        @if (treatmentConfirms != null && treatmentConfirms.Count() > 0)
+                                                                        {
+                                                                            for (int sc = 0; sc < treatmentConfirms.Count(); sc++)
+                                                                            {
+                                                                                var cf = treatmentConfirms[sc];
+                                                                                <div class="row">
+                                                                                    @if (cf.User_Deletion_Id == null)
+                                                                                    {
+                                                                                        if (cf.IsAccepted == true)
+                                                                                        {
+                                                                                            <div class="col-md-6">موافق</div>
+                                                                                            <div class="col-md-10">من قبل @cf.Employee_Name</div>
+                                                                                        }
+                                                                                        else if (cf.IsAccepted == false)
+                                                                                        {
+                                                                                            <div class="col-md-6">غير موافق</div>
+                                                                                            <div class="col-md-10">من قبل @cf.Employee_Name</div>
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            <div class="col-md-12">
+                                                                                                <label>لم يتم العمل عليها</label>
+                                                                                                <div class="col-md-4">من قبل @cf.Employee_Name</div>
+                                                                                                <input type="button" value="حذف المساعد" onclick="btn_Delete_click(this)" class="style-but" data-assigned-id="@(treatment.Committee_ID)_@(cf.EmployeeId)" autocomplete="off" />
+                                                                                            </div>
+                                                                                        }
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        <div class="col-md-10">تم حذف المساعد</div>
+                                                                                        <div class="col-md-10">@cf.Employee_Name</div>
+                                                                                        <div class="col-md-10">من قبل @cf.Employee_Name_Conferm</div>
+                                                                                        <div class="col-md-10">فى تاريخ @cf.User_Deletion_Date</div>
+                                                                                    }
+                                                                                    <div class="col-md-6"></div>
+                                                                                </div>
+                                                                            }
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <div class="row"><div class="col-md-10">لا يوجد مساعدين للجنة</div></div>
+                                                                        }
+                                                                    </td>
+                                                                    <td colspan="2">
+                                                                        @if (treatment.IsFinishedAll == true)
+                                                                        {
+                                                                            if (treatment.Is_Cancel == null)
+                                                                            {
+                                                                                <div class="row"><div class="col-md-12"><span>تم انتهاءعمل اللجنة</span></div></div>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <div class="row"><div class="col-md-12"><span>تم الانتهاء وتعزر عمل اللجنة</span></div></div>
+                                                                            }
+                                                                        }
+                                                                        else if (treatment.IsFinishedAll == false)
+                                                                        {
+                                                                            if (treatment.Is_Cancel == null)
+                                                                            {
+                                                                                if (treatment.TreatmentMat_ID == null)
+                                                                                {
+                                                                                    <div class="row"><div class="col-md-12"><span>تم عمل اللجنة ولم يتم العمل على هذا اللوط</span></div></div>
+                                                                                }
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <div class="row"><div class="col-md-12"><span>تعذرت المعالجة</span></div></div>
+                                                                            }
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            if (treatment.IsApproved == true)
+                                                                            {
+                                                                                <div class="row"><div class="col-md-12"><span>لم يتم نزول الاندرويد</span></div></div>
+                                                                            }
+                                                                            else if (treatment.IsApproved == false)
+                                                                            {
+                                                                                <div class="row"><div class="col-md-12"><span>تم رفض ميعاد اللجنة</span></div></div>
+                                                                            }
+                                                                            else if (treatment.Delegation_Date < DateTime.Now.Date)
+                                                                            {
+                                                                                <div class="row"><div class="col-md-12"><span>لم يتم اختيار الشركة والوقت انتهي</span></div></div>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <div class="row"><div class="col-md-12"><span>لم يتم اختيار شركة من قبل العميل</span></div></div>
+                                                                            }
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <tr style="background-color:#c1b88c !important; color:rgb(255,255,255); font-weight:bold; font-size:16px;"
+                                                                class="display-none toggle-div6-Lot_Result_@lot.ID_Lot">
+                                                                <td colspan="12" style="font-size:inherit">لا توجد معالجة</td>
+                                                            </tr>
+                                                        }
+                                                    }
+
+                                                    @* ---------------- موقف الحجر ---------------- *@
+                                                    if (finalResultLotInsert)
+                                                    {
+                                                        var statuses = lot.Lot_Status_Result ?? new List<Lot_Status_Result>();
+                                                        <tr class="display-none toggle-div6-stonestand_@lot.ID_Lot" style="color:black; font-weight:bold; font-size:16px;">
+                                                            <td colspan="12" style="font-size:inherit">
+                                                                <table id="Tab_Status_@lot.ID_Lot" style="width:100%">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <td colspan="12" style="font-size:inherit; background-color:#8e3200cc!important">موقف الحجر</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <th colspan="3" style="font-size:inherit; background-color:#8e3200cc!important">ملاحظات</th>
+                                                                            <th colspan="3" style="font-size:inherit; background-color:#8e3200cc!important">موقف الحجر</th>
+                                                                            <th hidden colspan="1" style="font-size:inherit; background-color:#8e3200cc!important">رقم موقف الحجر</th>
+                                                                            <th colspan="2" style="font-size:inherit; background-color:#8e3200cc!important">حالة اللجنة</th>
+                                                                            <th colspan="3" style="font-size:inherit; background-color:#8e3200cc!important">الموظف</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="tbody_Status_@lot.ID_Lot">
+                                                                        @for (int sc = 0; sc < statuses.Count(); sc++)
+                                                                        {
+                                                                            var status = statuses[sc];
+                                                                            var statusCommittee = status.Is_Continue == true ? "يوجد اجراء" : "لا يوجد اجراء اخر";
+                                                                            <tr id="Td_IS_Status_@lot.ID_Lot" class="display-none toggle-div6-stonestand_@lot.ID_Lot">
+                                                                                <td colspan="3"><label id="lbl_Nods_@lot.ID_Lot">@status.Note_Lot_Result</label></td>
+                                                                                <td colspan="3"><label id="lbl_Select_@lot.ID_Lot">@status.IS_Status_Name</label></td>
+                                                                                <td hidden colspan="1">@status.IS_Status_Lot_Result</td>
+                                                                                <td colspan="2"><label id="lbl_IS_Status_Committee_@lot.ID_Lot">@statusCommittee</label></td>
+                                                                                <td colspan="3"><label id="lbl_IS_Status_Committee_@lot.ID_Lot">@status.User_Name @status.User_Creation_Date</label></td>
+                                                                            </tr>
+                                                                        }
+                                                                    </tbody>
+                                                                    <tfoot>
+                                                                        @if (statuses.Any(a => a.Is_Continue == false) == false || statuses.Count() == 0)
+                                                                        {
+                                                                            <tr id="@lot.ID_Lot" class="display-none toggle-div6-stonestand_@lot.ID_Lot">
+                                                                                @if (lot.CommitteeResultType_ID != 7)
+                                                                                {
+                                                                                    <td colspan="6"><textarea id="Txt_Nots_@lot.ID_Lot"></textarea></td>
+                                                                                    <td colspan="6" class="padding-left-50">
+                                                                                        <div class="row">
+                                                                                            <div class="col-md-10">
+                                                                                                <label id="LotStatusLbl_@lot.ID_Lot" class="col-md-4">موقف الحجر</label>
+                                                                                                <select class="col-md-8" id="LotStatusLst_@lot.ID_Lot" name="@lot.ID_Lot"></select>
+                                                                                            </div>
+                                                                                            <div class="col-md-2">
+                                                                                                <button id="Insert_Lot_Result_@lot.ID_Lot" name="@lot.ID_Lot" onclick="reply_Insert_Lot_Result1(this)"
+                                                                                                        data-assigned-id="@lot.ID_Lot" class="quickview10 style-but"
+                                                                                                        data-bs-toggle="modal" data-bs-target="#saveStatus">
+                                                                                                    حفظ
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <td colspan="6">@lot.CommitteeResultType_ID تعذر الفحص على هذا اللوط</td>
+                                                                                }
+                                                                            </tr>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <tr class="display-none toggle-div6-stonestand_@lot.ID_Lot">
+                                                                                <td colspan="12">تم انتهاء الاجراءت على اللوط</td>
+                                                                            </tr>
+                                                                        }
+                                                                    </tfoot>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                    else
+                                                    {
+                                                        <tr class="display-none toggle-div6-stonestand_@lot.ID_Lot" style="background-color:#8e3200cc!important; color:rgb(255,255,255); font-weight:bold; font-size:16px;">
+                                                            <td colspan="12">لم يتم عمل اللجان حتى يتثنى لك العمل على موقف اللوط</td>
+                                                        </tr>
+                                                    }
+                                                }
+
+                                                <tr class="display-none toggle-div4-@i@i@i@i">
+                                                    <td colspan="6"><label>نوع اللجنة</label></td>
+                                                    <td colspan="6"></td>
+                                                </tr>
+                                                <tr class="display-none toggle-div5-@i@i@i@i">
+                                                    <td colspan="6"></td>
+                                                    <td colspan="6"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <br />
+                                        <hr style="border-top: 1px solid #848484;" />
+                                        <br />
+                                    }
+                                }
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    @* ============================== التأشيرة ============================== *@
+    <div class="row">
+        <label class="tapp-title">التأشيرة</label>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-12">
+            <a href='/Committees/FeesTotalResult/Index?ImCheckRequest_Number=@Model.ImCheckRequest_Number' class="btn btn-primary" style="background-color:#1f6c6f; border-color:#1f6c6f;">عرض الرسوم</a>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-4">
+            <input type="text" value="نص التأشيرة" readonly class="form-control" />
+            <select class="form-control" id="Visa_Lst"></select>
+            <textarea id="visalab" class="form-control" disabled></textarea>
+            <br />
+            <button type="button" class="quickview10 style-but" data-bs-toggle="modal" data-bs-target="#mytextVisa">
+                حفظ التأشيرة
+            </button>
+        </div>
+        <div class="col-md-8">
+            <table id="Tab_Visa" class="table table-bordered table-striped" role="grid" style="padding:5px; width:100%">
+                <thead>
+                    <tr>
+                        <th>نص التأشيرة</th>
+                        <th>التاريخ</th>
+                        <th>اسم الموظف</th>
+                    </tr>
+                </thead>
+                <tbody id="myTable2">
+                    @if (Model.CheckRequest_Visa != null)
+                    {
+                        for (int cm = 0; cm < Model.CheckRequest_Visa.Count(); cm++)
+                        {
+                            <tr>
+                                <td>
+                                    <textarea style="width:100%;" rows="4" disabled>@Model.CheckRequest_Visa[cm].Visa_Result_Name</textarea>
+                                </td>
+                                <td>@(Model.CheckRequest_Visa[cm].Date_Visa?.ToString("dd/MM/yyyy"))</td>
+                                <td>@Model.CheckRequest_Visa[cm].Visa_Result_Employee_Name</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr />
+
+    @* ============================ الموقف النهائي ============================ *@
+    <div class="row">
+        <div class="col-md-4">
+            <select class="form-control" id="FinalResult" name="FinalResult">
+                <option value="0">أختار</option>
+                <option id="FinalResult_worked" value="1">الطلب يعمل</option>
+                @if (Model.Count_Lots == 0)
+                {
+                    <option id="FinalResult_notworked" value="2">الطلب لا يعمل</option>
+                }
+            </select>
+            <select class="form-control" id="FinalResultList" name="FinalResultList"></select>
+            <br />
+            <button type="button" class="quickview17 style-but" data-bs-toggle="modal" data-bs-target="#mytextFinalRequest">
+                حفظ الموقف النهائى
+            </button>
+        </div>
+        <div class="col-md-8">
+            <table id="TblFinalResult" class="table table-bordered table-striped" role="grid" style="padding:5px; width:100%">
+                <thead>
+                    <tr>
+                        <th>اسم الموظف</th>
+                        <th>تاريخ الطلب</th>
+                        <th>حالة الطلب</th>
+                        <th>الموقف النهائي للطلب</th>
+                    </tr>
+                </thead>
+                <tbody id="myTable3">
+                    @if (Model.FinalResults != null)
+                    {
+                        for (int cm = 0; cm < Model.FinalResults.Count(); cm++)
+                        {
+                            <tr>
+                                <td>@Model.FinalResults[cm].Final_Result_Employee_Name</td>
+                                <td>@(Model.FinalResults[cm].DateFinalResult?.ToString("dd/MM/yyyy"))</td>
+                                @if (Model.FinalResults[cm].Final_Result_Status == true)
+                                {
+                                    <td>الطلب يعمل</td>
+                                }
+                                else
+                                {
+                                    <td>الطلب لا يعمل</td>
+                                }
+                                <td>@Model.FinalResults[cm].Final_Result_Name</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.Count_Lots == 0)
+    {
+        <br />
+        <hr />
+        <div class="row">
+            <div class="col-md-12">
+                <div class="col-md-4">
+                    <center><a href='/IM_Check_Requst_Report/ChooseAcceptedReport/Index?ImCheckRequest_Number=@Model.ImCheckRequest_Number' class="btn btn-primary">طباعة إستمارة الفحص</a></center>
+                </div>
+                <div class="col-md-4">
+                    <center><a href='/Committees/RefuseResultReport/Index?ImCheckRequest_Number=@Model.ImCheckRequest_Number' class="btn btn-primary">طباعة إخبار الرفض</a></center>
+                </div>
+                <div class="col-md-4" style="text-align:center">
+                    <center><a href='/Committees/FeesTotalResult/Index?ImCheckRequest_Number=@Model.ImCheckRequest_Number' class="btn btn-primary">عرض الرسوم</a></center>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@* =============================== Modals =============================== *@
+<div id="mymodalemanexamination" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">تفاصيل</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body" id="modaldetails"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="mytextVisa" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">لتاكيد إضافة تاشيرة</h4>
+            </div>
+            <div class="modal-body">هل تريد إضافة هذه التاشيرة؟؟</div>
+            <div class="modal-footer" style="text-align:center">
+                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Visa(this)" data-bs-dismiss="modal">نعم</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لا</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="saveStatus" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">لتاكيد حفظ الموقف</h4>
+            </div>
+            <div class="modal-body">هل تريد حفظ هذا الموقف؟؟</div>
+            <div class="modal-footer" style="text-align:center">
+                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Lot_Result(this)" data-bs-dismiss="modal">نعم</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لا</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="mytextFinalRequest" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">لتاكيد إضافة موقف الطلب</h4>
+            </div>
+            <div class="modal-body">هل تريد إضافة هذا الموقف النهائى للطلب؟؟</div>
+            <div class="modal-footer" style="text-align:center">
+                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Final_Result(this)" data-bs-dismiss="modal">نعم</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لا</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/_shared/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/_shared/lib/select2/js/select2.min.js"></script>
+    <script>
+        var visaAddEditUrl = '@Url.Action("Visa_AddEDIT", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var visaLabResultUrl = '@Url.Action("VisaLabResult_AddEDIT", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var finalResultAddEditUrl = '@Url.Action("FinalResult_AddEDIT", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var lotStatusLstUrl = '@Url.Action("LotStatusLst_AddEDIT", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var insertLotResultUrl = '@Url.Action("Insert_Lot_Result", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var insertVisaUrl = '@Url.Action("Insert_Im_CheckRequest_Visa", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var insertFinalResultUrl = '@Url.Action("Insert_Im_CheckRequest_Final_Result", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var deleteEmpUrl = '@Url.Action("Delete_Emp_Confirm", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var downloadUrl = '@Url.Action("Get_Downlood_Imge", "ImCommittee_Final_Result", new { area = "Committees" })';
+
+        // Legacy used the alertify toast library, which is not part of the portal; a small
+        // fixed-position box covers the same "success / error" feedback.
+        function notify(message, isOk) {
+            var box = document.getElementById('isccNotify');
+            box.className = 'alert ' + (isOk ? 'alert-success' : 'alert-danger');
+            box.style.display = 'block';
+            box.textContent = message;
+            window.clearTimeout(box._t);
+            box._t = window.setTimeout(function () { box.style.display = 'none'; }, 3500);
+        }
+
+        function reply_click2(element) {
+            $(".toggle-div2-" + element.id).toggle('fast', "linear");
+        }
+
+        function reply_click6(element) {
+            var lotId = element.id.split('_')[1];
+            $.post(lotStatusLstUrl, function (data) {
+                $('#LotStatusLst_' + lotId).empty();
+                $.each(data.options, function (i, index) {
+                    $('#LotStatusLst_' + lotId).append($('<option />').val(index.value).text(index.displayText));
+                });
+            });
+            $(".toggle-div6-" + element.id).toggle('fast', "linear");
+            $(".toggle-div55-" + element.id).toggle('fast', "linear");
+            $(".toggle-div16-" + element.id).toggle('fast', "linear");
+            $(".toggle-div51-" + element.id).toggle('fast', "linear");
+        }
+
+        function reply_click50(element) {
+            $(".toggle-div16-" + element.id).toggle('fast', "linear");
+        }
+
+        function reply_click55(element) {
+            $(".toggle-div55-" + element.id).toggle('fast', "linear");
+        }
+
+        function reply_click_display_Sample(element) {
+            $(".toggle-div51-" + element.id).toggle('fast', "linear");
+        }
+
+        // حفظ موقف اللوط
+        function reply_Insert_Lot_Result1(element) {
+            var btnLotId = element.name;
+            $("#Lbl_ID_Lot").empty();
+            $("#Lbl_ID_Lot").append(btnLotId);
+
+            var lotStatusLstId = $("#LotStatusLst_" + btnLotId).val();
+            if (!(lotStatusLstId > 0)) {
+                notify("يجب تحديد النتيجة", false);
+            }
+        }
+
+        function reply_Insert_Lot_Result(element) {
+            var btnLotId = document.getElementById("Lbl_ID_Lot").innerHTML.trim();
+            var lotStatusLstId = $("#LotStatusLst_" + btnLotId).val();
+            var lotStatusTxt = $('#LotStatusLst_' + btnLotId + ' :selected').text().trim().split('/')[0];
+            var lotStatusSt = $('#LotStatusLst_' + btnLotId + ' :selected').text().trim().split('/')[1];
+            var nots = document.getElementById("Txt_Nots_" + btnLotId).value.trim();
+
+            var insertStatus = true;
+            var rows = document.getElementById("tbody_Status_" + btnLotId).rows;
+            if (rows.length > 0) {
+                for (var i = 0; i < rows.length; i++) {
+                    var cells = rows[i].getElementsByTagName('td');
+                    var lotStatusNew = cells[2].innerHTML.trim();
+                    if (lotStatusNew == lotStatusLstId) {
+                        insertStatus = false;
+                    }
+                }
+            } else {
+                insertStatus = true;
+            }
+
+            if (nots == "") {
+                notify("يجب ادخال ملاحظات", false);
+                return;
+            }
+            if (!(lotStatusLstId > 0)) {
+                notify("يجب تحديد النتيجة", false);
+                return;
+            }
+            if (insertStatus != true) {
+                notify("موجود مسبقا", false);
+                return;
+            }
+
+            $.post(insertLotResultUrl, { Lot_Category_ID: btnLotId, IS_Status: lotStatusLstId, Nots: nots }, function () {
+                notify("تمت الاضافة بنجاح", true);
+                var tableName = "Tab_Status_" + btnLotId;
+                $("#" + tableName + " tbody").append("<tr><td colspan='3'>" + nots + "</td><td colspan='3'>" + lotStatusTxt + "</td><td colspan='1'>" + lotStatusLstId + "</td><td colspan='2'>" + lotStatusSt + "</td><td colspan='3'>الموظف الحالي</td></tr>");
+                if (lotStatusSt == "لا يوجد اجراء اخر") {
+                    $("#" + btnLotId).attr("style", "display: none !important");
+                    $("#" + tableName + " tfoot").append("<tr><td colspan='12'>تم انتهاء الاجراءت على اللوط</td></tr>");
+                }
+                document.getElementById('Txt_Nots_' + btnLotId).value = '';
+                $("#LotStatusLst_" + btnLotId).val('0');
+            });
+        }
+
+        // التأشيرة
+        function reply_Insert_Visa(element) {
+            var visaId = document.getElementById("Visa_Lst").value;
+            var visaName = $('#Visa_Lst :selected').text();
+            var fullname = $('#fullnameID').val();
+            var today = new Date();
+            var date = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
+
+            var insertVisa = true;
+            var rows = document.getElementById("myTable2").rows;
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                if (cells.length > 0 && cells[0].innerHTML.indexOf(visaName) > -1) {
+                    insertVisa = false;
+                }
+            }
+
+            if (insertVisa != true) {
+                notify("التأشيرة موجودة مسبقا", false);
+                return;
+            }
+            if (!(visaId > 0)) {
+                notify("يجب تحديد التأشيرة", false);
+                return;
+            }
+
+            $.post(insertVisaUrl, { Visa_ID: visaId }, function () {
+                notify("تمت الاضافة بنجاح", true);
+                $("#Tab_Visa tbody").append("<tr><td>" + visaName + "</td><td>" + date + "</td><td>" + fullname + "</td></tr>");
+            });
+        }
+
+        // موقف نهائى للطلب
+        function reply_Insert_Final_Result(element) {
+            var finalResultList = document.getElementById("FinalResultList").value;
+            var finalResult = $('#FinalResult :selected').text();
+            var fullname = $('#fullnameID').val();
+            var finalResultListName = $('#FinalResultList :selected').text();
+            var today = new Date();
+            var date = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
+
+            var insertFinalResult = true;
+            var rows = document.getElementById("myTable3").rows;
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                if (cells.length >= 4 && cells[3].innerHTML == finalResultListName) {
+                    insertFinalResult = false;
+                }
+            }
+
+            if (insertFinalResult != true) {
+                notify("موقف الطلب موجود مسبقا", false);
+                return;
+            }
+            if (!(finalResultList > 0)) {
+                notify("يجب تحديد موقف الطلب", false);
+                return;
+            }
+
+            $.post(insertFinalResultUrl, {
+                Im_Final_Result_ID: finalResultList,
+                FinalResult: finalResult,
+                FinalResultList_Name: finalResultListName
+            }, function () {
+                notify("تمت الاضافة بنجاح", true);
+                $("#TblFinalResult tbody").append("<tr><td>" + fullname + "</td><td>" + date + "</td><td>" + finalResult + "</td><td>" + finalResultListName + "</td></tr>");
+            });
+        }
+
+        function btndownload_click(elem) {
+            var path = $(elem).data('assigned-id');
+            if (path) {
+                window.open(downloadUrl + '?path1=' + path, "_blank");
+            }
+        }
+
+        function shoooow(element) {
+            window.open(downloadUrl + '?path1=' + element.id, "_blank");
+        }
+
+        function btn_Delete_click(elem) {
+            var path = $(elem).data('assigned-id');
+            var urlParams = new URLSearchParams(window.location.search);
+            var requestId = urlParams.get('requestId');
+            var committeeId = path.split("_")[0].trim();
+            var employeeId = path.split("_")[1].trim();
+
+            $.post(deleteEmpUrl, { requestId: requestId, Committee_ID: committeeId, Employee_ID: employeeId }, function () {
+                notify("تم الحذف بنجاح", true);
+                window.location.reload();
+            });
+        }
+
+        function tdVal(tableId, index) {
+            var rows = document.getElementById(tableId).rows;
+            if (rows.length > index) {
+                var cells = rows[index].getElementsByTagName('td');
+                return cells.length > 0 ? cells[0].innerHTML : '';
+            }
+            return '';
+        }
+
+        function v(data, fallback) {
+            return (data === undefined || data === null || data === '' || data === 0) ? fallback : data;
+        }
+
+        $(function () {
+            $("#Visa_Lst").select2({ width: "100%", dir: "rtl" });
+            $("#FinalResultList").select2({ width: "100%", dir: "rtl" });
+
+            $.post(visaAddEditUrl, function (data) {
+                $('#Visa_Lst').empty();
+                $('#Visa_Lst').append($('<option />').val(0).text("أختار"));
+                $.each(data.options, function (i, index) {
+                    $('#Visa_Lst').append($('<option />').val(index.value).text(index.displayText));
+                });
+            });
+
+            $('#Visa_Lst').on("change", function () {
+                var visaResult = document.getElementById("Visa_Lst").value;
+                $.post(visaLabResultUrl, { VisaResult: visaResult }, function (data) {
+                    $("#visalab").empty();
+                    if (data.options) {
+                        $("#visalab").append(data.options.description_Ar);
+                    }
+                });
+            });
+
+            $('#FinalResult').on("change", function () {
+                var finalResult = $('#FinalResult').val();
+                if (finalResult != 0) {
+                    $.post(finalResultAddEditUrl, { FinalResult: finalResult }, function (data) {
+                        $('#FinalResultList').empty();
+                        $('#FinalResultList').append($('<option />').val(0).text("أختار"));
+                        $.each(data.options, function (i, index) {
+                            $('#FinalResultList').append($('<option />').val(index.value).text(index.displayText));
+                        });
+                    });
+                } else {
+                    notify("يجب اختيار موقف للحجر", false);
+                }
+            });
+
+            $(".quickview1").on("click", function () {
+                var grossweight = $(this).data("grossweight");
+                var netweight = $(this).data("netweight");
+                var packagecount = v($(this).data("packagecount"), '#####');
+                var packageweight = v($(this).data("packageweight"), '#####');
+                var numberWoodenPackage = v($(this).data("number_wooden_package"), '#####');
+                var ordertext = v($(this).data("ordertext"), '#####');
+                var packagetype = v($(this).data("packagetype"), '#####');
+                var reasonentry = v($(this).data("reasonentry"), '#####');
+                var size = v($(this).data("size"), '#####');
+                var packagebasedweight = v($(this).data("packagebasedweight"), '#####');
+                var packagenetweight = v($(this).data("packagenetweight"), '#####');
+                var unitsnumber = $(this).data("unitsnumber");
+                var subpartname = '';
+                if (v(unitsnumber, '#####') === '#####') { unitsnumber = '#####'; }
+                else { subpartname = v($(this).data("subpartname"), '#####'); }
+                var shipmentpolicynumber = v($(this).data("shipmentpolicynumber"), '#####');
+                var growerNumber = v($(this).data("grower_number"), '#####');
+                var recorded = v($(this).data("recorded"), '#####');
+                var itemcat = v($(this).data("itemcat"), '#####');
+                var itemcatgroup = v($(this).data("itemcatgroup"), '#####');
+                var pckgematerial = v($(this).data("pckgematerial"), '#####');
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup'>" +
+                    "<tr><td>نوع العبوة</td><td><span class='modalspan'>" + packagetype + "</span></td><td>مادة العبوة</td><td><span class='modalspan'>" + pckgematerial + "</span></td></tr>" +
+                    "<tr><td>عدد العبوات</td><td><span class='modalspan'>" + packagecount + "</span><span class='red'>عبوة</span></td><td>الوزن القائم للعبوة</td><td><span class='modalspan'>" + packagebasedweight + "</span><span class='red'>كجم</span></td></tr>" +
+                    "<tr><td>وزن العبوة فارغة</td><td><span class='modalspan'>" + packageweight + "</span><span class='red'>كجم</span></td><td>الوزن الصافي للعبوة</td><td><span class='modalspan'>" + packagenetweight + "</span><span class='red'>كجم</span></td></tr>" +
+                    "<tr><td>الوزن الاجمالي للوط</td><td><span class='modalspan'>" + grossweight + "</span><span class='red'>كجم</span></td><td>الوزن الصافي للوط</td><td><span class='modalspan'>" + netweight + "</span><span class='red'>كجم</span></td></tr>" +
+                    "<tr><td>عدد الوحدات</td><td>" + unitsnumber + "<span class='red'>" + subpartname + "</span></td><td>حجم الرسالة</td><td>" + size + "[م³]</td></tr>" +
+                    "<tr><td>نص الطلب</td><td><span class='modalspan'>" + ordertext + "</span></td><td>رقم بوليصة الشحن</td><td><span class='modalspan'>" + shipmentpolicynumber + "</span></td></tr>" +
+                    "<tr><td>سبب الدخول</td><td><span class='modalspan'>" + reasonentry + "</span></td><td>رقم المزارع</td><td><span class='modalspan'>" + growerNumber + "</span></td></tr>" +
+                    "<tr><td>المجموعة الصنفية</td><td><span class='modalspan'>" + itemcatgroup + "</span></td><td>مسجل/غير مسجل</td><td><span class='modalspan'>" + recorded + "</span></td></tr>" +
+                    "<tr><td>الصنف الزراعي/السلالة</td><td><span class='modalspan'>" + itemcat + "</span></td><td>عدد البالتات والوزن القائم للبلته</td><td><span class='modalspan'>" + numberWoodenPackage + "</span></td></tr>" +
+                    "</table>");
+            });
+
+            $(".quickview3").on("click", function () {
+                var containerNumber = $(this).data("containernumber");
+                var contid = $(this).data("contid");
+                var containersTypeId = $(this).data("containerstypeid");
+                var shipholdnumber = $(this).data("shipholdnumber");
+                var navigationalNumber = $(this).data("navigationalnumber");
+                var totalWeight = $(this).data("totalweight");
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup'><tbody>" +
+                    "<tr><td>وحدة الشحن</td><td>" + contid + "</td><td>رقم وحدة الشحن</td><td>" + containerNumber + "</td></tr>" +
+                    "<tr><td>السيل الملاحي</td><td>" + navigationalNumber + "</td><td>رقم العنبر</td><td>" + shipholdnumber + "</td></tr>" +
+                    "<tr><td>طريقة التعبئة</td><td>" + containersTypeId + "</td><td>وزن وحدة الشحن</td><td>" + totalWeight + "<span class='red'>كجم</span></td></tr>" +
+                    "</tbody></table>");
+            });
+
+            $(".quickview4").on("click", function () {
+                var delegationDate = $(this).data("delegationdate");
+                var status = $(this).data("status");
+                var isFinishedAll = $(this).data("isfinishedall");
+                var employeeId = $(this).data("employeeid");
+                var startTime = $(this).data("starttime");
+                var endTime = $(this).data("endtime");
+                var notes = $(this).data("notes");
+                var employeeName = $(this).data("employeename");
+
+                status = (status == "False") ? "لم يتم عمل اللجنة او الوقت انتهي" : "تم انتهاء اللجنة";
+                if (isFinishedAll == "False") { isFinishedAll = "لم يتم العمل على كل اللوطات"; }
+                else if (isFinishedAll == "True") { isFinishedAll = "تم العمل على كل اللوطات"; }
+                else { isFinishedAll = "لم يتم بدأ عمل اللجنة"; }
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup'><tbody>" +
+                    "<tr><td>تاريخ اللجنة</td><td>" + delegationDate + "</td></tr>" +
+                    "<tr><td>وقت البدايه</td><td>" + startTime + "</td><td>وقت النهايه</td><td>" + endTime + "</td></tr>" +
+                    "<tr><td>موقف اللجنة</td><td>" + status + "</td><td>موقف اللوطات</td><td>" + isFinishedAll + "</td></tr>" +
+                    "<tr><td>اسم الادمن</td><td>" + employeeName + "</td><td>رقم الادمن</td><td>" + employeeId + "</td></tr>" +
+                    "<tr><td>ملاحظات الادمن</td><td>" + notes + "</td></tr></tbody></table>");
+            });
+
+            $(".quickview5").on("click", function () {
+                var delegationDate = $(this).data("delegationdate");
+                var status = $(this).data("status");
+                var isFinishedAll = $(this).data("isfinishedall");
+                var sampleSize = $(this).data("samplesize");
+                var sampleSatio = $(this).data("samplesatio");
+                var withdrawDate = $(this).data("withdrawdate");
+                var employeeName = $(this).data("employeename");
+                var notes = $(this).data("notes");
+                var sylAlkhatimaNumber = $(this).data("sylalkhatimanumber");
+
+                status = (status == "False") ? "لم يتم عمل اللجنة او الوقت انتهي" : "تم انتهاء اللجنة";
+                if (isFinishedAll == "False") { isFinishedAll = "لم يتم العمل على كل اللوطات"; }
+                else if (isFinishedAll == "True") { isFinishedAll = "تم العمل على كل اللوطات"; }
+                else { isFinishedAll = "لم يتم بدأ عمل اللجنة"; }
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup'><tbody>" +
+                    "<tr><td>تاريخ اللجنة</td><td>" + delegationDate + "</td></tr>" +
+                    "<tr><td>موقف اللجنة</td><td>" + status + "</td><td>موقف اللوطات</td><td>" + isFinishedAll + "</td></tr>" +
+                    "<tr><td>حجم العينه</td><td>" + sampleSize + "</td><td>نسبة العينة</td><td>" + sampleSatio + "</td></tr>" +
+                    "<tr><td>وقت السحب</td><td>" + withdrawDate + "</td><td>اسم الادمن</td><td>" + employeeName + "</td></tr>" +
+                    "<tr><td>الملاحظات</td><td>" + notes + "</td><td>السير الملاحى</td><td>" + sylAlkhatimaNumber + "</td></tr>" +
+                    "</tbody></table>");
+            });
+
+            $(".quickview6").on("click", function () {
+                var itemname = $(this).data("itemname");
+                var kingdomname = $(this).data("kingdomname");
+                var phylumsubphylumname = $(this).data("phylumsub");
+                var ordername = $(this).data("ordername");
+                var famliyname = $(this).data("famliyname");
+                var description = $(this).data("description");
+                var scientificname = $(this).data("scientificname");
+                var isplantegypt = $(this).data("isplantegypt");
+                var isforbidden = $(this).data("isforbidden");
+                var isforbiddenreason = $(this).data("isforbiddenreason");
+                var picture = $(this).data("picture");
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup'><tbody>" +
+                    "<tr><td>المملكة</td><td>" + kingdomname + "</td><td>الشعبة/الصف</td><td>" + phylumsubphylumname + "</td></tr>" +
+                    "<tr><td>الرتبة</td><td>" + ordername + "</td><td>العائلة</td><td>" + famliyname + "</td></tr>" +
+                    "<tr><td>الاسم</td><td>" + itemname + "</td><td>الاسم العلمي</td><td>" + scientificname + "</td></tr>" +
+                    "<tr><td>الوصف</td><td>" + description + "</td><td>توجد/لاتوجد فى ج.م.ع</td><td>" + isplantegypt + "</td></tr>" +
+                    "<tr><td>حالة المنع</td><td>" + isforbidden + "</td><td>سبب المنع</td><td>" + isforbiddenreason + "</td></tr>" +
+                    (picture
+                        ? "<tr><td colspan='6'><button onclick='shoooow(this)' id='" + picture + "' value=''>تحميل الصورة</button></td></tr>"
+                        : "<tr><td colspan='6'>لا يوجد صورة</td></tr>") +
+                    "</tbody></table>");
+            });
+
+            $(".quickview7").on("click", function () {
+                var picture = $(this).data("picture");
+                $("#modaldetails").empty();
+                $("#modaldetails").append("<table id='popup'><tbody><tr><td><img width='100px' src='" + picture + "'></td></tr></tbody></table>");
+            });
+
+            $(".quickview_Treatment").on("click", function () {
+                var companyName = $(this).data("companyname");
+                var stationId = $(this).data("stationid");
+                var stationPlace = $(this).data("stationplace");
+                var treatmentMatName = $(this).data("treatmentmatname");
+                var size = $(this).data("size");
+                var treatmentMatAmount = $(this).data("treatmentmatamount");
+                var theDose = $(this).data("thedose");
+                var exposureDay = $(this).data("exposureday");
+                var exposureHour = $(this).data("exposurehour");
+                var exposureMinute = $(this).data("exposureminute");
+                var temperature = $(this).data("temperature");
+                var employeeName = $(this).data("employeename");
+                var notes = $(this).data("notes");
+                var thermalSealNumber = $(this).data("thermalsealnumber");
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup'><tbody>" +
+                    "<tr><td>أسم ألادمن</td><td>" + employeeName + "</td><td></td></tr>" +
+                    "<tr><td>الشركة</td><td>" + companyName + "</td><td>المحطة</td><td>" + stationId + "</td></tr>" +
+                    "<tr><td>مكان المعالجة</td><td>" + stationPlace + "</td><td>حجم الرسالة</td><td>" + size + "<span class='red'>سم2/ م2</span></td></tr>" +
+                    "<tr><td>كمية المادة</td><td>" + treatmentMatAmount + "</td><td>الجرعة</td><td>" + theDose + "<span class='red'>جم/ م3</span></td></tr>" +
+                    "<tr><td>التعرض باليوم</td><td>" + exposureDay + "</td><td>التعرض بالساعة</td><td>" + exposureHour + "</td></tr>" +
+                    "<tr><td>التعرض بالدقيقة</td><td>" + exposureMinute + "</td><td>درجة الحرارة</td><td>" + temperature + "<span class='red'>درجة مئوية</span></td></tr>" +
+                    "<tr><td>الملاحظات</td><td>" + notes + "</td><td>رقم الختم الحرارى</td><td>" + thermalSealNumber + "</td></tr>" +
+                    "</tbody></table>");
+            });
+        });
+    </script>
+    <div id="isccNotify" class="alert" style="display:none; position:fixed; top:15px; inset-inline-start:15px; z-index:2000; min-width:220px;"></div>
 }

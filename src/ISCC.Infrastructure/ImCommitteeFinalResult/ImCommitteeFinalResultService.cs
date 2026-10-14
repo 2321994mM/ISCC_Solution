@@ -30,9 +30,10 @@ public class ImCommitteeFinalResultService : IImCommitteeFinalResultService
     private static string? Pick(string? arabic, string? english) =>
         IsArabic ? arabic ?? english : english ?? arabic;
 
+    // Every sequence in PlantQuarantine_New is bigint, so the value must be read back as long.
     private long NextSequenceValue(string sequence) =>
-        (long)_db.Database
-            .SqlQueryRaw<decimal>($"SELECT NEXT VALUE FOR dbo.{sequence} AS value")
+        _db.Database
+            .SqlQueryRaw<long>($"SELECT NEXT VALUE FOR dbo.{sequence} AS value")
             .AsEnumerable()
             .First();
 
@@ -45,8 +46,13 @@ public class ImCommitteeFinalResultService : IImCommitteeFinalResultService
         if (ids.Count == 0)
             return _ => null;
 
+        // dbPrivilage sits at compatibility level 110. EF Core translates Contains over a
+        // parameterised collection into OPENJSON(...) WITH ([value] ... '$'), which only
+        // parses from compatibility level 130 onward, so the query fails there with
+        // "Incorrect syntax near '$'". EF.Constant inlines the ids instead, producing a plain
+        // IN (...). The values are longs, so nothing is exposed to injection.
         var rows = await _privilege.PrUsers
-            .Where(u => ids.Contains(u.Id))
+            .Where(u => EF.Constant(ids).Contains(u.Id))
             .Select(u => new { u.Id, u.FullName, u.FullNameEn })
             .ToListAsync(cancellationToken);
 
@@ -942,6 +948,46 @@ public class ImCommitteeFinalResultService : IImCommitteeFinalResultService
         var result = new List<CustomOption> { new() { DisplayText = "----------", Value = 0 } };
         result.AddRange(rows);
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CustomOptionLongId>> GetVisaOptionsAsync(CancellationToken cancellationToken)
+    {
+        var rows = await _db.ImVisas
+            .Where(v => v.UserDeletionId == null)
+            .Select(v => new { v.Id, Ar = v.ArName, En = v.EnName })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(v => new CustomOptionLongId
+            {
+                Value = v.Id,
+                DisplayText = Pick(v.Ar, v.En) ?? string.Empty,
+            })
+            .OrderBy(o => o.DisplayText)
+            .ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<CustomOptionLongId>> GetFinalResultOptionsAsync(int finalResult, CancellationToken cancellationToken)
+    {
+        // Legacy FillFinalResultDrop_Edit: accepted standing (1) or 6 shows only the
+        // Status == true rows; every other value shows the Status == false rows.
+        var getStatus = finalResult is 1 or 6;
+
+        var rows = await _db.ImFinalResults
+            .Where(f => f.Status == getStatus && f.UserDeletionId == null)
+            .Select(f => new { f.Id, Ar = f.ArName, En = f.EnName })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(f => new CustomOptionLongId
+            {
+                Value = f.Id,
+                DisplayText = Pick(f.Ar, f.En) ?? string.Empty,
+            })
+            .OrderBy(o => o.DisplayText)
+            .ToList();
     }
 
     /// <inheritdoc />

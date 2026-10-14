@@ -251,6 +251,78 @@ public class ImCommittee_Final_ResultController : BaseController
         }
     }
 
+    /// <summary>
+    /// Visa dropdown — ported verb of the legacy <c>DE_Import / Im_Visa_Data / Visa_AddEDIT</c>
+    /// lookup. Served from this controller until the DE_Import area itself is ported; the view
+    /// points straight here so the dropdown works today.
+    /// </summary>
+    [HttpPost("Visa_AddEDIT")]
+    public async Task<IActionResult> Visa_AddEDIT()
+    {
+        try
+        {
+            var lst = await _service.GetVisaOptionsAsync(HttpContext.RequestAborted);
+            return Json(new { Result = "OK", Options = lst });
+        }
+        catch (Exception ex)
+        {
+            LogErrorToDb(nameof(ImCommittee_Final_ResultController), nameof(Visa_AddEDIT), ex.ToString());
+            return Json(new { Result = "ERROR", Message = "حدث خطأ" });
+        }
+    }
+
+    /// <summary>
+    /// Final-result dropdown — ported verb of the legacy
+    /// <c>DE_Import / Im_FinalResult_Data / FinalResult_AddEDIT</c> lookup.
+    /// </summary>
+    [HttpPost("FinalResult_AddEDIT")]
+    public async Task<IActionResult> FinalResult_AddEDIT(int FinalResult)
+    {
+        try
+        {
+            var lst = await _service.GetFinalResultOptionsAsync(FinalResult, HttpContext.RequestAborted);
+            return Json(new { Result = "OK", Options = lst });
+        }
+        catch (Exception ex)
+        {
+            LogErrorToDb(nameof(ImCommittee_Final_ResultController), nameof(FinalResult_AddEDIT), ex.ToString());
+            return Json(new { Result = "ERROR", Message = "حدث خطأ" });
+        }
+    }
+
+    /// <summary>
+    /// Serves an attachment/report file from the shared network path. Ported verb of the legacy
+    /// <c>Imges / Downlood_Imge / Get_Downlood_Imge</c>; the page uses it both for the sample-lab
+    /// result file and for the pest picture.
+    /// </summary>
+    [HttpGet("Get_Downlood_Imge")]
+    public IActionResult Get_Downlood_Imge(string? path1)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(path1))
+                return NotFound();
+
+            var shared = _configuration["Path_NetworkShare"] ?? string.Empty;
+            if (!path1.StartsWith("/") && !path1.StartsWith("\\"))
+                path1 = "\\" + path1;
+
+            var full = ("\\\\" + shared + path1).Replace('/', '\\');
+            var bytes = System.IO.File.ReadAllBytes(full);
+            var extension = Path.GetExtension(full).TrimStart('.');
+
+            if (string.Equals(extension, "pdf", StringComparison.OrdinalIgnoreCase))
+                return File(bytes, "application/pdf");
+
+            return File(bytes, System.Net.Mime.MediaTypeNames.Application.Octet, Path.GetFileName(full));
+        }
+        catch (Exception ex)
+        {
+            LogErrorToDb(nameof(ImCommittee_Final_ResultController), nameof(Get_Downlood_Imge), ex.ToString());
+            return NotFound();
+        }
+    }
+
     /// <summary>Soft-deletes a non-admin committee employee and logs it.</summary>
     [HttpPost("Delete_Emp_Confirm")]
     public async Task<IActionResult> Delete_Emp_Confirm(long requestId, long Committee_ID, long Employee_ID)
