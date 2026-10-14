@@ -750,4 +750,37 @@
   <data name="ImCommittee_FinalResult_Lot" xml:space="preserve">
     <value>Lot</value>
   </data>
+  <data name="ImShowData_Title" xml:space="preserve">
+    <value>Import inspection request status</value>
+  </data>
+  <data name="ImShowData_ColNo" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="ImShowData_ColOutletId" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="ImShowData_ColOutlet" xml:space="preserve">
+    <value>Outlet</value>
+  </data>
+  <data name="ImShowData_ColTotal" xml:space="preserve">
+    <value>Total requests</value>
+  </data>
+  <data name="ImShowData_ColAccepted" xml:space="preserve">
+    <value>Accepted requests</value>
+  </data>
+  <data name="ImShowData_ColRejected" xml:space="preserve">
+    <value>Rejected requests</value>
+  </data>
+  <data name="ImShowData_ColNotReviewed" xml:space="preserve">
+    <value>Requests not yet reviewed</value>
+  </data>
+  <data name="ImShowData_ColClosed" xml:space="preserve">
+    <value>Closed requests</value>
+  </data>
+  <data name="ImShowData_NoOutlet" xml:space="preserve">
+    <value>Not routed to an outlet</value>
+  </data>
+  <data name="ImShowData_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
 </root>

@@ -1,0 +1,81 @@
+@model IReadOnlyList<ISCC.Application.ImCheckRequestShowData.Dtos.ImCheckRequestShowDataDto>
+@*
+    "موقف طلبات الفحص الواردة" (menu 165). Ported from
+    PlantQuar.WEB/Areas/Im_CheckRequests/Views/Im_CheckRequest_ShowData/Index.cshtml.
+
+    The legacy page was a single static table: one row per outlet with the request counts and
+    an "عرض" link per figure that opened the current-requests list. It had no JavaScript, so
+    nothing had to be ported here.
+
+    Dev deviation, deliberate: the legacy header repeated "م" for both the serial and the
+    outlet-code column (a copy-paste slip). The second one is the outlet id, so it is labelled
+    "كود" / "Code" here.
+*@
+@{
+    ViewData["PageHeading"] = L["ImShowData_Title"];
+    var rows = Model ?? Array.Empty<ISCC.Application.ImCheckRequestShowData.Dtos.ImCheckRequestShowDataDto>();
+    var serial = 0;
+}
+
+<div id="checkRequest_lst4" class="table-responsive">
+    <table class="table table-bordered table-striped" id="tblCheckLst">
+        <thead>
+            <tr class="table-primary">
+                <th>@L["ImShowData_ColNo"]</th>
+                <th>@L["ImShowData_ColOutletId"]</th>
+                <th>@L["ImShowData_ColOutlet"]</th>
+                <th>@L["ImShowData_ColTotal"]</th>
+                <th>@L["ImShowData_ColAccepted"]</th>
+                <th>@L["ImShowData_ColRejected"]</th>
+                <th>@L["ImShowData_ColNotReviewed"]</th>
+                <th>@L["ImShowData_ColClosed"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in rows)
+            {
+                serial++;
+                <tr>
+                    <td>@serial</td>
+                    <td>@item.outlet_ID</td>
+                    <td>@(string.IsNullOrWhiteSpace(item.outlet_Name) ? L["ImShowData_NoOutlet"] : item.outlet_Name)</td>
+                    <td>
+                        @item.CheckRequest_Count_all
+                        @if (item.CheckRequest_Count_all > 0)
+                        {
+                            <a href="/Im_CheckRequests/List_ImCheckRequest/Index?outlet_ID=@item.outlet_ID&&CheckRequest=1">@L["ImShowData_Show"]</a>
+                        }
+                    </td>
+                    <td>
+                        @item.CheckRequest_Count_true
+                        @if (item.CheckRequest_Count_true > 0)
+                        {
+                            <a href="/Im_CheckRequests/List_ImCheckRequest/Index?outlet_ID=@item.outlet_ID&&CheckRequest=2">@L["ImShowData_Show"]</a>
+                        }
+                    </td>
+                    <td>
+                        @item.CheckRequest_Count_false
+                        @if (item.CheckRequest_Count_false > 0)
+                        {
+                            <a href="/Im_CheckRequests/List_ImCheckRequest/Index?outlet_ID=@item.outlet_ID&&CheckRequest=2">@L["ImShowData_Show"]</a>
+                        }
+                    </td>
+                    <td>
+                        @item.CheckRequest_Count_nulls
+                        @if (item.CheckRequest_Count_nulls > 0)
+                        {
+                            <a href="/Im_CheckRequests/List_ImCheckRequest/Index?outlet_ID=@item.outlet_ID&&CheckRequest=3">@L["ImShowData_Show"]</a>
+                        }
+                    </td>
+                    <td>
+                        @item.Closed_Request_true
+                        @if (item.Closed_Request_true > 0)
+                        {
+                            <a href="/Im_CheckRequests/List_ImCheckRequest/Index?outlet_ID=@item.outlet_ID&&CheckRequest=4">@L["ImShowData_Show"]</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

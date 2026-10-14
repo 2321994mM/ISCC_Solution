@@ -2,6 +2,7 @@ using ISCC.Application.Auth;
 using ISCC.Application.ExCheckRequests;
 using ISCC.Application.ImCheckRequestDetails;
 using ISCC.Application.ImCheckRequests;
+using ISCC.Application.ImCheckRequestShowData;
 using ISCC.Application.ImCommitteeFinalResult;
 using ISCC.Application.Menu;
 using ISCC.Application.ReferenceData;
@@ -12,6 +13,7 @@ using ISCC.Infrastructure.Data.Privilage;
 using ISCC.Infrastructure.ExCheckRequests;
 using ISCC.Infrastructure.ImCheckRequestDetails;
 using ISCC.Infrastructure.ImCheckRequests;
+using ISCC.Infrastructure.ImCheckRequestShowData;
 using ISCC.Infrastructure.ImCommitteeFinalResult;
 using ISCC.Infrastructure.Menu;
 using ISCC.Infrastructure.ReferenceData;
@@ -74,6 +76,11 @@ public static class DependencyInjection
         // Import check-request details screen ("تفاصيل طلب الفحص - وارد"). EF Core port of the
         // legacy Im_CheckRequestDetailsBLL; reached from ImCommittee_Final_Result.
         services.AddScoped<IImCheckRequestDetailsService, ImCheckRequestDetailsService>();
+
+        // Import status board ("موقف طلبات الفحص الواردة", menu 165). EF Core port of the
+        // Pro_Im_CheckRequest_ShowData procedure: a per-outlet tally of the requests, their
+        // committee decision and their final result.
+        services.AddScoped<IImCheckRequestShowDataService, ImCheckRequestShowDataService>();
 
         // Authentication (Phase 3.2). Spans both databases: PR_User from dbPrivilage,
         // Outlet from PlantQuarantine_New.
