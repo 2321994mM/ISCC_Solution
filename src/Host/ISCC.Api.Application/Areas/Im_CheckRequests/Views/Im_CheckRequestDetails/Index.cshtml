@@ -1,0 +1,1023 @@
+@model ImRequestDetailsDto
+@*
+    "تفاصيل طلب الفحص - وارد" — full detail page of one import inspection request.
+
+    Ported from PlantQuar.WEB/Areas/Im_CheckRequests/Views/Im_CheckRequestDetails/Index.cshtml.
+    Every tab, table, field and button of the legacy page is reproduced. The markup is rebuilt on
+    the current design system (Bootstrap 5 + select2 from the shared bundle) instead of the
+    legacy Bootstrap 3 / jQuery / DataTables / chosen stack, because those libraries are no
+    longer part of the portal. The tab order, the column layout and the wording follow the
+    legacy page so the two can be compared side by side.
+
+    The four actions wired to the legacy URLs are kept verbatim: saveReasons, acceptRequest,
+    saveItemFees and GetReport.
+*@
+@{
+    ViewData["PageHeading"] = L["Im_CheckRequestDetails_Title"];
+
+    var reasons = (IReadOnlyList<RefuseReasonOptionDto>?)ViewBag.ListReasons ?? Array.Empty<RefuseReasonOptionDto>();
+    var hideButton = ViewBag.Hide_Button is int hb ? hb : 0;
+}
+
+@if (Model is null)
+{
+    <div class="alert alert-warning">@L["Im_CheckRequestDetails_NoData"]</div>
+    return;
+}
+
+@{
+    var actionDisabled = Model.IsAccepted == true || hideButton == 1;
+    var approveText = Model.IsPaid == false
+        ? "لا يتم دفع النفقات"
+        : (Model.IsAccepted == true ? "تمت الموافقة علي الطلب" : "الموافقة علي الطلب");
+
+    var exportPort = Model.List_Port.FirstOrDefault(a => a.ReqPortType_ID == 9);
+    var transitPort = Model.List_Port.FirstOrDefault(a => a.ReqPortType_ID == 11);
+    var arrivePort = Model.List_Port.FirstOrDefault(a => a.ReqPortType_ID == 10);
+}
+
+<form id="submform" method="post" enctype="multipart/form-data"
+      action="@Url.Action("acceptRequest", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })">
+    <input type="hidden" name="Im_CheckRequest_ID" value="@Model.Im_CheckRequest_ID" />
+    <input type="hidden" id="txtIsAccepted" name="IsAccepted" value="" />
+
+    <div class="card">
+        <div class="card-body">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link1">الجهة المستوردة</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link9">بيانات الرسالة الجمركية</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link2">بيانات الرسالة</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link3">مسار الرسالة</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link4">الأشتراطات</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link5">الجهة الموردة</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link6">مرفقات</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#link7">الرسوم</button>
+                </li>
+            </ul>
+
+            <div class="tab-content pt-3">
+
+                @* ============ link1: الجهة المستوردة ============ *@
+                <div class="tab-pane fade show active" id="link1" role="tabpanel">
+                    <div class="row">
+                        <div class="form-group col-sm-4">
+                            <label class="form-label">نوع الجهة المستوردة</label>
+                            <input class="form-control" value="@Model.ImporterType" readonly />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-sm-4">
+                            <label class="form-label">الشركة المستوردة</label>
+                            <input class="form-control" value="@Model.ImporterName" readonly />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-sm-4">
+                            <label class="form-label">صاحب الشركة</label>
+                            <input class="form-control" value="@Model.OwnerName" readonly />
+                        </div>
+                        <div class="form-group col-sm-4">
+                            <label class="form-label">عنوان الشركة</label>
+                            <input class="form-control" value="@Model.ImporterAddress" readonly />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-sm-4">
+                            <label class="form-label">مندوب صاحب الرسالة</label>
+                            <input class="form-control" value="@Model.MessageOwner" readonly />
+                        </div>
+                        <div class="form-group col-sm-4">
+                            <label class="form-label">الرقم القومي لمندوب صاحب الرسالة</label>
+                            <input class="form-control" value="@Model.MessageOwnerNationalID" readonly />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            @if (Model.ImporterType_Id == 6)
+                            {
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>نوع النشاط</th>
+                                            <th colspan="2">رقم التسجيل</th>
+                                            <th colspan="2">انواع التسجيل</th>
+                                            <th colspan="2">التاريخ من</th>
+                                            <th colspan="2">التاريخ الي</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var a in Model._CompanyActivitys)
+                                        {
+                                            <tr>
+                                                <td>@a.CompActivityType__Name</td>
+                                                <td colspan="2">@a.Enrollment_Number</td>
+                                                <td colspan="2">@(string.IsNullOrEmpty(a.Enrollment_type_Name) ? "غير معروف" : a.Enrollment_type_Name)</td>
+                                                <td colspan="2">@a.Enrollment_Start</td>
+                                                <td colspan="2">@a.Enrollment_End</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>أسم الهيئة</th>
+                                            <th colspan="2">أسم الشخص المسئول</th>
+                                            <th colspan="2">وظيفة الشخص المسئول</th>
+                                            <th colspan="2">الرقم القومي للشخص المسئول</th>
+                                            <th colspan="2">عنوان الشخص المسئول</th>
+                                            <th colspan="2">تاريخ التنشيط</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var a in Model._CompanyActivitys)
+                                        {
+                                            <tr>
+                                                <td>@a.Enrollment_Name</td>
+                                                <td colspan="2">@a.PersonResponsible_Name</td>
+                                                <td colspan="2">@a.Person_Responsible_Job</td>
+                                                <td colspan="2">@a.PersonResponsible_IDNumber</td>
+                                                <td colspan="2">@a.Person_Responsible_Address</td>
+                                                <td colspan="2">@a.Enrollment_Start</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            @if (Model.ImporterContacts.Count > 0)
+                            {
+                                if (Model.ImporterType_Id == 6)
+                                {
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>نوع وسائل الاتصال</th>
+                                                <th>وسائل الاتصال</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var c in Model.ImporterContacts)
+                                            {
+                                                <tr>
+                                                    <td>@c.Name_Ar</td>
+                                                    <td>@c.Value</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                                else
+                                {
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>البريد الاكتروني</th>
+                                                <th>الهاتف</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>@Model.ImporterContacts[0].Name_Ar</td>
+                                                <td>@Model.ImporterContacts[0].Value</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* ============ link9: بيانات الرسالة الجمركية ============ *@
+                <div class="tab-pane fade" id="link9" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead style="background-color:#4d9e97 !important;">
+                                    <tr>
+                                        <th>رقم طلب الفحص</th>
+                                        <th>رقم الشهادة الجمركية</th>
+                                        <th>تاريخ الشهادة</th>
+                                        <th>تاريخ الشحن</th>
+                                        <th>تاريخ الوصول</th>
+                                        <th>ACID</th>
+                                        <th>رقم المنافيستو</th>
+                                        <th>التوكيل الملاحي</th>
+                                        <th>نوع العملية</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var m in Model.CustomsMessages)
+                                    {
+                                        <tr>
+                                            <td>@Model.ImCheckRequest_Number</td>
+                                            <td>@m.Customs_Certificate_Number</td>
+                                            <td>@(m.Certification_Date?.ToString("dd/MM/yyyy"))</td>
+                                            <td>@(m.Shipment_Date?.ToString("dd/MM/yyyy"))</td>
+                                            <td>@(m.Arrival_Date?.ToString("dd/MM/yyyy"))</td>
+                                            <td>@m.Certificate_Number_Each_Product</td>
+                                            <td>@m.Manifest_Number</td>
+                                            <td>@m.Shipping_Agency_Name</td>
+                                            <td>@Model.OperationType_Name</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @* ============ link2: بيانات الرسالة ============ *@
+                <div class="tab-pane fade" id="link2" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            @foreach (var ship in Model.checkRequestShipping)
+                            {
+                                <table class="table" style="border: 5px solid #1f6c6f !important;">
+                                    <thead style="background-color:#4d9e97 !important;">
+                                        <tr>
+                                            <th colspan="2">وحدة الشحن</th>
+                                            <th colspan="2">رقم وحدة الشحن</th>
+                                            <th colspan="3">السيل الملاحي</th>
+                                            <th>رقم العنبر</th>
+                                            <th colspan="2">تعبئة أو بدون تعبئة</th>
+                                            <th>وزن وحدة الشحن</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="2">@ship.containerName</td>
+                                            <td colspan="2">@ship.ContainerNumber</td>
+                                            <td colspan="3">@ship.NavigationalNumber</td>
+                                            <td>@ship.ShipholdNumber</td>
+                                            <td colspan="2">@ship.containerType</td>
+                                            <td>@ship.Total_Weight <span class="text-danger">كجم</span></td>
+                                        </tr>
+
+                                        <tr style="background-color: #94c5c7;">
+                                            <td colspan="11">تفاصيل المنتجات</td>
+                                        </tr>
+
+                                        @foreach (var item in ship.Items_checkReq)
+                                        {
+                                            <tr style="background-color:#4d9e97 !important;">
+                                                <th>أسم النبات</th>
+                                                <th>النوع (مجموعة نوعية/نبات)</th>
+                                                <th>الاسم المختصر</th>
+                                                <th>الاسم العلمي</th>
+                                                <th>دولة المنشأ</th>
+                                                <th>الوزن الإجمالي للنبات</th>
+                                                <th>الوزن الصافي للنبات</th>
+                                                <th>وزن اللوطات الإجمالي</th>
+                                                <th>وزن اللوطات الصافي</th>
+                                                <th>المصروفات</th>
+                                                <th>التفاصيل</th>
+                                            </tr>
+                                            <tr>
+                                                <td>@item.ItemName</td>
+                                                <td>@item.qualitiveGroupName</td>
+                                                <td>@item.ItemShortNameAr</td>
+                                                <td style="color:red; font-style: italic; direction:ltr; text-align:left!important">@item.ScientificNameAr</td>
+                                                <td>@item.InitiatorCountry</td>
+                                                <td>@item.GrossWeight <span class="text-danger">كجم</span></td>
+                                                <td>@item.Net_Weight <span class="text-danger">كجم</span></td>
+                                                <td>@item.ItemCategories_lots.Select(a => a.GrossWeight).Sum() <span class="text-danger">كجم</span></td>
+                                                <td>@item.ItemCategories_lots.Select(a => a.Net_Weight).Sum() <span class="text-danger">كجم</span></td>
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm d-inline-block"
+                                                           style="width:110px;" id="i_@item.ImcheckReqItem_ID" value="@item.Fees" />
+                                                    <span class="text-danger">ج.م</span>
+                                                    <input type="button" class="savefees btn btn-sm btn-info"
+                                                           data-id="@item.ImcheckReqItem_ID _@Model.Im_CheckRequest_ID" value="حفظ" />
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="quickview2 btn btn-sm btn-info"
+                                                            data-bs-toggle="modal" data-bs-target="#mymodalemanexamination"
+                                                            data-item="@item.ItemName"
+                                                            data-qualitive="@item.qualitiveGroupName"
+                                                            data-initiator="@item.InitiatorCountry"
+                                                            data-itemsn="@item.ItemShortNameAr"
+                                                            data-gweight="@item.GrossWeight"
+                                                            data-nweight="@item.Net_Weight"
+                                                            data-pmatrial="@item.packageMaterial"
+                                                            data-ptype="@item.packageType"
+                                                            data-packcount="@item.Package_Count"
+                                                            data-pweight="@item.Package_Weight"
+                                                            data-purpose="@item.Purpose"
+                                                            data-status="@item.Status"
+                                                            data-subpartname="@item.subPartName"
+                                                            data-unitcount="@item.Units_Number"
+                                                            data-scientificname="@item.ScientificNameAr"
+                                                            data-odrtxt="@item.Order_TextItem"
+                                                            data-size="@item.Size"
+                                                            data-fees="@item.Fees">التفاصيل</button>
+                                                </td>
+                                            </tr>
+
+                                            <tr style="background-color: #94c5c7;">
+                                                <td colspan="11">بيانات اللوط</td>
+                                            </tr>
+                                            <tr style="background-color:#4d9e97 !important;">
+                                                <th>رقم اللوط</th>
+                                                <th>أسم الصنف</th>
+                                                <th>وزن إجمالي</th>
+                                                <th>وزن صافي</th>
+                                                <th>عدد العبوات</th>
+                                                <th>الوزن القائم للعبوة</th>
+                                                <th>وزن العبوة الفارغ</th>
+                                                <th>الوزن الصافي للعبوة</th>
+                                                <th>نوع العبوة</th>
+                                                <th>واحدت التعبئة الخشبية</th>
+                                                <th>التفاصيل</th>
+                                            </tr>
+                                            @foreach (var lot in item.ItemCategories_lots)
+                                            {
+                                                <tr>
+                                                    <td>@lot.Lot_Number</td>
+                                                    <td>@lot.categoryName</td>
+                                                    <td>@lot.GrossWeight <span class="text-danger">كجم</span></td>
+                                                    <td>@lot.Net_Weight <span class="text-danger">كجم</span></td>
+                                                    <td>@lot.Package_Count</td>
+                                                    <td>@lot.Package_Based_Weight <span class="text-danger">كجم</span></td>
+                                                    <td>@lot.Package_Weight <span class="text-danger">كجم</span></td>
+                                                    <td>@lot.Package_Net_Weight <span class="text-danger">كجم</span></td>
+                                                    <td>@lot.packageType</td>
+                                                    <td>@lot.Number_Wooden_Package</td>
+                                                    <td>
+                                                        <button type="button" class="quickview1 btn btn-sm btn-info"
+                                                                data-bs-toggle="modal" data-bs-target="#mymodalemanexamination"
+                                                                data-grossweight="@lot.GrossWeight"
+                                                                data-netweight="@lot.Net_Weight"
+                                                                data-packagecount="@lot.Package_Count"
+                                                                data-packageweight="@lot.Package_Weight"
+                                                                data-ordertext="@lot.Order_TextLot"
+                                                                data-recorded="@lot.RecordedOrNot"
+                                                                data-packagetype="@lot.packageType"
+                                                                data-reasonentry="@lot.Reason_Entry"
+                                                                data-size="@lot.Size"
+                                                                data-basedweight="@lot.Based_Weight"
+                                                                data-pckgematerial="@lot.packageMaterialName"
+                                                                data-packagebasedweight="@lot.Package_Based_Weight"
+                                                                data-packagenetweight="@lot.Package_Net_Weight"
+                                                                data-unitsnumber="@lot.Units_Number"
+                                                                data-subpartname="@item.subPartName"
+                                                                data-itemcat="@lot.categoryName"
+                                                                data-itemcatgroup="@lot.ItemCategoryGroup"
+                                                                data-grower_number="@lot.Grower_Number"
+                                                                data-number_wooden_package="@lot.Number_Wooden_Package"
+                                                                data-shipmentpolicynumber="@lot.Waybill">التفاصيل</button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            <tr>
+                                                <td><span class="text-danger" style="font-size:15px">اجمالي</span></td>
+                                                <td></td>
+                                                <td><span class="text-danger" style="font-size:13px">@item.ItemCategories_lots.Select(a => a.GrossWeight).Sum()</span> <span class="text-danger">كجم</span></td>
+                                                <td><span class="text-danger" style="font-size:13px">@item.ItemCategories_lots.Select(a => a.Net_Weight).Sum()</span> <span class="text-danger">كجم</span></td>
+                                                <td><span class="text-danger" style="font-size:13px">@item.ItemCategories_lots.Select(a => a.Package_Count).Sum() عبوة</span></td>
+                                                <td><span class="text-danger" style="font-size:13px">@item.ItemCategories_lots.Select(a => a.Package_Based_Weight).Sum()</span> <span class="text-danger">كجم</span></td>
+                                                <td><span class="text-danger" style="font-size:13px">@item.ItemCategories_lots.Select(a => a.Package_Weight).Sum()</span> <span class="text-danger">كجم</span></td>
+                                                <td><span class="text-danger" style="font-size:13px">@item.ItemCategories_lots.Select(a => a.Package_Net_Weight).Sum()</span> <span class="text-danger">كجم</span></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <br /><hr style="border-top: 1px solid #848484;" /><br />
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* ============ link3: مسار الرسالة ============ *@
+                <div class="tab-pane fade" id="link3" role="tabpanel">
+                    <div class="row" style="padding:10px;">
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">الدولة المصدرة</label>
+                            <input class="form-control" value="@exportPort?.ExportCountryName" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">نوع ميناء الشحن</label>
+                            <input class="form-control" value="@exportPort?.TransportPortType" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">ميناء الشحن</label>
+                            <input class="form-control" value="@exportPort?.TransportPortName" readonly />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">دولة العبور</label>
+                            <input class="form-control" value="@transitPort?.TransitCountry" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">نوع ميناء العبور</label>
+                            <input class="form-control" value="@transitPort?.TransitPortType" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">ميناء العبور</label>
+                            <input class="form-control" value="@transitPort?.TransitPort" readonly />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">دولة الوصول</label>
+                            <input class="form-control" value="مصر" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">نوع ميناء الوصول</label>
+                            <input class="form-control" value="@arrivePort?.ArrivePortType" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">ميناء الوصول</label>
+                            <input class="form-control" value="@arrivePort?.ArrivePortName" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">المحافظة</label>
+                            <input class="form-control" value="@arrivePort?.govNameAR" readonly />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">طريقة النقل</label>
+                            <input class="form-control" value="@Model.Transport_MeanName" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">وسيلة الشحن</label>
+                            <input class="form-control" value="@Model.Shipment_MeanName" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">وسائل النقل الدولية</label>
+                            <input class="form-control" value="@Model.InternationalTransport" readonly />
+                        </div>
+                        <div class="form-group col-sm-3">
+                            <label class="form-label">اسم وسيلة الشحن</label>
+                            <input class="form-control" value="@Model.Ship_Name" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                @* ============ link4: الأشتراطات ============ *@
+                <div class="tab-pane fade" id="link4" role="tabpanel">
+                    <div style="min-height:400px;padding:10px;">
+                        @foreach (var c in Model.itemsWithConstrains)
+                        {
+                            <h3 class="text-center">النبات</h3>
+                            <table class="table" style="width:100%;">
+                                <thead style="background-color: #94c5c7;">
+                                    <tr>
+                                        <th>الاسم</th>
+                                        <th>الجزء النباتي</th>
+                                        <th>الحالة</th>
+                                        <th>غرض التصدير</th>
+                                        <th>المسمي المختصر</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>@c.ItemName</td>
+                                        <td>@c.subPartName</td>
+                                        <td>@c.Status</td>
+                                        <td>@c.Purpose</td>
+                                        <td>@c.ItemShortNameAr @c.qualitiveGroupName</td>
+                                    </tr>
+
+                                    <tr style="background-color: #94c5c7;">
+                                        <td colspan="6">الإشتراطات</td>
+                                    </tr>
+                                    @if (c.Itemconstrains != null && c.Itemconstrains.InSide_Certificate_Ar.Count > 0)
+                                    {
+                                        <tr>
+                                            <td></td>
+                                            <td colspan="5" style="width:80%">
+                                                @foreach (var locin in c.Itemconstrains.InSide_Certificate_Ar)
+                                                {
+                                                    <div style="padding:5px;word-break: normal;text-align: right;">
+                                                        <p>@locin</p>
+                                                    </div>
+                                                    <hr />
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        <tr><td colspan="6">لايوجد الإشتراط</td></tr>
+                                    }
+
+                                    <tr style="background-color: #94c5c7;">
+                                        <td colspan="6">المواني</td>
+                                    </tr>
+                                    <tr>
+                                        <td><label>اسم المواني</label></td>
+                                        <td colspan="5" style="width:80%;text-align: right;">
+                                            @if (c.Itemconstrains != null)
+                                            {
+                                                @foreach (var j in c.Itemconstrains.itemConstrainPorts)
+                                                {
+                                                    <label>نوع الميناء: @j.portType</label>
+                                                    <br />
+                                                    <label>ميناء محلى: @j.portName</label>
+                                                    <br /><hr />
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                </div>
+
+                @* ============ link5: الجهة الموردة ============ *@
+                <div class="tab-pane fade" id="link5" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead style="background-color:#4d9e97 !important;">
+                                    <tr>
+                                        <th>اسم الشركة / الراسل</th>
+                                        <th>العنوان</th>
+                                        <th>اسم الشركة</th>
+                                        <th>العنوان بالإنجليزية</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ic in Model.ImportersCompanies)
+                                    {
+                                        <tr>
+                                            <td>@ic.ImporterCompany</td>
+                                            <td>@ic.ImporterCompanyAddress</td>
+                                            <td>@ic.ImporterCompanyEn</td>
+                                            <td>@ic.ImporterCompanyAddressEn</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @* ============ link6: مرفقات ============ *@
+                <div class="tab-pane fade" id="link6" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <thead style="background-color:#4d9e97 !important;">
+                                    <tr>
+                                        <th>نوع المرفق</th>
+                                        <th>اسم المرفق</th>
+                                        <th>رقم المرفق</th>
+                                        <th>تاريخ البداية</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>المرفق</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var at in Model.Attachments)
+                                    {
+                                        <tr>
+                                            <td>@at.Attachment_Name</td>
+                                            <td>@at.Attachment_TypeName</td>
+                                            <td>@at.Attachment_Number</td>
+                                            <td>@(at.StartDate?.ToString("dd/MM/yyyy"))</td>
+                                            <td>@(at.EndDate?.ToString("dd/MM/yyyy"))</td>
+                                            <td>
+                                                <input type="button" value="تحميل الملف" class="btn btn-info btn-sm"
+                                                       onclick="btndownload_click(this)" data-assigned-id="@at.AttachmentPath" />
+                                            </td>
+                                        </tr>
+                                    }
+
+                                    @if (Model.AttachmentPermission.Count > 0)
+                                    {
+                                        <tr>
+                                            <td colspan="6">مرفقات الأذون والاشعارات</td>
+                                        </tr>
+                                        @foreach (var at in Model.AttachmentPermission)
+                                        {
+                                            <tr>
+                                                <td>@at.Attachment_Name</td>
+                                                <td>@at.Attachment_TypeName</td>
+                                                <td>@at.Attachment_Number</td>
+                                                <td>@(at.StartDate?.ToString("dd/MM/yyyy"))</td>
+                                                <td>@(at.EndDate?.ToString("dd/MM/yyyy"))</td>
+                                                <td>
+                                                    <input type="button" value="تحميل الملف" class="btn btn-info btn-sm"
+                                                           onclick="btndownload_click(this)" data-assigned-id="@at.AttachmentPath" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @* ============ link7: الرسوم ============ *@
+                <div class="tab-pane fade" id="link7" role="tabpanel">
+                    <div class="row" style="padding:10px;">
+                        <div class="col-md-12">
+                            <label class="badge bg-info">رســــوم ثــابتة</label>
+                            <br />
+                            <table class="table table-bordered" style="margin:10px;">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th class="text-center">الرســم</th>
+                                        <th class="text-center">القيمـة</th>
+                                        <th class="text-center">الدفع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>رسوم طلب فحص</td>
+                                        <td>10.00</td>
+                                        <td>@(string.IsNullOrEmpty(Model.Is_Paid_Check) ? "لم يتم الدفع" : Model.Is_Paid_Check)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <label class="badge bg-info">رســــوم المنتجات</label>
+                            <br />
+                            <table class="table table-bordered" style="margin:10px;">
+                                <thead>
+                                    <tr class="table-primary">
+                                        <th class="text-center">أسم المنتج</th>
+                                        <th class="text-center">المسمي المختصر</th>
+                                        <th class="text-center">الوزن الأجمالى للوطات ( الطن )</th>
+                                        <th class="text-center">القيمـة</th>
+                                        <th class="text-center">الدفع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var f in Model.Fees_Item_All)
+                                    {
+                                        <tr>
+                                            <td>@f.ItemName</td>
+                                            <td>@f.ItemShortName</td>
+                                            <td>@f.GrossWeight</td>
+                                            <td>@f.Fees</td>
+                                            <td>@(string.IsNullOrEmpty(f.Is_Paid_Items) ? "لم يتم الدفع" : f.Is_Paid_Items)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-center">الاجمالى</td>
+                                        <td>@(Model.Fees_Item_All.Sum(a => a.Fees) ?? 0m)</td>
+                                        <td>@(Model.Fees_Item_All.Any(a => a.Is_Paid_Items != null) ? "تم الدفع" : "لم يتم الدفع")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <label class="badge bg-info">رســــوم النوبتجية</label>
+                            <br />
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">اسم النوبتجية</th>
+                                        <th class="text-center">العدد</th>
+                                        <th class="text-center">القمية</th>
+                                        <th class="text-center">الاجمالى</th>
+                                        <th class="text-center">الدفع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var s in Model.List_Shift)
+                                    {
+                                        <tr>
+                                            <td>@s.Shift_Name</td>
+                                            <td>@s.Shift_Count</td>
+                                            <td>@s.Shift_Amount</td>
+                                            <td>@s.Shift_Sum_All</td>
+                                            <td>@(string.IsNullOrEmpty(s.Is_Paid_Shift) ? "لم يتم الدفع" : s.Is_Paid_Shift)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td class="text-center">الاجمالى</td>
+                                        <td>@Model.List_Shift.Sum(a => a.Shift_Count)</td>
+                                        <td>@Model.List_Shift.Sum(a => a.Shift_Amount)</td>
+                                        <td>@Model.List_Shift.Sum(a => a.Shift_Sum_All)</td>
+                                        <td>@(Model.List_Shift.Any(a => a.Is_Paid_Shift != null) ? "تم الدفع" : "لم يتم الدفع")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <label class="badge bg-info">رسوم السحب</label>
+                            <br />
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">اسم المعمل</th>
+                                        <th class="text-center">اسم التحليل</th>
+                                        <th class="text-center">نوع الفحص</th>
+                                        <th class="text-center">العدد</th>
+                                        <th class="text-center">القيمة</th>
+                                        <th class="text-center">الاجمالى</th>
+                                        <th class="text-center">الدفع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var s in Model.List_Sample)
+                                    {
+                                        <tr>
+                                            <td>@s.Laboratory_Name</td>
+                                            <td>@s.Sample_Name</td>
+                                            <td>@s.Is_Total</td>
+                                            <td>@s.Sample_Count</td>
+                                            <td>@s.Sample_Amount</td>
+                                            <td>@s.Sample_Sum_All</td>
+                                            <td>@(string.IsNullOrEmpty(s.Is_Paid_Sample) ? "لم يتم الدفع" : s.Is_Paid_Sample)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-center">الاجمالى</td>
+                                        <td>@Model.List_Sample.Sum(a => a.Sample_Count)</td>
+                                        <td>@((Model.List_Sample.Sum(a => a.Sample_Count) ?? 0) > 0 ? "200" : "###")</td>
+                                        <td>@Model.List_Sample.Sum(a => a.Sample_Sum_All)</td>
+                                        <td>
+                                            @if (Model.List_Sample.Any(a => a.Is_Paid_Sample != null))
+                                            {
+                                                <span>تم الدفع</span>
+                                            }
+                                            else if (Model.List_Sample.Any(a => a.Is_Paid_Sample == null))
+                                            {
+                                                <span>لم يتم الدفع</span>
+                                            }
+                                            else
+                                            {
+                                                <span>لا يوجد رسوم سحب</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <label class="badge bg-info">رسوم المعالجة</label>
+                            <br />
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">نوع المعالجة</th>
+                                        <th class="text-center">طريقة المعالجة</th>
+                                        <th class="text-center">مادة المعالجة</th>
+                                        <th class="text-center">القيمة</th>
+                                        <th class="text-center">الدفع</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var t in Model.List_Treatment)
+                                    {
+                                        <tr>
+                                            <td>@t.TreatmentType_Name</td>
+                                            <td>@t.TreatmentMethod_Name</td>
+                                            <td>@t.TreatmentMat_Name</td>
+                                            <td>@t.Treatment_Amount</td>
+                                            <td>@t.Is_Paid_Treatment</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-center">الاجمالى</td>
+                                        <td>@Model.List_Treatment.Sum(a => a.Treatment_Amount)</td>
+                                        <td>@(Model.List_Treatment.Any(a => a.Is_Paid_Treatment == "لم يتم الدفع") ? "لم يتم الدفع" : "تم الدفع")</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+                            <div class="alert alert-warning" style="font-size:16px;font-weight:bold">
+                                <div>
+                                    السعر الأجمالى للطلب الفحص الوراد (بالجنية المصرى) :
+                                    @(10
+                                        + (Model.Fees_Item_All.Sum(a => a.Fees) ?? 0m)
+                                        + (Model.List_Sample.Sum(a => a.Sample_Sum_All) ?? 0m)
+                                        + (Model.List_Shift.Sum(a => a.Shift_Sum_All) ?? 0m)
+                                        + (Model.List_Treatment.Sum(a => a.Treatment_Amount) ?? 0m))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="link8" role="tabpanel">
+                    @* Legacy placeholder tab, not linked from the tab bar. *@
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.IsAccepted == null)
+    {
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="col-md-3"></div>
+                <div class="col-md-3">
+                    <input type="submit" id="btnSave" value="@approveText"
+                           disabled="@(actionDisabled ? "disabled" : null)"
+                           class="btn btn-success w-100" />
+                </div>
+                <div class="col-md-3">
+                    <input type="button" id="btnReject" value="تم رفض الطلب"
+                           disabled="@(actionDisabled ? "disabled" : null)"
+                           class="btn btn-danger w-100"
+                           data-bs-toggle="modal" data-bs-target="#Modal-refuse" />
+                </div>
+            </div>
+        </div>
+    }
+</form>
+
+@* ============ Modal: اختر الاسباب ============ *@
+<div id="Modal-refuse" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">أختر الاسباب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="اغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <select id="rejreasons" multiple style="width:95%;">
+                    @foreach (var c in reasons)
+                    {
+                        <option value="@c.Value">@c.DisplayText</option>
+                    }
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saverejectreason" data-id="@Model.Im_CheckRequest_ID">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ============ Modal: التفاصيل ============ *@
+<div id="mymodalemanexamination" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">التفاصيل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="اغلاق"></button>
+            </div>
+            <div class="modal-body" id="modaldetails"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">اغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="/_shared/lib/select2/css/select2.min.css" />
+}
+
+@section Scripts {
+    <script src="/_shared/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/_shared/lib/select2/js/select2.min.js"></script>
+    <script>
+        var saveReasonsUrl = '@Url.Action("saveReasons", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })';
+        var saveItemFeesUrl = '@Url.Action("saveItemFees", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })';
+        var getReportUrl = '@Url.Action("GetReport", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })';
+
+        function btndownload_click(elem) {
+            var path = $(elem).data('assigned-id');
+            window.open(getReportUrl + '?path1=' + path, "_blank");
+        }
+
+        $(function () {
+            $("#rejreasons").select2({
+                width: "95%",
+                dir: "rtl",
+                placeholder: "حدد واحد أو أكثر"
+            });
+
+            $("#btnSave").on("click", function () {
+                $("#txtIsAccepted").val("true");
+            });
+
+            $("#saverejectreason").on("click", function () {
+                $("#txtIsAccepted").val("false");
+                var list = $("#rejreasons").val();
+                var id = $(this).data("id");
+                if (list != null) {
+                    $.post(saveReasonsUrl, { listIDs: list, checkReqId: id }, function () {
+                        $("#submform").submit();
+                    });
+                } else {
+                    alert("choose reasons");
+                }
+            });
+
+            $('.savefees').on('click', function () {
+                var id = $(this).data("id");
+                var parts = String(id).split("_");
+                var itemId = parts[0].trim();
+                var requestId = parts[1].trim();
+                var fees = $("#i_" + itemId).val();
+                $.post(saveItemFeesUrl, { itemId: itemId, Im_CheckRequest_ID: requestId, fees: fees }, function () {
+                    alert('تم تعديل الرسوم');
+                });
+            });
+
+            function valOr(data, fallback) {
+                var v = data;
+                if (v === undefined || v === null || v === '' || v === 0) { return fallback; }
+                return v;
+            }
+
+            $(".quickview2").on("click", function () {
+                var itemName = $(this).data("item");
+                var qualitive = $(this).data("qualitive");
+                var initiator = $(this).data("initiator");
+                var itemsn = $(this).data("itemsn");
+                var purpose = $(this).data("purpose");
+                var status = $(this).data("status");
+                var subpartname = $(this).data("subpartname");
+                var unitcount = $(this).data("unitcount");
+                var size = $(this).data("size");
+                var ordertext = $(this).data("odrtxt");
+                var fees = $(this).data("fees");
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup' class='table table-bordered'><tbody>" +
+                    "<tr><td>المنتج النباتي</td><td>" + itemName + "</td><td>الاسم المختصر</td><td>" + itemsn + "</td></tr>" +
+                    "<tr><td>دولة المنشئ</td><td>" + initiator + "</td><td>subpartname</td><td>" + subpartname + "</td></tr>" +
+                    "<tr><td>الغرض</td><td>" + purpose + "</td><td>الحالة</td><td>" + status + "</td></tr>" +
+                    "<tr><td>عدد الوحدات</td><td>" + unitcount + "</td><td>المصروفات</td><td>" + fees + "</td></tr>" +
+                    "<tr><td>حجم الرسالة</td><td>" + size + "[م³]</td><td>الرتبة</td><td>" + ordertext + "</td></tr>" +
+                    "</tbody></table>");
+            });
+
+            $(".quickview1").on("click", function () {
+                var netweight = $(this).data("netweight");
+                var grossweight = $(this).data("grossweight");
+                var packagecount = valOr($(this).data("packagecount"), '#####');
+                var packageweight = valOr($(this).data("packageweight"), '#####');
+                var numberWoodenPackage = valOr($(this).data("number_wooden_package"), '#####');
+                var ordertext = valOr($(this).data("ordertext"), '#####');
+                var packagetype = valOr($(this).data("packagetype"), '#####');
+                var reasonentry = valOr($(this).data("reasonentry"), '#####');
+                var size = valOr($(this).data("size"), '#####');
+                var itemcat = valOr($(this).data("itemcat"), '#####');
+                var itemcatgroup = valOr($(this).data("itemcatgroup"), '#####');
+                var pckgematerial = valOr($(this).data("pckgematerial"), '#####');
+                var packagebasedweight = valOr($(this).data("packagebasedweight"), '#####');
+                var packagenetweight = valOr($(this).data("packagenetweight"), '#####');
+                var unitsnumber = valOr($(this).data("unitsnumber"), '#####');
+                var subpartname = unitsnumber === '#####' ? '' : valOr($(this).data("subpartname"), '#####');
+                var shipmentpolicynumber = valOr($(this).data("shipmentpolicynumber"), '#####');
+                var growerNumber = valOr($(this).data("grower_number"), '#####');
+                var recorded = valOr($(this).data("recorded"), '#####');
+
+                $("#modaldetails").empty();
+                $("#modaldetails").append(
+                    "<table id='popup' class='table table-bordered'><tbody>" +
+                    "<tr><td>نوع العبوة</td><td>" + packagetype + "</td><td>مادة العبوة</td><td>" + pckgematerial + "</td></tr>" +
+                    "<tr><td>عدد العبوات</td><td>" + packagecount + " عبوة</td><td>الوزن القائم للعبوة</td><td>" + packagebasedweight + " كجم</td></tr>" +
+                    "<tr><td>وزن العبوة الفارغ</td><td>" + packageweight + " كجم</td><td>الوزن الصافي للعبوة</td><td>" + packagenetweight + " كجم</td></tr>" +
+                    "<tr><td>الوزن الاجمالي للوط</td><td>" + grossweight + " كجم</td><td>الوزن الصافي للوط</td><td>" + netweight + " كجم</td></tr>" +
+                    "<tr><td>عدد الوحدات</td><td>" + unitsnumber + " " + subpartname + "</td><td>حجم الرسالة</td><td>" + size + "[م³]</td></tr>" +
+                    "<tr><td>الرتبة</td><td>" + ordertext + "</td><td>رقم بوليصة الشحن</td><td>" + shipmentpolicynumber + "</td></tr>" +
+                    "<tr><td>سبب الدخول</td><td>" + reasonentry + "</td><td>رقم المزارع</td><td>" + growerNumber + "</td></tr>" +
+                    "<tr><td>المجموعة الصنفية</td><td>" + itemcatgroup + "</td><td>مسجل/غير مسجل</td><td>" + recorded + "</td></tr>" +
+                    "<tr><td>الصنف الزراعي/السلالة</td><td>" + itemcat + "</td><td>واحدت التعبئة الخشبية</td><td>" + numberWoodenPackage + "</td></tr>" +
+                    "</tbody></table>");
+            });
+        });
+    </script>
+}

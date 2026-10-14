@@ -1,5 +1,6 @@
 using ISCC.Application.Auth;
 using ISCC.Application.ExCheckRequests;
+using ISCC.Application.ImCheckRequestDetails;
 using ISCC.Application.ImCheckRequests;
 using ISCC.Application.ImCommitteeFinalResult;
 using ISCC.Application.Menu;
@@ -9,6 +10,7 @@ using ISCC.Infrastructure.Auth;
 using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Data.Privilage;
 using ISCC.Infrastructure.ExCheckRequests;
+using ISCC.Infrastructure.ImCheckRequestDetails;
 using ISCC.Infrastructure.ImCheckRequests;
 using ISCC.Infrastructure.ImCommitteeFinalResult;
 using ISCC.Infrastructure.Menu;
@@ -68,6 +70,10 @@ public static class DependencyInjection
         // Import committee final-result page ("نتيجة لجان الوارد"). EF Core port of the legacy
         // ImCommittee_Final_ResultBLL; the controller consumes only the interface.
         services.AddScoped<IImCommitteeFinalResultService, ImCommitteeFinalResultService>();
+
+        // Import check-request details screen ("تفاصيل طلب الفحص - وارد"). EF Core port of the
+        // legacy Im_CheckRequestDetailsBLL; reached from ImCommittee_Final_Result.
+        services.AddScoped<IImCheckRequestDetailsService, ImCheckRequestDetailsService>();
 
         // Authentication (Phase 3.2). Spans both databases: PR_User from dbPrivilage,
         // Outlet from PlantQuarantine_New.

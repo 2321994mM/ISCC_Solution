@@ -696,4 +696,10 @@
   <data name="DE_Item_Data_Item_ExcelWorksheet" xml:space="preserve">
     <value>الأصناف</value>
   </data>
+  <data name="Im_CheckRequestDetails_Title" xml:space="preserve">
+    <value>تفاصيل طلب الفحص - وارد</value>
+  </data>
+  <data name="Im_CheckRequestDetails_NoData" xml:space="preserve">
+    <value>لا يوجد بيانات لهذا الطلب.</value>
+  </data>
 </root>
