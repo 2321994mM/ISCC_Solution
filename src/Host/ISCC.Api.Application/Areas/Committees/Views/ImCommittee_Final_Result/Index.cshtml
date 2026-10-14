@@ -1,0 +1,76 @@
+@model ImCommittee_Final_ResultDTO
+@{
+    ViewData["PageHeading"] = L["ImCommittee_FinalResult_Title"];
+}
+
+@if (Model is null)
+{
+    <div class="alert alert-warning">
+        @L["ImCommittee_FinalResult_NoData"]
+    </div>
+    return;
+}
+
+<section class="mb-4">
+    <h3>@Model.ImCheckRequest_Number - @Model.OutLet_Name</h3>
+    <dl class="row">
+        <dt>@L["ImCommittee_FinalResult_StartDate"]</dt>
+        <dd>@Model.StartDate</dd>
+        <dt>@L["ImCommittee_FinalResult_ArrivalPort"]</dt>
+        <dd>@Model.ArrivePortName</dd>
+        <dt>@L["ImCommittee_FinalResult_PortType"]</dt>
+        <dd>@Model.ArrivePortType</dd>
+        <dt>@L["ImCommittee_FinalResult_Gov"]</dt>
+        <dd>@Model.govNameAR</dd>
+        <dt>@L["ImCommittee_FinalResult_CountLots"]</dt>
+        <dd>@Model.Count_Lots</dd>
+    </dl>
+
+    @if (Model.FinalResults?.Count > 0)
+    {
+        <h4>@L["ImCommittee_FinalResult_FinalResults"]</h4>
+        <table class="table">
+            <thead><tr><th>@L["ImCommittee_FinalResult_Date"]</th><th>@L["ImCommittee_FinalResult_Employee"]</th><th>@L["ImCommittee_FinalResult_Result"]</th></tr></thead>
+            <tbody>
+            @foreach (var r in Model.FinalResults)
+            {
+                <tr><td>@r.DateFinalResult</td><td>@r.Final_Result_Employee_Name</td><td>@r.Final_Result_Name</td></tr>
+            }
+            </tbody>
+        </table>
+    }
+
+    @if (Model.CheckRequest_Visa?.Count > 0)
+    {
+        <h4>@L["ImCommittee_FinalResult_Visas"]</h4>
+        <table class="table">
+            <thead><tr><th>@L["ImCommittee_FinalResult_Date"]</th><th>@L["ImCommittee_FinalResult_Employee"]</th><th>@L["ImCommittee_FinalResult_Visa"]</th></tr></thead>
+            <tbody>
+            @foreach (var v in Model.CheckRequest_Visa)
+            {
+                <tr><td>@v.Date_Visa</td><td>@v.Visa_Result_Employee_Name</td><td>@v.Visa_Result_Name</td></tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+@foreach (var itemGroup in Model.itemsWithConstrains ?? Enumerable.Empty<Items_checkReq_New>())
+{
+    <section class="mb-4">
+        <h4>@($"{itemGroup.ItemShortNameAr} / {itemGroup.ItemName_Ar}")</h4>
+        <p>
+            @itemGroup.qualitiveGroupName, @itemGroup.InitiatorCountry,
+            @L["ImCommittee_FinalResult_Gross"]: @itemGroup.GrossWeight,
+            @L["ImCommittee_FinalResult_Net"]: @itemGroup.Net_Weight
+        </p>
+
+        @foreach (var lot in itemGroup.ItemCategories_lots ?? Enumerable.Empty<categories_lots_New>())
+        {
+            <div class="border p-3 mb-2">
+                <strong>@L["ImCommittee_FinalResult_Lot"] #@lot.Lot_Number — @lot.categoryName</strong>
+                (@lot.packageType, @lot.packageMaterialName, @lot.ContainerNumber)
+            </div>
+        }
+    </section>
+}

@@ -1,6 +1,7 @@
 using ISCC.Application.Auth;
 using ISCC.Application.ExCheckRequests;
 using ISCC.Application.ImCheckRequests;
+using ISCC.Application.ImCommitteeFinalResult;
 using ISCC.Application.Menu;
 using ISCC.Application.ReferenceData;
 using ISCC.Domain.Abstraction.IRepository;
@@ -9,6 +10,7 @@ using ISCC.Infrastructure.Data;
 using ISCC.Infrastructure.Data.Privilage;
 using ISCC.Infrastructure.ExCheckRequests;
 using ISCC.Infrastructure.ImCheckRequests;
+using ISCC.Infrastructure.ImCommitteeFinalResult;
 using ISCC.Infrastructure.Menu;
 using ISCC.Infrastructure.ReferenceData;
 using ISCC.Infrastructure.Repositories;
@@ -62,6 +64,10 @@ public static class DependencyInjection
         // and a paged results list over the dbo.Ex_List database view, scoped by the user's
         // examination stations and outlet. No stored procedure and no dropdowns.
         services.AddScoped<IExCheckRequestListService, ExCheckRequestListService>();
+
+        // Import committee final-result page ("نتيجة لجان الوارد"). EF Core port of the legacy
+        // ImCommittee_Final_ResultBLL; the controller consumes only the interface.
+        services.AddScoped<IImCommitteeFinalResultService, ImCommitteeFinalResultService>();
 
         // Authentication (Phase 3.2). Spans both databases: PR_User from dbPrivilage,
         // Outlet from PlantQuarantine_New.
