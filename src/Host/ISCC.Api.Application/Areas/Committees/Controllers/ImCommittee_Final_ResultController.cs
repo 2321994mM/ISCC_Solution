@@ -31,10 +31,10 @@ public class ImCommittee_Final_ResultController : BaseController
         _configuration = configuration;
     }
 
-    /// <summary>Mirrors <c>(short)Session["UserId"]</c> in the legacy controller.</summary>
+    /// <summary>Reads the signed-in user's id from the name-identifier claim.</summary>
     private short GetUserId()
     {
-        var raw = User.FindFirstValue("UserId");
+        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return short.TryParse(raw, out var value) ? value : (short)0;
     }
 

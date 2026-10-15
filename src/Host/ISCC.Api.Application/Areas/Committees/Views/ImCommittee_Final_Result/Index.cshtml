@@ -993,9 +993,8 @@
                                                                                                 <select class="col-md-8" id="LotStatusLst_@lot.ID_Lot" name="@lot.ID_Lot"></select>
                                                                                             </div>
                                                                                             <div class="col-md-2">
-                                                                                                <button id="Insert_Lot_Result_@lot.ID_Lot" name="@lot.ID_Lot" onclick="reply_Insert_Lot_Result1(this)"
-                                                                                                        data-assigned-id="@lot.ID_Lot" class="quickview10 style-but"
-                                                                                                        data-bs-toggle="modal" data-bs-target="#saveStatus">
+                                                                                                <button type="button" id="Insert_Lot_Result_@lot.ID_Lot" name="@lot.ID_Lot" onclick="reply_Insert_Lot_Result1(this)"
+                                                                                                        data-assigned-id="@lot.ID_Lot" class="quickview10 style-but">
                                                                                                     حفظ
                                                                                                 </button>
                                                                                             </div>
@@ -1200,7 +1199,7 @@
             </div>
             <div class="modal-body">هل تريد إضافة هذه التاشيرة؟؟</div>
             <div class="modal-footer" style="text-align:center">
-                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Visa(this)" data-bs-dismiss="modal">نعم</button>
+                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Visa(this)">نعم</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لا</button>
             </div>
         </div>
@@ -1215,7 +1214,7 @@
             </div>
             <div class="modal-body">هل تريد حفظ هذا الموقف؟؟</div>
             <div class="modal-footer" style="text-align:center">
-                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Lot_Result(this)" data-bs-dismiss="modal">نعم</button>
+                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Lot_Result(this)">نعم</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لا</button>
             </div>
         </div>
@@ -1230,7 +1229,7 @@
             </div>
             <div class="modal-body">هل تريد إضافة هذا الموقف النهائى للطلب؟؟</div>
             <div class="modal-footer" style="text-align:center">
-                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Final_Result(this)" data-bs-dismiss="modal">نعم</button>
+                <button type="button" class="btn btn-secondary" onClick="reply_Insert_Final_Result(this)">نعم</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">لا</button>
             </div>
         </div>
@@ -1250,16 +1249,36 @@
         var insertFinalResultUrl = '@Url.Action("Insert_Im_CheckRequest_Final_Result", "ImCommittee_Final_Result", new { area = "Committees" })';
         var deleteEmpUrl = '@Url.Action("Delete_Emp_Confirm", "ImCommittee_Final_Result", new { area = "Committees" })';
         var downloadUrl = '@Url.Action("Get_Downlood_Imge", "ImCommittee_Final_Result", new { area = "Committees" })';
+        var requestErrorText = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Common_ErrorOccurred"].Value));
+        var deleteConfirmText = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Common_ConfirmDelete"].Value));
+        var deleteSuccessText = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Common_DeletedSuccessfully"].Value));
 
         // Legacy used the alertify toast library, which is not part of the portal; a small
         // fixed-position box covers the same "success / error" feedback.
         function notify(message, isOk) {
             var box = document.getElementById('isccNotify');
+            if (!box) { return; }
             box.className = 'alert ' + (isOk ? 'alert-success' : 'alert-danger');
             box.style.display = 'block';
             box.textContent = message;
             window.clearTimeout(box._t);
             box._t = window.setTimeout(function () { box.style.display = 'none'; }, 3500);
+        }
+
+        function apiSucceeded(data) {
+            var result = data && (data.result || data.Result);
+            if (result === 'OK') { return true; }
+            notify((data && (data.message || data.Message)) || requestErrorText, false);
+            return false;
+        }
+
+        function requestFailed() { notify(requestErrorText, false); }
+
+        function closeDialog(button) {
+            var modal = button && button.closest('.modal');
+            if (modal && window.bootstrap) {
+                window.bootstrap.Modal.getOrCreateInstance(modal).hide();
+            }
         }
 
         function reply_click2(element) {
@@ -1269,11 +1288,12 @@
         function reply_click6(element) {
             var lotId = element.id.split('_')[1];
             $.post(lotStatusLstUrl, function (data) {
+                if (!apiSucceeded(data)) { return; }
                 $('#LotStatusLst_' + lotId).empty();
-                $.each(data.options, function (i, index) {
+                $.each(data.options || data.Options || [], function (i, index) {
                     $('#LotStatusLst_' + lotId).append($('<option />').val(index.value).text(index.displayText));
                 });
-            });
+            }).fail(requestFailed);
             $(".toggle-div6-" + element.id).toggle('fast', "linear");
             $(".toggle-div55-" + element.id).toggle('fast', "linear");
             $(".toggle-div16-" + element.id).toggle('fast', "linear");
@@ -1295,13 +1315,14 @@
         // حفظ موقف اللوط
         function reply_Insert_Lot_Result1(element) {
             var btnLotId = element.name;
-            $("#Lbl_ID_Lot").empty();
-            $("#Lbl_ID_Lot").append(btnLotId);
-
             var lotStatusLstId = $("#LotStatusLst_" + btnLotId).val();
             if (!(lotStatusLstId > 0)) {
                 notify("يجب تحديد النتيجة", false);
+                return false;
             }
+            document.getElementById("Lbl_ID_Lot").textContent = btnLotId;
+            window.bootstrap.Modal.getOrCreateInstance(document.getElementById('saveStatus')).show();
+            return false;
         }
 
         function reply_Insert_Lot_Result(element) {
@@ -1338,7 +1359,8 @@
                 return;
             }
 
-            $.post(insertLotResultUrl, { Lot_Category_ID: btnLotId, IS_Status: lotStatusLstId, Nots: nots }, function () {
+            $.post(insertLotResultUrl, { Lot_Category_ID: btnLotId, IS_Status: lotStatusLstId, Nots: nots }, function (data) {
+                if (!apiSucceeded(data)) { return; }
                 notify("تمت الاضافة بنجاح", true);
                 var tableName = "Tab_Status_" + btnLotId;
                 $("#" + tableName + " tbody").append("<tr><td colspan='3'>" + nots + "</td><td colspan='3'>" + lotStatusTxt + "</td><td colspan='1'>" + lotStatusLstId + "</td><td colspan='2'>" + lotStatusSt + "</td><td colspan='3'>الموظف الحالي</td></tr>");
@@ -1348,7 +1370,8 @@
                 }
                 document.getElementById('Txt_Nots_' + btnLotId).value = '';
                 $("#LotStatusLst_" + btnLotId).val('0');
-            });
+                closeDialog(element);
+            }).fail(requestFailed);
         }
 
         // التأشيرة
@@ -1377,16 +1400,19 @@
                 return;
             }
 
-            $.post(insertVisaUrl, { Visa_ID: visaId }, function () {
+            $.post(insertVisaUrl, { Visa_ID: visaId }, function (data) {
+                if (!apiSucceeded(data)) { return; }
                 notify("تمت الاضافة بنجاح", true);
                 $("#Tab_Visa tbody").append("<tr><td>" + visaName + "</td><td>" + date + "</td><td>" + fullname + "</td></tr>");
-            });
+                closeDialog(element);
+            }).fail(requestFailed);
         }
 
         // موقف نهائى للطلب
         function reply_Insert_Final_Result(element) {
             var finalResultList = document.getElementById("FinalResultList").value;
             var finalResult = $('#FinalResult :selected').text();
+            var finalResultId = $('#FinalResult').val();
             var fullname = $('#fullnameID').val();
             var finalResultListName = $('#FinalResultList :selected').text();
             var today = new Date();
@@ -1405,7 +1431,7 @@
                 notify("موقف الطلب موجود مسبقا", false);
                 return;
             }
-            if (!(finalResultList > 0)) {
+            if (!(finalResultId > 0) || !(finalResultList > 0)) {
                 notify("يجب تحديد موقف الطلب", false);
                 return;
             }
@@ -1414,10 +1440,12 @@
                 Im_Final_Result_ID: finalResultList,
                 FinalResult: finalResult,
                 FinalResultList_Name: finalResultListName
-            }, function () {
+            }, function (data) {
+                if (!apiSucceeded(data)) { return; }
                 notify("تمت الاضافة بنجاح", true);
                 $("#TblFinalResult tbody").append("<tr><td>" + fullname + "</td><td>" + date + "</td><td>" + finalResult + "</td><td>" + finalResultListName + "</td></tr>");
-            });
+                closeDialog(element);
+            }).fail(requestFailed);
         }
 
         function btndownload_click(elem) {
@@ -1435,13 +1463,19 @@
             var path = $(elem).data('assigned-id');
             var urlParams = new URLSearchParams(window.location.search);
             var requestId = urlParams.get('requestId');
-            var committeeId = path.split("_")[0].trim();
-            var employeeId = path.split("_")[1].trim();
+            var parts = String(path || '').split('_');
+            var committeeId = (parts[0] || '').trim();
+            var employeeId = (parts[1] || '').trim();
 
-            $.post(deleteEmpUrl, { requestId: requestId, Committee_ID: committeeId, Employee_ID: employeeId }, function () {
-                notify("تم الحذف بنجاح", true);
-                window.location.reload();
-            });
+            if (!requestId || !committeeId || !employeeId || !window.confirm(deleteConfirmText)) { return; }
+            $.post(deleteEmpUrl, { requestId: requestId, Committee_ID: committeeId, Employee_ID: employeeId }, function (data) {
+                if (data === 'Su') {
+                    notify(deleteSuccessText, true);
+                    window.location.reload();
+                    return;
+                }
+                notify((data && (data.message || data.Message)) || requestErrorText, false);
+            }).fail(requestFailed);
         }
 
         function tdVal(tableId, index) {
@@ -1462,33 +1496,38 @@
             $("#FinalResultList").select2({ width: "100%", dir: "rtl" });
 
             $.post(visaAddEditUrl, function (data) {
+                if (!apiSucceeded(data)) { return; }
                 $('#Visa_Lst').empty();
                 $('#Visa_Lst').append($('<option />').val(0).text("أختار"));
-                $.each(data.options, function (i, index) {
+                 $.each(data.options || data.Options || [], function (i, index) {
                     $('#Visa_Lst').append($('<option />').val(index.value).text(index.displayText));
                 });
-            });
+            }).fail(requestFailed);
 
             $('#Visa_Lst').on("change", function () {
                 var visaResult = document.getElementById("Visa_Lst").value;
+            if (!(visaResult > 0)) { $("#visalab").empty(); return; }
                 $.post(visaLabResultUrl, { VisaResult: visaResult }, function (data) {
+                    if (!apiSucceeded(data)) { return; }
                     $("#visalab").empty();
-                    if (data.options) {
-                        $("#visalab").append(data.options.description_Ar);
+                    var option = data.options || data.Options;
+                    if (option) {
+                        $("#visalab").append(option.description_Ar || option.Description_Ar || '');
                     }
-                });
+                }).fail(requestFailed);
             });
 
             $('#FinalResult').on("change", function () {
                 var finalResult = $('#FinalResult').val();
                 if (finalResult != 0) {
                     $.post(finalResultAddEditUrl, { FinalResult: finalResult }, function (data) {
+                        if (!apiSucceeded(data)) { return; }
                         $('#FinalResultList').empty();
                         $('#FinalResultList').append($('<option />').val(0).text("أختار"));
-                        $.each(data.options, function (i, index) {
+                         $.each(data.options || data.Options || [], function (i, index) {
                             $('#FinalResultList').append($('<option />').val(index.value).text(index.displayText));
                         });
-                    });
+                    }).fail(requestFailed);
                 } else {
                     notify("يجب اختيار موقف للحجر", false);
                 }
