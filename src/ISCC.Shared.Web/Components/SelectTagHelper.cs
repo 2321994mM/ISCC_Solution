@@ -79,11 +79,11 @@ public class SelectTagHelper : TagHelper
 
         if (!string.IsNullOrWhiteSpace(Label))
         {
-            output.PreContent.AppendHtml("<label class=\"iscc-field__label\"");
-            if (id is not null) output.PreContent.AppendHtml($" for=\"{id}\"");
-            output.PreContent.Append(">");
-            output.PreContent.Append(Label);
-            output.PreContent.Append("</label>");
+            var label = new TagBuilder("label");
+            label.AddCssClass("iscc-field__label");
+            if (id is not null) label.Attributes["for"] = id;
+            label.InnerHtml.Append(Label);
+            output.PreContent.AppendHtml(label);
         }
 
         var select = new TagBuilder("select");

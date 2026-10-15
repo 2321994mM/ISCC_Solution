@@ -12,12 +12,8 @@ namespace ISCC.Shared.Web.Components;
 /// The legacy tree carried jquery 3.4.1 and jquery 3.7.1 side by side in
 /// <c>wwwroot/js</c>, plus a 1.2 MB <c>all.js</c> that was never loaded by a view.
 /// </para>
-/// <para>
-/// Versions come from configuration so they can be pinned in one place. jQuery and
-/// select2 are referenced from a CDN; for an intranet deployment that cannot reach the
-/// internet, vendor them into <c>wwwroot/lib/</c> and point the settings at the local
-/// paths instead.
-/// </para>
+/// <para>jQuery and select2 use the shared local assets so interactive forms also work
+/// when the portal runs without internet access.</para>
 /// <example>
 /// <code>
 /// &lt;iscc-scripts /&gt;
@@ -37,12 +33,6 @@ public class ScriptsTagHelper : TagHelper
     /// <summary>Inject the shared component behaviour script.</summary>
     public bool Components { get; set; } = true;
 
-    /// <summary>jQuery version.</summary>
-    public string JqueryVersion { get; set; } = "3.7.1";
-
-    /// <summary>select2 version.</summary>
-    public string Select2Version { get; set; } = "4.0.13";
-
     /// <inheritdoc />
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
@@ -52,13 +42,13 @@ public class ScriptsTagHelper : TagHelper
         if (Jquery)
         {
             output.PreContent.AppendHtml(
-                $"<script src=\"https://cdn.jsdelivr.net/npm/jquery@{JqueryVersion}/dist/jquery.min.js\"></script>");
+                "<script src=\"/_shared/lib/jquery/dist/jquery.min.js\"></script>");
         }
 
         if (Select2)
         {
             output.PreContent.AppendHtml(
-                $"<script src=\"https://cdn.jsdelivr.net/npm/select2@{Select2Version}/dist/js/select2.min.js\"></script>");
+                "<script src=\"/_shared/lib/select2/js/select2.min.js\"></script>");
         }
 
         if (Components)

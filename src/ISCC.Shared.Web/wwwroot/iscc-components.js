@@ -131,12 +131,23 @@
             fetchOptions(ajaxUrl, payload)
                 .then(function (options) {
                     $el.empty();
+                    var placeholder = $el.data('placeholder');
+                    if (placeholder) {
+                        $el.append($('<option></option>').val('').text(placeholder));
+                    }
                     options.forEach(function (option) {
                         $el.append($('<option></option>')
                             .val(option.id)
                             .text(option.text)
                             .prop('disabled', !!option.disabled));
                     });
+                    // Adding the first option to an empty single-select auto-selects it.
+                    // Keep dependent fields unselected until the user chooses an option.
+                    if (placeholder) {
+                        $el.val('');
+                    } else {
+                        $el.prop('selectedIndex', -1);
+                    }
                 })
                 .catch(function (error) {
                     console.error('Failed to load options for', $el.attr('id'), error);
