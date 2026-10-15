@@ -58,7 +58,8 @@
 
         function clearChain(selectId) {
             var $sel = $('#' + selectId);
-            resetToPrompt($sel).trigger('change');
+            resetToPrompt($sel);
+            $sel.trigger('change');
         }
 
         $('#ItemTypeId').on('change', function () {

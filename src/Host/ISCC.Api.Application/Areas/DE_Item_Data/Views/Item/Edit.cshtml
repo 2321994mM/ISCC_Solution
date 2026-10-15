@@ -162,14 +162,16 @@
             <div class="col-md-2">
                 <label class="form-label" asp-for="IsPlantInEgypt">@L["DE_Item_Data_Item_PlantInEgypt"]</label>
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" asp-for="IsPlantInEgypt" checked="@Model.IsPlantInEgypt" />
+                    <input class="form-check-input" type="checkbox" id="IsPlantInEgypt" name="IsPlantInEgypt" value="true" checked="@(Model.IsPlantInEgypt == true)" />
+                    <input type="hidden" name="IsPlantInEgypt" value="false" />
                     <label class="form-check-label" asp-for="IsPlantInEgypt">@L["Common_Yes"]</label>
                 </div>
             </div>
             <div class="col-md-2">
                 <label class="form-label" asp-for="IsKnownItem">@L["DE_Item_Data_Item_IsKnown"]</label>
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" asp-for="IsKnownItem" checked="@Model.IsKnownItem" />
+                    <input class="form-check-input" type="checkbox" id="IsKnownItem" name="IsKnownItem" value="true" checked="@(Model.IsKnownItem == true)" />
+                    <input type="hidden" name="IsKnownItem" value="false" />
                     <label class="form-check-label" asp-for="IsKnownItem">@L["Common_Yes"]</label>
                 </div>
             </div>
@@ -183,7 +185,8 @@
             <div class="col-md-3">
                 <label class="form-label" asp-for="Agriculture17">@L["DE_Item_Data_Item_Agriculture17"]</label>
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" asp-for="Agriculture17" checked="@Model.Agriculture17" />
+                    <input class="form-check-input" type="checkbox" id="Agriculture17" name="Agriculture17" value="true" checked="@(Model.Agriculture17 == true)" />
+                    <input type="hidden" name="Agriculture17" value="false" />
                     <label class="form-check-label" asp-for="Agriculture17">@L["Common_Yes"]</label>
                 </div>
             </div>

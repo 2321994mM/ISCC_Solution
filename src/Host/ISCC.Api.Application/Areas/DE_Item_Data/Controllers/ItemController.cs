@@ -231,6 +231,7 @@ public class ItemController : BaseController
                 model.UserUpdationId = null;
                 model.UserUpdationDate = null;
                 model.IsKnownItem = model.IsKnownItem ?? false;
+                model.Id = long.Parse(GetSequencing("long", "Item_SEQ"));
 
                 Db.Items.Add(model);
                 await Db.SaveChangesAsync();
@@ -526,6 +527,7 @@ public class ItemController : BaseController
             {
                 Db.ItemParts.Add(new ItemPart
                 {
+                    Id = long.Parse(GetSequencing("long", "ItemPart_SEQ")),
                     ItemId = itemId,
                     SubPartId = subPartId.Value,
                     IsAllowed = isAllowed ?? false,
@@ -1139,10 +1141,10 @@ public class ItemController : BaseController
         return extension is ".jpg" or ".jpeg" or ".png";
     }
 
-    /// <summary>Reads the UserId claim defensively; a missing/unparsable claim yields 0.</summary>
+    /// <summary>Reads the authenticated user's name-identifier claim; an unusable claim yields 0.</summary>
     private short GetUserId()
     {
-        var raw = User.FindFirstValue("UserId");
+        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return short.TryParse(raw, out var id) ? id : (short)0;
     }
 

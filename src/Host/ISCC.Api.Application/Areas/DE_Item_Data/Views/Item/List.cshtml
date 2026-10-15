@@ -172,8 +172,8 @@ else
 }
 
 @*
-    Excel export: fetch the filtered rows as JSON, drop them into the hidden table, then run
-    the legacy btoa data-URI trick from the jtable page. The worksheet name is the only
+    Excel export: fetch the filtered rows as JSON, drop them into the hidden table, then
+    download the generated workbook as a Blob. The worksheet name is the only
     thing Excel sees from us; the columns are the same ones the list shows, as NAMES not ids.
 *@
 <table id="excelTable" border="1" style="display:none">
@@ -214,14 +214,21 @@ else
             'use strict';
 
             var tableToExcel = (function () {
-                var uri = 'data:application/vnd.ms-excel;base64,'
-                    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
-                    , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))); }
+                var template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>{table}</table></body></html>'
                     , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }); };
                 return function (table, name) {
                     if (!table.nodeType) { table = document.getElementById(table); }
                     var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML };
-                    window.location.href = uri + base64(format(template, ctx));
+                    var blob = new Blob(['\ufeff', format(template, ctx)], { type: 'application/vnd.ms-excel;charset=utf-8' });
+                    var url = window.URL.createObjectURL(blob);
+                    var link = document.createElement('a');
+                    link.href = url;
+                    link.download = (name || 'Worksheet') + '.xls';
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.setTimeout(function () { window.URL.revokeObjectURL(url); }, 1000);
                 };
             })();
 
