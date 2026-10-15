@@ -1,62 +1,447 @@
-@using ISCC.Shared.Contracts
+﻿@*
+    "المنافذ" - outlets management list.
+
+    Ported from PlantQuar.WEB/Areas/DE_Outlets/Views/Outlet/Index.cshtml in the newer
+    legacy source (PlantQuarantineNew). The newer source replaced the old server-rendered
+    search form with a single-page shell: a hero strip, a search panel, a client-rendered
+    table fed by an AJAX feed, an inline edit modal and a CSV export button.
+
+    Three things are deliberately different from that original:
+
+      1. Strings come from the resource file, not hardcoded Arabic. The legacy view
+         inlined "إدارة المنافذ", "قائمة المنافذ" and friends directly; those are now
+         DE_Outlets_Outlet_* keys so the English portal is readable too.
+      2. Property names are camelCase. The solution's JSON serializer applies the
+         default camelCase naming policy, so the legacy `response.Result` shape is
+         `response.result` here. The AJAX envelope itself (result/records/
+         totalRecordCount) is kept the same shape the legacy JavaScript expected.
+      3. The modal posts to a JSON action (UpdateOutlet) instead of replaying the full
+         Edit form, because the legacy page's modal only ever sent the seven editable
+         fields plus the carried-through HR/port/admin references.
+*@
 @{
     ViewData["PageHeading"] = L["DE_Outlets_Outlet_Title"];
-    var culture = (string?)ViewData["Culture"] ?? "ar";
-    var generalAdmins = (IReadOnlyList<SelectOption>?)ViewBag.GeneralAdmins ?? Array.Empty<SelectOption>();
-    var searchAr = (string?)ViewBag.SearchAr ?? string.Empty;
-    var searchEn = (string?)ViewBag.SearchEn ?? string.Empty;
 }
 
-@if (TempData["SuccessMessage"] is string success)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @success
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+@section Styles {
+<style>
+    .outlets-page { direction: rtl; color: #263b44; margin: 18px auto 30px; }
+    .outlets-hero {
+        background: linear-gradient(135deg, #176c70, #2b9da0);
+        border-radius: 18px; padding: 24px 28px; color: #fff; margin-bottom: 18px;
+        display: flex; align-items: center; justify-content: space-between;
+        box-shadow: 0 12px 28px rgba(28, 100, 105, .18);
+    }
+    .outlets-hero h3 { margin: 0 0 7px; font-size: 24px; font-weight: 700; }
+    .outlets-hero p { margin: 0; opacity: .88; font-weight: 400; }
+    .outlets-count {
+        min-width: 100px; text-align: center; background: rgba(255,255,255,.16);
+        padding: 12px 18px; border-radius: 14px;
+    }
+    .outlets-count strong { display: block; font-size: 27px; line-height: 1.1; }
+    .outlets-count span { font-size: 12px; }
+    .outlets-filter, .outlets-card {
+        background: #fff; border: 1px solid #e3ebee; border-radius: 16px;
+        box-shadow: 0 7px 24px rgba(32, 65, 75, .07);
+    }
+    .outlets-filter { padding: 18px 20px; margin-bottom: 18px; }
+    .outlets-filter .form-control {
+        height: 42px; border-radius: 9px; border-color: #d8e3e7; box-shadow: none;
+    }
+    .outlets-filter label { color: #445c65; margin-bottom: 7px; }
+    .outlets-actions { padding-top: 25px; white-space: nowrap; }
+    .outlets-actions .btn { height: 42px; border-radius: 9px; min-width: 95px; }
+    .outlets-card { overflow: hidden; }
+    .outlets-card-head {
+        padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+        border-bottom: 1px solid #e8eef0;
+    }
+    .outlets-card-head h4 { margin: 0; font-weight: 700; }
+    .outlets-table { margin: 0; }
+    .outlets-table thead { background: #245f68; color: #fff; }
+    .outlets-table thead th {
+        padding: 13px 10px !important; border: 0 !important; text-align: center;
+        vertical-align: middle; white-space: nowrap;
+    }
+    .outlets-table tbody td {
+        padding: 12px 10px !important; border: 0 !important;
+        border-bottom: 1px solid #edf2f3 !important; text-align: center; vertical-align: middle;
+        font-family: inherit !important; font-size: 14px !important;
+    }
+    .outlets-table tbody tr:nth-child(even) td { background: #f8fafb; }
+    .outlets-table tbody tr:hover td { background: #edf8f8; }
+    .status-pill {
+        display: inline-block; padding: 6px 11px; border-radius: 20px;
+        font-size: 12px; font-weight: 700; white-space: nowrap;
+    }
+    .status-yes { color: #167044; background: #e4f6ec; }
+    .status-no { color: #a2373f; background: #fde9eb; }
+    .edit-outlet {
+        border: 0; color: #176d70; background: #e6f5f5; border-radius: 8px;
+        padding: 7px 12px; font-weight: 700;
+    }
+    .edit-outlet:hover { color: #fff; background: #237f82; }
+    .empty-state, .loading-state { padding: 42px !important; color: #74878f; font-size: 15px !important; }
+    .outlets-pagination {
+        display: flex; direction: ltr; justify-content: center; align-items: center;
+        gap: 6px; padding: 18px;
+    }
+    .outlets-pagination button {
+        min-width: 38px; height: 36px; border: 1px solid #d7e2e5;
+        border-radius: 8px; background: #fff; color: #37525c;
+    }
+    .outlets-pagination button.active { color: #fff; background: #267f82; border-color: #267f82; }
+    .outlets-pagination button:disabled { opacity: .45; cursor: not-allowed; }
+    #outletEditModal .modal-content { border: 0; border-radius: 16px; overflow: hidden; }
+    #outletEditModal .modal-header { background: #276f76; color: #fff; border: 0; }
+    #outletEditModal .modal-title { font-weight: 700; }
+    #outletEditModal .close { color: #fff; opacity: .9; }
+    #outletEditModal .modal-body { padding: 22px; background: #fbfcfc; }
+    #outletEditModal .form-group { margin-bottom: 15px; }
+    #outletEditModal label { display: block; color: #40555e; margin-bottom: 6px; }
+    #outletEditModal .form-control { height: 42px; border-radius: 8px; box-shadow: none; border-color: #d8e2e6; }
+    #outletEditModal textarea.form-control { min-height: 78px; resize: vertical; }
+    .switch-row {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+        background: #fff; border: 1px solid #e4ebed; border-radius: 11px; padding: 14px;
+    }
+    .switch-item { display: flex; align-items: center; gap: 8px; }
+    .switch-item input { width: 18px; height: 18px; margin: 0; }
+    #outletEditModal .modal-footer { border: 0; padding: 14px 22px 20px; }
+    #saveOutletButton { min-width: 115px; border-radius: 8px; background: #277f82; border-color: #277f82; }
+    @@media (max-width: 767px) {
+        .outlets-hero { align-items: flex-start; gap: 15px; }
+        .outlets-actions { padding-top: 8px; }
+        .switch-row { grid-template-columns: 1fr; }
+    }
+</style>
 }
 
-@if (TempData["ErrorMessage"] is string error)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @error
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<div class="outlets-page">
+    <div class="outlets-hero">
+        <div>
+            <h3>@L["DE_Outlets_Outlet_HeroTitle"]</h3>
+            <p>@L["DE_Outlets_Outlet_HeroSubtitle"]</p>
+        </div>
+        <div class="outlets-count">
+            <strong id="totalOutlets">0</strong>
+            <span>@L["DE_Outlets_Outlet_TotalCount"]</span>
+        </div>
     </div>
-}
 
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">@L["DE_Outlets_Outlet_Search"]</h5>
-        <a class="btn btn-primary btn-sm" asp-action="Create">@L["Common_AddNew"]</a>
-    </div>
-    <div class="card-body">
-        <form method="get" action="@Url.Action("List")" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label" for="searchAr">@L["DE_Outlets_Outlet_SearchAr"]</label>
-                <input class="form-control" type="text" id="searchAr" name="searchAr" value="@searchAr" placeholder="@L["DE_Outlets_Outlet_SearchArPlaceholder"]" />
-            </div>
-            <div class="col-md-4">
-                <label class="form-label" for="searchEn">@L["DE_Outlets_Outlet_SearchEn"]</label>
-                <input class="form-control" type="text" id="searchEn" name="searchEn" value="@searchEn" placeholder="@L["DE_Outlets_Outlet_SearchEnPlaceholder"]" />
-            </div>
-            <div class="col-md-4">
-                <label class="form-label" for="generalAdminId">@L["DE_Outlets_Outlet_GeneralAdmin"]</label>
-                <select id="generalAdminId" name="generalAdminId" class="form-select">
-                    <option value="0" selected="@((int)ViewBag.GeneralAdminId == 0 ? "selected" : null)">@L["Common_All"]</option>
-                    @foreach (var admin in generalAdmins)
-                    {
-                        <option value="@admin.Value" selected="@(((int)ViewBag.GeneralAdminId).ToString() == admin.Value ? "selected" : null)">@admin.Text(culture)</option>
-                    }
-                </select>
-            </div>
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary">@L["Common_Search"]</button>
-                <a class="btn btn-outline-secondary" asp-action="Index">@L["Common_Clear"]</a>
+    <div class="outlets-filter">
+        <form id="outletSearchForm">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="arabicNameSearch">@L["DE_Outlets_Outlet_SearchAr"]</label>
+                    <input type="text" id="arabicNameSearch" class="form-control" autocomplete="off" placeholder="@L["DE_Outlets_Outlet_SearchArPlaceholder"]" />
+                </div>
+                <div class="col-md-4">
+                    <label for="englishNameSearch">@L["DE_Outlets_Outlet_SearchEn"]</label>
+                    <input type="text" id="englishNameSearch" class="form-control" autocomplete="off" placeholder="@L["DE_Outlets_Outlet_SearchEnPlaceholder"]" />
+                </div>
+                <div class="col-md-4 outlets-actions">
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i> @L["Common_Search"]</button>
+                    <button type="button" id="clearOutletSearch" class="btn btn-default">@L["Common_Clear"]</button>
+                </div>
             </div>
         </form>
     </div>
+
+    <div class="outlets-card">
+        <div class="outlets-card-head">
+            <h4>@L["DE_Outlets_Outlet_ListTitle"]</h4>
+            <button type="button" id="exportOutlets" class="btn btn-default">
+                <i class="fa fa-file-excel-o"></i> @L["Common_ExportExcel"]
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table outlets-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>@L["DE_Outlets_Outlet_ArName"]</th>
+                        <th>@L["DE_Outlets_Outlet_EnName"]</th>
+                        <th>@L["DE_Outlets_Outlet_IsActive"]</th>
+                        <th>@L["DE_Outlets_Outlet_IsDisplay"]</th>
+                        <th>@L["DE_Outlets_Outlet_CanAcceptPayment"]</th>
+                        <th>@L["Common_Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody id="outletsTableBody">
+                    <tr><td colspan="7" class="loading-state"><i class="fa fa-spinner fa-spin"></i> @L["DE_Outlets_Outlet_Loading"]</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="outletsPagination" class="outlets-pagination"></div>
+    </div>
 </div>
 
-@if (ViewBag.TotalCount != null)
-{
-    <partial name="_ResultsTable" />
+<div class="modal fade" id="outletEditModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" dir="rtl">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">@L["DE_Outlets_Outlet_EditTitle"]</h4>
+            </div>
+            <form id="outletEditForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editOutletId" />
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="editArabicName">@L["DE_Outlets_Outlet_ArName"]</label>
+                            <input type="text" id="editArabicName" class="form-control" required />
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="editEnglishName">@L["DE_Outlets_Outlet_EnName"]</label>
+                            <input type="text" id="editEnglishName" class="form-control" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label for="editArabicAddress">@L["DE_Outlets_Outlet_AddressAr"]</label>
+                            <textarea id="editArabicAddress" class="form-control" required></textarea>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label for="editEnglishAddress">@L["DE_Outlets_Outlet_AddressEn"]</label>
+                            <textarea id="editEnglishAddress" class="form-control" required></textarea>
+                        </div>
+                    </div>
+                    <div class="switch-row">
+                        <label class="switch-item"><input type="checkbox" id="editIsActive" /> @L["DE_Outlets_Outlet_SwitchActive"]</label>
+                        <label class="switch-item"><input type="checkbox" id="editIsDisplay" /> @L["DE_Outlets_Outlet_SwitchDisplay"]</label>
+                        <label class="switch-item"><input type="checkbox" id="editCanAcceptPayment" /> @L["DE_Outlets_Outlet_SwitchPayment"]</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">@L["Common_Cancel"]</button>
+                    <button type="submit" id="saveOutletButton" class="btn btn-primary">
+                        <i class="fa fa-save"></i> @L["DE_Outlets_Outlet_SaveChanges"]
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<iscc-scripts jquery="true" select2="false" />
+<script>
+    (function () {
+        var pageSize = 10;
+        var currentPage = 1;
+        var totalRecords = 0;
+        var currentRecords = [];
+        var selectedOutlet = null;
+
+        var msg = {
+            loadError: '@L["DE_Outlets_Outlet_LoadError"]',
+            connectionError: '@L["DE_Outlets_Outlet_ConnectionError"]',
+            saveError: '@L["DE_Outlets_Outlet_SaveError"]',
+            saveConnectionError: '@L["DE_Outlets_Outlet_SaveConnectionError"]',
+            saved: '@L["Common_UpdatedSuccessfully"]',
+            noMatch: '@L["DE_Outlets_Outlet_NoMatch"]',
+            loading: '@L["DE_Outlets_Outlet_Loading"]',
+            yes: '@L["Common_Active"]',
+            no: '@L["Common_Inactive"]',
+            shows: '@L["DE_Outlets_Outlet_Shows"]',
+            hidden: '@L["DE_Outlets_Outlet_NotDisplay"]',
+            canPay: '@L["DE_Outlets_Outlet_CanAcceptPayment"]',
+            cannotPay: '@L["DE_Outlets_Outlet_CannotAcceptPayment"]',
+            edit: '@L["Common_Edit"]',
+            prev: '@L["Common_Prev"]',
+            next: '@L["Common_Next"]'
+        };
+
+        function booleanValue(value) {
+            return value === true || value === 1 || value === '1' || value === 'true' || value === 'True';
+        }
+
+        function htmlEncode(value) {
+            return $('<div/>').text(value == null ? '' : value).html();
+        }
+
+        function normalizeRecords(records) {
+            if (typeof records === 'string') {
+                try { return JSON.parse(records); } catch (e) { return []; }
+            }
+            return records || [];
+        }
+
+        function statusPill(value, yesText, noText) {
+            return booleanValue(value)
+                ? '<span class="status-pill status-yes">' + yesText + '</span>'
+                : '<span class="status-pill status-no">' + noText + '</span>';
+        }
+
+        function renderRows(records) {
+            var body = $('#outletsTableBody').empty();
+            if (!records.length) {
+                body.append('<tr><td colspan="7" class="empty-state"><i class="fa fa-inbox"></i> ' + msg.noMatch + '</td></tr>');
+                return;
+            }
+            $.each(records, function (index, outlet) {
+                var sequence = ((currentPage - 1) * pageSize) + index + 1;
+                var row = $('<tr>');
+                row.append($('<td>').text(sequence));
+                row.append($('<td>').text(outlet.arName || ''));
+                row.append($('<td>').text(outlet.enName || ''));
+                row.append($('<td>').html(statusPill(outlet.isActive, msg.yes, msg.no)));
+                row.append($('<td>').html(statusPill(outlet.isDisplay, msg.shows, msg.hidden)));
+                row.append($('<td>').html(statusPill(outlet.canAcceptPayment, msg.canPay, msg.cannotPay)));
+                row.append($('<td>').html('<button type="button" class="edit-outlet" data-index="' + index + '"><i class="fa fa-pencil"></i> ' + msg.edit + '</button>'));
+                body.append(row);
+            });
+        }
+
+        function renderPagination() {
+            var totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
+            var container = $('#outletsPagination').empty();
+            if (totalRecords <= pageSize) return;
+
+            function addButton(text, page, disabled, active) {
+                $('<button type="button">').text(text).prop('disabled', disabled)
+                    .toggleClass('active', active).on('click', function () {
+                        if (!disabled && !active) loadOutlets(page);
+                    }).appendTo(container);
+            }
+
+            addButton(msg.prev, currentPage - 1, currentPage === 1, false);
+            var start = Math.max(1, currentPage - 2);
+            var end = Math.min(totalPages, currentPage + 2);
+            for (var page = start; page <= end; page++) {
+                addButton(page, page, false, page === currentPage);
+            }
+            addButton(msg.next, currentPage + 1, currentPage === totalPages, false);
+        }
+
+        function loadOutlets(page) {
+            currentPage = page || 1;
+            $('#outletsTableBody').html('<tr><td colspan="7" class="loading-state"><i class="fa fa-spinner fa-spin"></i> ' + msg.loading + '</td></tr>');
+            $.ajax({
+                url: '@Url.Action("listOutlet", "Outlet", new { area = "DE_Outlets" })',
+                type: 'POST',
+                data: {
+                    txt_AR_BTNSearch: $.trim($('#arabicNameSearch').val()),
+                    txt_EN_BTNSearch: $.trim($('#englishNameSearch').val()),
+                    jtStartIndex: (currentPage - 1) * pageSize,
+                    jtPageSize: pageSize,
+                    jtSorting: 'Ar_Name ASC'
+                },
+                success: function (response) {
+                    if (!response || response.result !== 'OK') {
+                        showError(response && response.message ? response.message : msg.loadError);
+                        return;
+                    }
+                    currentRecords = normalizeRecords(response.records);
+                    totalRecords = parseInt(response.totalRecordCount, 10) || 0;
+                    $('#totalOutlets').text(totalRecords);
+                    renderRows(currentRecords);
+                    renderPagination();
+                },
+                error: function () { showError(msg.connectionError); }
+            });
+        }
+
+        function showError(message) {
+            $('#outletsTableBody').html('<tr><td colspan="7" class="empty-state">' + htmlEncode(message) + '</td></tr>');
+            if (window.alertify) alertify.error(message);
+        }
+
+        $('#outletSearchForm').on('submit', function (event) {
+            event.preventDefault();
+            loadOutlets(1);
+        });
+
+        $('#clearOutletSearch').on('click', function () {
+            $('#arabicNameSearch, #englishNameSearch').val('');
+            loadOutlets(1);
+        });
+
+        $('#outletsTableBody').on('click', '.edit-outlet', function () {
+            selectedOutlet = $.extend(true, {}, currentRecords[parseInt($(this).data('index'), 10)]);
+            if (!selectedOutlet) return;
+
+            $('#editOutletId').val(selectedOutlet.id);
+            $('#editArabicName').val(selectedOutlet.arName || '');
+            $('#editEnglishName').val(selectedOutlet.enName || '');
+            $('#editArabicAddress').val(selectedOutlet.addressAr || '');
+            $('#editEnglishAddress').val(selectedOutlet.addressEn || '');
+            $('#editIsActive').prop('checked', booleanValue(selectedOutlet.isActive));
+            $('#editIsDisplay').prop('checked', booleanValue(selectedOutlet.isDisplay));
+            $('#editCanAcceptPayment').prop('checked', booleanValue(selectedOutlet.canAcceptPayment));
+
+            $('#outletEditModal').modal('show');
+        });
+
+        $('#outletEditForm').on('submit', function (event) {
+            event.preventDefault();
+            if (!selectedOutlet) return;
+
+            var updateModel = {
+                id: selectedOutlet.id,
+                arName: $.trim($('#editArabicName').val()),
+                enName: $.trim($('#editEnglishName').val()),
+                addressAr: $.trim($('#editArabicAddress').val()),
+                addressEn: $.trim($('#editEnglishAddress').val()),
+                supervisorId: selectedOutlet.supervisorId,
+                grAdminId: selectedOutlet.grAdminId,
+                isExport: selectedOutlet.isExport,
+                idHr: selectedOutlet.idHr,
+                portNationalId: selectedOutlet.portNationalId,
+                isActive: $('#editIsActive').is(':checked'),
+                isDisplay: $('#editIsDisplay').is(':checked'),
+                canAcceptPayment: $('#editCanAcceptPayment').is(':checked')
+            };
+
+            var saveButton = $('#saveOutletButton').prop('disabled', true);
+            $.ajax({
+                url: '@Url.Action("UpdateOutlet", "Outlet", new { area = "DE_Outlets" })',
+                type: 'POST',
+                data: updateModel,
+                success: function (response) {
+                    if (response && response.result === 'OK') {
+                        $('#outletEditModal').modal('hide');
+                        if (window.alertify) alertify.success(msg.saved);
+                        loadOutlets(currentPage);
+                    } else {
+                        if (window.alertify) alertify.error(response && response.message ? response.message : msg.saveError);
+                    }
+                },
+                error: function () {
+                    if (window.alertify) alertify.error(msg.saveConnectionError);
+                },
+                complete: function () { saveButton.prop('disabled', false); }
+            });
+        });
+
+        $('#exportOutlets').on('click', function () {
+            $.getJSON('@Url.Action("AllOutletExcell", "Outlet", new { area = "DE_Outlets" })', function (records) {
+                records = normalizeRecords(records);
+                var rows = [['@L["DE_Outlets_Outlet_ArName"]', '@L["DE_Outlets_Outlet_EnName"]', '@L["DE_Outlets_Outlet_IsActive"]', '@L["DE_Outlets_Outlet_IsDisplay"]', '@L["DE_Outlets_Outlet_CanAcceptPayment"]']];
+                $.each(records, function (_, item) {
+                    rows.push([
+                        item.arName || '', item.enName || '',
+                        booleanValue(item.isActive) ? msg.yes : msg.no,
+                        booleanValue(item.isDisplay) ? msg.shows : msg.hidden,
+                        booleanValue(item.canAcceptPayment) ? msg.canPay : msg.cannotPay
+                    ]);
+                });
+                var csv = rows.map(function (row) {
+                    return row.map(function (cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',');
+                }).join('\r\n');
+                var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Outlets.csv';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            });
+        });
+
+        loadOutlets(1);
+    })();
+</script>
 }

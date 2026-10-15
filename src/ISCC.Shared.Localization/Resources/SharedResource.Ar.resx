@@ -894,4 +894,61 @@
   <data name="Im_List_DtEmptyTable" xml:space="preserve">
     <value>لا توجد بيانات</value>
   </data>
+  <data name="DE_Outlets_Outlet_HeroTitle" xml:space="preserve">
+    <value>إدارة المنافذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_HeroSubtitle" xml:space="preserve">
+    <value>عرض بيانات المنافذ وتحديد المنافذ المسموح لها بقبول الدفع.</value>
+  </data>
+  <data name="DE_Outlets_Outlet_TotalCount" xml:space="preserve">
+    <value>إجمالي المنافذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ListTitle" xml:space="preserve">
+    <value>قائمة المنافذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_NoMatch" xml:space="preserve">
+    <value>لا توجد منافذ مطابقة للبحث</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Loading" xml:space="preserve">
+    <value>جارٍ تحميل البيانات...</value>
+  </data>
+  <data name="DE_Outlets_Outlet_LoadError" xml:space="preserve">
+    <value>تعذر تحميل بيانات المنافذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ConnectionError" xml:space="preserve">
+    <value>تعذر الاتصال بالخادم لتحميل بيانات المنافذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SaveError" xml:space="preserve">
+    <value>تعذر حفظ بيانات المنفذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SaveConnectionError" xml:space="preserve">
+    <value>تعذر الاتصال بالخادم لحفظ بيانات المنفذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_EditTitle" xml:space="preserve">
+    <value>تعديل بيانات المنفذ</value>
+  </data>
+  <data name="DE_Outlets_Outlet_CanAcceptPayment" xml:space="preserve">
+    <value>يقبل الدفع</value>
+  </data>
+  <data name="DE_Outlets_Outlet_CannotAcceptPayment" xml:space="preserve">
+    <value>لا يقبل الدفع</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Shows" xml:space="preserve">
+    <value>يظهر</value>
+  </data>
+  <data name="DE_Outlets_Outlet_NotDisplay" xml:space="preserve">
+    <value>لا يظهر</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SwitchActive" xml:space="preserve">
+    <value>منفذ نشط</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SwitchDisplay" xml:space="preserve">
+    <value>يظهر في القوائم</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SwitchPayment" xml:space="preserve">
+    <value>يقبل الدفع</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SaveChanges" xml:space="preserve">
+    <value>حفظ التعديلات</value>
+  </data>
 </root>

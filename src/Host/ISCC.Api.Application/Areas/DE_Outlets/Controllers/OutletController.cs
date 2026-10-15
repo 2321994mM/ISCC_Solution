@@ -29,38 +29,20 @@ public class OutletController : BaseController
 {
     public OutletController(IStringLocalizer<SharedResource> localizer) : base(localizer) { }
 
-    /// <summary>The portal's search form for outlets.</summary>
+    /// <summary>The outlets list page (menu "المنافذ").</summary>
+    /// <remarks>
+    /// The newer legacy source made this a single-page shell: the hero, filter panel, table
+    /// and edit modal are all rendered by the view, and the rows arrive over AJAX from
+    /// <see cref="listOutlet"/>. The action therefore does nothing but return the view —
+    /// the search is no longer a server round-trip, so there is no <c>GeneralAdmins</c>
+    /// lookup and no redirect to <see cref="List"/>.
+    /// </remarks>
     [HttpGet("Index")]
-    public async Task<IActionResult> Index(
-        string? searchAr = null,
-        string? searchEn = null,
-        int page = 1,
-        int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public IActionResult Index()
     {
         try
         {
             ViewData["PageHeading"] = L["DE_Outlets_Outlet_Title"];
-            ViewData["Culture"] = CurrentCulture;
-
-            ViewBag.SearchAr = searchAr ?? string.Empty;
-            ViewBag.SearchEn = searchEn ?? string.Empty;
-            ViewBag.GeneralAdminId = 0;
-
-            // Get General Admin dropdown for filter
-            var generalAdmins = await Db.GeneralAdmins
-                .Where(g => g.IsActive && g.UserDeletionId == null)
-                .Select(g => new SelectOption { Value = g.Id.ToString(), TextAr = g.ArName, TextEn = g.EnName })
-                .ToListAsync(cancellationToken);
-
-            ViewBag.GeneralAdmins = generalAdmins;
-
-            // If search parameters provided, redirect to List action
-            if (!string.IsNullOrWhiteSpace(searchAr) || !string.IsNullOrWhiteSpace(searchEn))
-            {
-                return RedirectToAction(nameof(List), new { searchAr, searchEn, page, pageSize });
-            }
-
             return View();
         }
         catch (Exception ex)
@@ -353,6 +335,186 @@ public class OutletController : BaseController
             TempData["ErrorMessage"] = L["Common_ErrorOccurred"].Value;
             return RedirectToAction(nameof(Index));
         }
+    }
+
+    /// <summary>
+    /// Paged search feed for the outlets list page (AJAX).
+    /// Ported from the legacy <c>listOutlet</c> action, which called the
+    /// <c>Outlet_API</c> list endpoint and returned a jTable-shaped envelope:
+    /// <c>{ Result = "OK", Records, TotalRecordCount }</c>. The envelope shape is kept
+    /// because the legacy list page's JavaScript reads those exact property names.
+    /// </summary>
+    /// <remarks>
+    /// The legacy action took <c>jtStartIndex</c>/<c>jtPageSize</c>/<c>jtSorting</c> (jTable's
+    /// naming) and forwarded them as <c>index</c>/<c>pageSize</c>/<c>jtSorting</c>. Those
+    /// parameter names are preserved verbatim so a legacy caller keeps working.
+    /// </remarks>
+    [HttpPost("listOutlet")]
+    public async Task<IActionResult> listOutlet(
+        string txt_AR_BTNSearch = "",
+        string txt_EN_BTNSearch = "",
+        int jtStartIndex = 0,
+        int jtPageSize = 0,
+        string jtSorting = "",
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var (records, total) = await QueryOutletsAsync(
+                txt_AR_BTNSearch, txt_EN_BTNSearch, jtStartIndex, jtPageSize, jtSorting, cancellationToken);
+
+            return Json(new { Result = "OK", Records = records, TotalRecordCount = total });
+        }
+        catch (Exception ex)
+        {
+            LogErrorToDb("Outlet", "listOutlet", ex.ToString());
+            return Json(new { Result = "ERROR", Message = L["Common_ErrorOccurred"].Value });
+        }
+    }
+
+    /// <summary>Every non-deleted outlet, for the list page's Excel export.</summary>
+    [HttpGet("AllOutletExcell")]
+    public async Task<IActionResult> AllOutletExcell(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var (records, _) = await QueryOutletsAsync(string.Empty, string.Empty, 0, -1, string.Empty, cancellationToken);
+            return Json(records);
+        }
+        catch (Exception ex)
+        {
+            LogErrorToDb("Outlet", "AllOutletExcell", ex.ToString());
+            return Json(new { Result = "ERROR", Message = L["Common_ErrorOccurred"].Value });
+        }
+    }
+
+    /// <summary>
+    /// Saves the inline edit modal on the outlets list page (AJAX).
+    /// Ported from the legacy <c>UpdateOutlet</c> action, which did a full <c>PUT</c>
+    /// against <c>Outlet_API</c> and answered <c>{ Result = "OK" }</c>.
+    /// </summary>
+    /// <remarks>
+    /// The modal edits the same fields the legacy DTO did (name, address, the three flags,
+    /// plus the HR/port/admin references carried through untouched). Contacts are not part
+    /// of the modal — they stay on the full Edit form — so <c>contacts</c> is not touched
+    /// here, which is what the legacy page did too (the modal never posted a contacts list).
+    /// </remarks>
+    [HttpPost("UpdateOutlet")]
+    public async Task<IActionResult> UpdateOutlet(OutletEditInputModel model, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                var details = string.Join("; ", ModelState
+                    .Where(kv => kv.Value is { Errors.Count: > 0 })
+                    .SelectMany(kv => kv.Value!.Errors.Select(e => kv.Key + ": " + e.ErrorMessage)));
+                LogErrorToDb("Outlet", "UpdateOutlet", "ModelState invalid: " + details);
+                return Json(new { Result = "ERROR", Message = L["Common_RequiredData"].Value });
+            }
+
+            var existing = await Db.Outlets
+                .FirstOrDefaultAsync(o => o.Id == model.Id && o.UserDeletionId == null, cancellationToken);
+
+            if (existing == null)
+            {
+                return Json(new { Result = "ERROR", Message = L["Common_NotFound"].Value });
+            }
+
+            var userId = long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+
+            existing.ArName = model.ArName;
+            existing.EnName = model.EnName;
+            existing.AddressAr = model.AddressAr;
+            existing.AddressEn = model.AddressEn;
+            existing.SupervisorId = model.SupervisorId;
+            existing.GrAdminId = model.GrAdminId;
+            existing.IsExport = model.IsExport;
+            existing.IdHr = model.IdHr;
+            existing.PortNationalId = model.PortNationalId;
+            existing.IsActive = model.IsActive;
+            existing.IsDisplay = (byte)(model.IsDisplay ? 1 : 0);
+            existing.CanAcceptPayment = model.CanAcceptPayment;
+            existing.UserUpdationId = userId;
+            existing.UserUpdationDate = DateOnly.FromDateTime(DateTime.Now);
+
+            await Db.SaveChangesAsync(cancellationToken);
+
+            return Json(new { Result = "OK" });
+        }
+        catch (Exception ex)
+        {
+            LogErrorToDb("Outlet", "UpdateOutlet", ex.ToString());
+            return Json(new { Result = "ERROR", Message = L["Common_ErrorOccurred"].Value });
+        }
+    }
+
+    /// <summary>
+    /// Shared filter/sort/page core for <c>listOutlet</c> and <c>AllOutletExcell</c>.
+    /// A <paramref name="pageSize"/> of <c>-1</c> means "every row", matching the legacy
+    /// <c>pageSize=-1&amp;index=-1</c> convention used by the Excel export.
+    /// </summary>
+    private async Task<(List<object> Records, int Total)> QueryOutletsAsync(
+        string searchAr, string searchEn, int startIndex, int pageSize, string sorting,
+        CancellationToken cancellationToken)
+    {
+        var query = Db.Outlets.Where(o => o.UserDeletionId == null);
+
+        if (!string.IsNullOrWhiteSpace(searchAr))
+            query = query.Where(o => o.ArName != null && o.ArName.Contains(searchAr));
+
+        if (!string.IsNullOrWhiteSpace(searchEn))
+            query = query.Where(o => o.EnName != null && o.EnName.Contains(searchEn));
+
+        var total = await query.CountAsync(cancellationToken);
+
+        // Only ArName/EnName are sortable from the page; anything else falls back to ArName.
+        query = sorting.StartsWith("En_Name", StringComparison.OrdinalIgnoreCase)
+            ? query.OrderBy(o => o.EnName)
+            : query.OrderBy(o => o.ArName);
+
+        if (pageSize > 0)
+            query = query.Skip(Math.Max(0, startIndex)).Take(pageSize);
+
+        var rows = await query
+            .Select(o => new
+            {
+                o.Id,
+                o.ArName,
+                o.EnName,
+                o.AddressAr,
+                o.AddressEn,
+                o.SupervisorId,
+                o.GrAdminId,
+                o.IsExport,
+                o.IdHr,
+                o.PortNationalId,
+                o.IsActive,
+                o.IsDisplay,
+                o.CanAcceptPayment
+            })
+            .ToListAsync(cancellationToken);
+
+        var records = rows
+            .Select(o => (object)new
+            {
+                o.Id,
+                o.ArName,
+                o.EnName,
+                o.AddressAr,
+                o.AddressEn,
+                o.SupervisorId,
+                o.GrAdminId,
+                o.IsExport,
+                o.IdHr,
+                o.PortNationalId,
+                o.IsActive,
+                o.IsDisplay,
+                o.CanAcceptPayment
+            })
+            .ToList();
+
+        return (records, total);
     }
 
     /// <summary>Gets contacts for an outlet (AJAX).</summary>

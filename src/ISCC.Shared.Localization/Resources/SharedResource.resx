@@ -894,4 +894,61 @@
   <data name="Im_List_DtEmptyTable" xml:space="preserve">
     <value>No data available</value>
   </data>
+  <data name="DE_Outlets_Outlet_HeroTitle" xml:space="preserve">
+    <value>Outlets management</value>
+  </data>
+  <data name="DE_Outlets_Outlet_HeroSubtitle" xml:space="preserve">
+    <value>View outlet data and choose which outlets may accept payment.</value>
+  </data>
+  <data name="DE_Outlets_Outlet_TotalCount" xml:space="preserve">
+    <value>Total outlets</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ListTitle" xml:space="preserve">
+    <value>Outlets list</value>
+  </data>
+  <data name="DE_Outlets_Outlet_NoMatch" xml:space="preserve">
+    <value>No outlets match the search</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Loading" xml:space="preserve">
+    <value>Loading data...</value>
+  </data>
+  <data name="DE_Outlets_Outlet_LoadError" xml:space="preserve">
+    <value>Could not load outlet data</value>
+  </data>
+  <data name="DE_Outlets_Outlet_ConnectionError" xml:space="preserve">
+    <value>Could not reach the server to load outlet data</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SaveError" xml:space="preserve">
+    <value>Could not save the outlet data</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SaveConnectionError" xml:space="preserve">
+    <value>Could not reach the server to save the outlet data</value>
+  </data>
+  <data name="DE_Outlets_Outlet_EditTitle" xml:space="preserve">
+    <value>Edit outlet data</value>
+  </data>
+  <data name="DE_Outlets_Outlet_CanAcceptPayment" xml:space="preserve">
+    <value>Accepts payment</value>
+  </data>
+  <data name="DE_Outlets_Outlet_CannotAcceptPayment" xml:space="preserve">
+    <value>Does not accept payment</value>
+  </data>
+  <data name="DE_Outlets_Outlet_Shows" xml:space="preserve">
+    <value>Shown</value>
+  </data>
+  <data name="DE_Outlets_Outlet_NotDisplay" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SwitchActive" xml:space="preserve">
+    <value>Active outlet</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SwitchDisplay" xml:space="preserve">
+    <value>Shown in lists</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SwitchPayment" xml:space="preserve">
+    <value>Accepts payment</value>
+  </data>
+  <data name="DE_Outlets_Outlet_SaveChanges" xml:space="preserve">
+    <value>Save changes</value>
+  </data>
 </root>
