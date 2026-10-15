@@ -35,11 +35,40 @@
 
     var fullname = ViewBag.Fullname as string;
     var committeeType = Convert.ToInt32(ViewBag.CommitteeTypeLst_Value ?? 0);
+
+    // Summary-card counts. The newer legacy source computes these at the top of the view
+    // so the "ملخص الطلب" strip can show them before the (much later) plant tables render.
+    var itemsCount = Model.itemsWithConstrains == null ? 0 : Model.itemsWithConstrains.Count();
+    var lotsCount = 0;
+    if (Model.itemsWithConstrains != null)
+    {
+        for (int itemIndex = 0; itemIndex < Model.itemsWithConstrains.Count(); itemIndex++)
+        {
+            if (Model.itemsWithConstrains[itemIndex].ItemCategories_lots != null)
+            {
+                lotsCount += Model.itemsWithConstrains[itemIndex].ItemCategories_lots.Count();
+            }
+        }
+    }
 }
 
 @section Styles {
     <link rel="stylesheet" href="/_shared/lib/select2/css/select2.min.css" />
     <style>
+        @* Palette lifted from the newer legacy source. Every rule below that used to hardcode
+           the old teal (#1e7c80) now reads from these, so the whole page shares one tone. *@
+        :root {
+            --committee-primary: #24685e;
+            --committee-primary-hover: #194f47;
+            --committee-tint: #eaf3ef;
+            --committee-surface: #ffffff;
+            --committee-subtle: #f5f7f6;
+            --committee-border: #dce4e0;
+            --committee-text: #263c35;
+            --committee-muted: #596d64;
+            --committee-danger: #a63232;
+        }
+
         @@media screen and (min-width: 768px) {
             .modal-dialog {
                 left: 0% !important;
@@ -64,12 +93,12 @@
         }
 
         .modal-header {
-            background-color: #1e7c80;
+            background-color: var(--committee-primary);
             color: white;
         }
 
         .modal-content {
-            color: #167479;
+            color: var(--committee-primary);
         }
 
         .display-none {
@@ -79,33 +108,562 @@
         .style-but {
             height: auto !important;
             color: white;
-            background-color: #1e7c80;
-            border: 2px solid #1e8084;
+            background-color: var(--committee-primary);
+            border: 2px solid var(--committee-primary);
             box-shadow: 0 4px #1d9fa5;
             outline: none;
             margin-top: 5px;
         }
 
         .tapp-title {
-            background-color: #1e7c80;
+            background-color: var(--committee-primary);
             color: #fff;
             padding: 5px 12px;
             display: inline-block;
         }
 
         .tab .nav-tabs {
-            border-bottom: 1px solid #1e7c80;
+            border-bottom: 1px solid var(--committee-primary);
         }
 
         .tab .nav-tabs > li > a,
         .tab .nav-tabs button {
-            color: #1e7c80;
+            color: var(--committee-primary);
         }
 
         .tab .nav-tabs .active a,
         .tab .nav-tabs .active button {
-            background-color: #1e7c80 !important;
+            background-color: var(--committee-primary) !important;
             color: #fff !important;
+        }
+
+        /* ---------- Workspace: step nav, summary strip, section cards ---------- */
+        .committee-workspace {
+            direction: rtl;
+            margin-bottom: 24px;
+        }
+
+        .committee-steps {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 12px;
+            margin-bottom: 16px;
+            background: #fff;
+            border: 1px solid var(--committee-border);
+            border-radius: 10px;
+            box-shadow: 0 4px 14px rgba(38, 60, 53, .05);
+        }
+
+        .committee-steps a {
+            flex: 1 1 150px;
+            padding: 10px 12px;
+            border-radius: 7px;
+            background: var(--committee-tint);
+            color: var(--committee-primary);
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none !important;
+            transition: .2s ease;
+        }
+
+        .committee-steps a:hover,
+        .committee-steps a.is-active {
+            background: var(--committee-primary);
+            color: #fff;
+        }
+
+        .committee-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .committee-summary-card {
+            padding: 14px;
+            background: #fff;
+            border: 1px solid var(--committee-border);
+            border-right: 5px solid var(--committee-primary);
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(38, 60, 53, .04);
+        }
+
+        .committee-summary-card span {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--committee-muted);
+            font-size: 12px;
+        }
+
+        .committee-summary-card strong {
+            color: var(--committee-primary);
+            font-size: 18px;
+        }
+
+        .committee-section {
+            scroll-margin-top: 90px;
+            padding: 18px;
+            margin-bottom: 18px;
+            background: #fff;
+            border: 1px solid var(--committee-border);
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(38, 60, 53, .04);
+        }
+
+        .committee-section > .row:first-child .tapp-title {
+            margin-bottom: 10px;
+        }
+
+        .committee-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 0 0 12px;
+            padding: 10px 12px;
+            background: var(--committee-subtle);
+            border: 1px solid var(--committee-border);
+            border-radius: 8px;
+        }
+
+        .committee-toolbar p {
+            margin: 0;
+            color: var(--committee-muted);
+        }
+
+        .committee-toolbar .btn {
+            margin: 0 4px;
+        }
+
+        #lagnaDiv table[id="itemTable"] {
+            margin-bottom: 18px;
+            border-width: 2px !important;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 9px rgba(0, 0, 0, .08);
+        }
+
+        #lagnaDiv .style-but,
+        #lagnaDiv button {
+            border-radius: 6px;
+            box-shadow: none !important;
+            padding: 7px 10px;
+        }
+
+        .final-result-panel {
+            border-top: 5px solid var(--committee-primary);
+            background: var(--committee-subtle);
+        }
+
+        .final-result-help {
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            color: var(--committee-muted);
+            background: var(--committee-tint);
+            border-radius: 6px;
+        }
+
+        #imCommitteeResult input.form-control[readonly],
+        #imCommitteeResult textarea.form-control[disabled] {
+            background: var(--committee-subtle);
+            border-color: var(--committee-border);
+            color: var(--committee-text);
+            box-shadow: none;
+        }
+
+        @@media (max-width: 991px) {
+            .committee-summary {
+                grid-template-columns: repeat(2, minmax(140px, 1fr));
+            }
+
+            .committee-steps {
+                position: static;
+            }
+        }
+
+        @@media (max-width: 575px) {
+            .committee-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .committee-section {
+                padding: 10px;
+            }
+        }
+
+        /* ---------- Plant browser (built by script, scoped to #lagnaDiv) ---------- */
+        #lagnaDiv .plant-browser {
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr);
+            gap: 20px;
+            direction: rtl;
+            align-items: start;
+        }
+
+        #lagnaDiv .plant-navigation {
+            position: sticky;
+            top: 80px;
+            padding: 14px;
+            background: var(--committee-subtle);
+            border: 1px solid var(--committee-border);
+            border-radius: 12px;
+        }
+
+        #lagnaDiv .plant-navigation h3 {
+            margin: 0 0 14px;
+            font-size: 17px;
+            color: var(--committee-primary);
+        }
+
+        #lagnaDiv .plant-choice {
+            display: block;
+            width: 100%;
+            height: auto;
+            margin: 0 0 8px;
+            padding: 13px;
+            text-align: right;
+            white-space: normal;
+            border: 1px solid var(--committee-border);
+            background: #fff;
+            color: var(--committee-text);
+            border-radius: 8px;
+        }
+
+        #lagnaDiv .plant-choice[aria-pressed="true"] {
+            background: var(--committee-tint);
+            border-color: var(--committee-primary);
+            box-shadow: inset -4px 0 var(--committee-primary) !important;
+        }
+
+        #lagnaDiv .plant-choice strong, #lagnaDiv .plant-choice span {
+            display: block;
+        }
+
+        #lagnaDiv .plant-choice span {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--committee-muted);
+        }
+
+        #lagnaDiv .plant-content, #lagnaDiv .plant-panel {
+            min-width: 0;
+        }
+
+        #lagnaDiv .plant-panel[hidden] {
+            display: none !important;
+        }
+
+        #lagnaDiv .plant-heading {
+            margin: 0 0 8px;
+            color: var(--committee-primary);
+            font-size: 22px;
+        }
+
+        #lagnaDiv .plant-description {
+            color: var(--committee-muted);
+            margin-bottom: 18px;
+        }
+
+        #lagnaDiv .lot-card {
+            margin: 16px 0;
+            border: 1px solid var(--committee-border);
+            border-radius: 12px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        #lagnaDiv .lot-card > summary {
+            padding: 17px 20px;
+            background: var(--committee-tint);
+            color: var(--committee-text);
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        #lagnaDiv .lot-metrics {
+            display: block;
+            margin: 8px 18px 0 0;
+            color: var(--committee-muted);
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.8;
+        }
+
+        #lagnaDiv .lot-body {
+            padding: 16px;
+        }
+
+        #lagnaDiv .lot-body h4 {
+            font-size: 16px;
+            color: var(--committee-text);
+            margin: 20px 0 12px;
+        }
+
+        #lagnaDiv .committee-disclosure {
+            border: 1px solid var(--committee-border);
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        #lagnaDiv .committee-disclosure > summary {
+            cursor: pointer;
+            padding: 14px;
+            background: var(--committee-subtle);
+            color: var(--committee-text);
+            font-weight: bold;
+            line-height: 1.7;
+        }
+
+        #lagnaDiv .committee-disclosure[open] > summary {
+            border-bottom: 1px solid var(--committee-border);
+            background: var(--committee-tint);
+        }
+
+        #lagnaDiv .committee-disclosure .table-scroll {
+            padding: 10px;
+        }
+
+        #lagnaDiv .table-scroll {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        #lagnaDiv .plant-browser table {
+            width: 100%;
+            margin-bottom: 0;
+            border: 1px solid var(--committee-border) !important;
+            box-shadow: none;
+        }
+
+        #lagnaDiv .plant-browser table td, #lagnaDiv .plant-browser table th {
+            padding: 10px;
+            font-size: 13px;
+            line-height: 1.7;
+            border: 1px solid var(--committee-border) !important;
+            color: var(--committee-text);
+        }
+
+        #lagnaDiv .plant-browser table th {
+            background: var(--committee-subtle) !important;
+        }
+
+        #lagnaDiv .plant-browser table tr {
+            background: #fff !important;
+            color: var(--committee-text) !important;
+        }
+
+        #lagnaDiv .plant-browser table td[style*="background-color"] {
+            background: var(--committee-subtle) !important;
+        }
+
+        #lagnaDiv .plant-browser input[type="button"], #lagnaDiv .plant-browser button {
+            font-size: 13px;
+        }
+
+        #lagnaDiv .plant-browser .ui-original-heading,
+        #lagnaDiv .plant-browser .ui-original-toggle {
+            display: none !important;
+        }
+
+        #lagnaDiv .plant-browser .lot-overview, #lagnaDiv .lot-overview tbody {
+            display: block;
+            border: 0 !important;
+        }
+
+        #lagnaDiv .lot-overview tr.ui-overview-heading {
+            display: none !important;
+        }
+
+        #lagnaDiv .plant-browser .lot-overview tr[data-ui-lot] {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        #lagnaDiv .plant-browser .lot-overview td {
+            display: block;
+            border: 0 !important;
+            background: var(--committee-subtle);
+            border-radius: 6px;
+            text-align: right;
+        }
+
+        #lagnaDiv .lot-overview td::before {
+            content: attr(data-label);
+            display: block;
+            color: var(--committee-muted);
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        #lagnaDiv .lot-overview td.hidden, #lagnaDiv .lot-overview td[hidden], #lagnaDiv .lot-overview td.ui-overview-empty {
+            display: none !important;
+        }
+
+        #lagnaDiv summary:focus-visible, #lagnaDiv .plant-choice:focus-visible {
+            outline: 3px solid var(--committee-primary);
+            outline-offset: 3px;
+        }
+
+        #lagnaDiv .plant-empty {
+            padding: 24px;
+            background: var(--committee-subtle);
+            color: var(--committee-muted);
+            border-radius: 8px;
+        }
+
+        #lagnaDiv.is-organized > .tab > .nav-tabs {
+            display: none;
+        }
+
+        #lagnaDiv.is-organized .tab-content {
+            background: #fff !important;
+            padding: 0;
+        }
+
+        #lagnaDiv .plant-browser button:not(.plant-choice),
+        #lagnaDiv .plant-browser input[type="button"],
+        #lagnaDiv .committee-toolbar .btn {
+            background: var(--committee-surface) !important;
+            color: var(--committee-primary) !important;
+            border: 1px solid var(--committee-border) !important;
+            box-shadow: none !important;
+        }
+
+        #lagnaDiv .plant-browser button:not(.plant-choice):hover,
+        #lagnaDiv .plant-browser input[type="button"]:hover,
+        #lagnaDiv .committee-toolbar .btn:hover {
+            background: var(--committee-tint) !important;
+            border-color: var(--committee-primary) !important;
+        }
+
+        #lagnaDiv .plant-browser button[id^="Insert_Lot_Result_"],
+        #lagnaDiv .plant-browser input[id^="stonestand_"] {
+            background: var(--committee-primary) !important;
+            color: var(--committee-surface) !important;
+            border-color: var(--committee-primary) !important;
+        }
+
+        #lagnaDiv .plant-browser button[id^="Insert_Lot_Result_"]:hover,
+        #lagnaDiv .plant-browser input[id^="stonestand_"]:hover {
+            background: var(--committee-primary-hover) !important;
+        }
+
+        #lagnaDiv .plant-choice:hover {
+            border-color: var(--committee-primary);
+        }
+
+        #lagnaDiv .lot-card[open] {
+            border-color: #b5cdc0;
+        }
+
+        #lagnaDiv .committee-disclosure > summary:hover {
+            background: var(--committee-tint);
+        }
+
+        #lagnaDiv .plant-browser a:not(.btn) {
+            color: var(--committee-primary);
+            text-decoration: underline;
+        }
+
+        #lagnaDiv .plant-browser :is(button, input, select, textarea):focus-visible {
+            outline: 2px solid var(--committee-primary) !important;
+            outline-offset: 3px;
+        }
+
+        #lagnaDiv .plant-browser :is(button, input, select, textarea):disabled {
+            background: var(--committee-subtle) !important;
+            color: var(--committee-muted) !important;
+            border-color: var(--committee-border) !important;
+            cursor: not-allowed;
+        }
+
+        .committee-section .tapp-title {
+            background: var(--committee-tint) !important;
+            color: var(--committee-primary) !important;
+            border-color: var(--committee-border) !important;
+        }
+
+        .committee-section .btn-primary, .committee-section button.quickview10,
+        .committee-section button.quickview17, #btnSave, #PrintResultButton {
+            background: var(--committee-primary) !important;
+            color: #fff !important;
+            border: 1px solid var(--committee-primary) !important;
+            box-shadow: none !important;
+        }
+
+        .committee-section .btn-primary:hover, .committee-section button.quickview10:hover,
+        .committee-section button.quickview17:hover, #btnSave:hover, #PrintResultButton:hover {
+            background: var(--committee-primary-hover) !important;
+        }
+
+        #btnReject {
+            background: var(--committee-danger) !important;
+            border-color: var(--committee-danger) !important;
+            box-shadow: none !important;
+        }
+
+        .committee-section table, .committee-section table td, .committee-section table th {
+            border-color: var(--committee-border) !important;
+        }
+
+        .committee-section table th {
+            background: var(--committee-subtle);
+            color: var(--committee-text);
+        }
+
+        @@media (max-width: 991px) {
+            #lagnaDiv .plant-browser {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            #lagnaDiv .plant-navigation {
+                position: static;
+                min-width: 0;
+            }
+
+            #lagnaDiv .plant-navigation-list {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+            }
+
+            #lagnaDiv .plant-choice {
+                flex: 0 0 180px;
+            }
+
+            #lagnaDiv .lot-body {
+                padding: 10px;
+            }
+
+            #lagnaDiv .plant-browser .lot-overview tr[data-ui-lot] {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media print {
+            #lagnaDiv .plant-navigation, #lagnaDiv .committee-toolbar {
+                display: none;
+            }
+
+            #lagnaDiv .plant-browser {
+                display: block;
+            }
+
+            #lagnaDiv .plant-panel[hidden] {
+                display: block !important;
+            }
+
+            #lagnaDiv .table-scroll {
+                overflow: visible;
+            }
         }
 
         #popup td, #popup th {
@@ -128,7 +686,26 @@
 
 <div id="imCommitteeResult">
 
+    @* ======================== ملخص الطلب ومراحل المراجعة ======================== *@
+    <div class="committee-workspace">
+        <nav class="committee-steps" aria-label="مراحل مراجعة نتيجة اللجنة">
+            <a href="#request-data" class="is-active">1. بيانات الطلب</a>
+            <a href="#customs-data">2. الشهادة الجمركية</a>
+            <a href="#lagnaDiv">3. النباتات واللوطات</a>
+            <a href="#visa-section">4. التأشيرة والرسوم</a>
+            <a href="#final-result-section">5. الموقف النهائي</a>
+        </nav>
+
+        <div class="committee-summary" aria-label="ملخص الطلب">
+            <div class="committee-summary-card"><span>رقم الطلب</span><strong>@Model.ImCheckRequest_Number</strong></div>
+            <div class="committee-summary-card"><span>عدد النباتات</span><strong>@itemsCount</strong></div>
+            <div class="committee-summary-card"><span>عدد اللوطات</span><strong>@lotsCount</strong></div>
+            <div class="committee-summary-card"><span>التأشيرات المسجلة</span><strong>@(Model.CheckRequest_Visa == null ? 0 : Model.CheckRequest_Visa.Count())</strong></div>
+        </div>
+    </div>
+
     @* ============================ بيانات الرسالة ============================ *@
+    <div id="request-data" class="committee-section">
     <div class="row">
         <label class="tapp-title">بيانات الرسالة</label>
     </div>
@@ -156,8 +733,10 @@
         </div>
     </div>
     <br />
+    </div>
 
     @* ======================== بيانات الشهادة الجمركية ======================== *@
+    <div id="customs-data" class="committee-section">
     <div class="row">
         <label class="tapp-title">بيانات الشهادة الجمركية</label>
         <label hidden id="Lbl_ID_Lot"></label>
@@ -258,11 +837,21 @@
             </div>
         }
     }
+    </div>
 
     <hr />
 
     @* ============================== النباتات ============================== *@
     <div class="form-box" id="lagnaDiv">
+
+        <div class="committee-toolbar">
+            <p><strong>النباتات واللوطات:</strong> افتح النبات المطلوب ثم راجع نتائج اللجان وموقف الحجر الخاص بكل لوط.</p>
+            <div>
+                <button type="button" id="expandAllLots" class="btn btn-default">فتح لوطات النبات</button>
+                <button type="button" id="collapseAllLots" class="btn btn-default">طي لوطات النبات</button>
+            </div>
+        </div>
+
         <div class="tab" role="tabpanel">
             <ul class="row nav nav-tabs" role="tablist">
                 <li role="presentation" class="nav-item">
@@ -280,7 +869,7 @@
                                     for (int i = 0; i < Model.itemsWithConstrains.Count(); i++)
                                     {
                                         var item = Model.itemsWithConstrains[i];
-                                        <table id="itemTable" class="table" style="border: 5px solid #1f6c6f !important;">
+                                        <table id="itemTable" class="table" data-ui-plant="@i" data-plant-name="@item.ItemName_Ar" data-plant-short-name="@item.ItemShortNameAr" style="border: 5px solid #1f6c6f !important;">
                                             <tbody>
                                                 <tr style="background-color: rgb(77,158,151); color:#fff; font-weight:bold; font-size:16px;" class="toggle-div-@i">
                                                     <td colspan="12" style="font-size:inherit">النبات</td>
@@ -325,7 +914,7 @@
                                                 @for (int m = 0; m < item.ItemCategories_lots.Count(); m++)
                                                 {
                                                     var lot = item.ItemCategories_lots[m];
-                                                    <tr class="display-none toggle-div2-Lot_@i">
+                                                    <tr class="display-none toggle-div2-Lot_@i" data-ui-lot="@lot.ID_Lot">
                                                         <td>@lot.Lot_Number</td>
                                                         <td class="hidden">@lot.categoryName</td>
                                                         <td>@lot.GrossWeight</td>
@@ -1050,9 +1639,13 @@
         </div>
     </div>
 
-    <hr />
+    @* The newer legacy source pulls "عرض الرسوم" out of the visa block and hides the block
+       itself. The visa editor and its "حفظ التأشيرة" button therefore stay in the DOM but
+       are unreachable; mirrored here so this page matches the newer source exactly. *@
+    <a href='/Committees/FeesTotalResult/Index?ImCheckRequest_Number=@Model.ImCheckRequest_Number' class="btn btn-primary button" style="background-color:#1f6c6f; border-color:#1f6c6f;">عرض الرسوم</a>
 
     @* ============================== التأشيرة ============================== *@
+    <div id="visa-section" class="committee-section" hidden>
     <div class="row">
         <label class="tapp-title">التأشيرة</label>
     </div>
@@ -1100,9 +1693,14 @@
             </table>
         </div>
     </div>
-    <hr />
+    </div>
 
     @* ============================ الموقف النهائي ============================ *@
+    <div id="final-result-section" class="committee-section final-result-panel">
+    <div class="row">
+        <label class="tapp-title">الموقف النهائي للطلب</label>
+    </div>
+    <div class="final-result-help">هذه هي الخطوة الأخيرة. راجع نتائج اللوطات والتأشيرات أولاً، ثم اختر موقف الطلب واحفظه.</div>
     <div class="row">
         <div class="col-md-4">
             <select class="form-control" id="FinalResult" name="FinalResult">
@@ -1152,6 +1750,7 @@
                 </tbody>
             </table>
         </div>
+    </div>
     </div>
 
     @if (Model.Count_Lots == 0)
@@ -1700,6 +2299,130 @@
                     "<tr><td>التعرض بالدقيقة</td><td>" + exposureMinute + "</td><td>درجة الحرارة</td><td>" + temperature + "<span class='red'>درجة مئوية</span></td></tr>" +
                     "<tr><td>الملاحظات</td><td>" + notes + "</td><td>رقم الختم الحرارى</td><td>" + thermalSealNumber + "</td></tr>" +
                     "</tbody></table>");
+            });
+        });
+    </script>
+    @* Plant browser: pure presentation. It moves the plant tables that are already rendered
+       into a sidebar + disclosure layout; it never clones result inputs or calls an API, so
+       the original controls, ids and their handlers keep working. Ported from the newer
+       legacy source's script block. *@
+    <script>
+        $(function () {
+            var $workspace = $('#lagnaDiv');
+            var $plants = $workspace.find('table[data-ui-plant]');
+            var $browser = $('<div class="plant-browser"></div>');
+            var $navigation = $('<nav class="plant-navigation" aria-label="النباتات"></nav>').append('<h3>نباتات الطلب</h3>');
+            var $choices = $('<div class="plant-navigation-list"></div>').appendTo($navigation);
+            var $content = $('<div class="plant-content"></div>');
+
+            function scrollTable($rows, $target) {
+                var $scroll = $('<div class="table-scroll" tabindex="0" role="region" aria-label="تفاصيل البيانات"></div>').appendTo($target);
+                var $table = $('<table class="table"><tbody></tbody></table>').appendTo($scroll);
+                $table.children('tbody').append($rows);
+                return $table;
+            }
+
+            $plants.each(function (plantIndex) {
+                var $original = $(this);
+                var $rows = $original.children('tbody').children('tr');
+                var $lotStarts = $rows.filter('[data-ui-lot]');
+                var name = $original.attr('data-plant-name');
+                var shortName = $original.attr('data-plant-short-name');
+                var panelId = 'committee-plant-panel-' + plantIndex;
+                var $panel = $('<section class="plant-panel"></section>').attr('id', panelId).prop('hidden', plantIndex !== 0).appendTo($content);
+                $('<h3 class="plant-heading"></h3>').attr('id', panelId + '-title').text(name).appendTo($panel);
+                $panel.attr('aria-labelledby', panelId + '-title');
+                $('<p class="plant-description"></p>').text((shortName ? shortName + ' · ' : '') + $lotStarts.length + ' لوط — اختر اللوط لمراجعة اللجان التابعة له').appendTo($panel);
+                var $choice = $('<button type="button" class="plant-choice"></button>').attr({ 'aria-controls': panelId, 'aria-pressed': plantIndex === 0 ? 'true' : 'false' }).appendTo($choices);
+                $('<strong></strong>').text(name).appendTo($choice);
+                $('<span></span>').text((shortName ? shortName + ' · ' : '') + $lotStarts.length + ' لوط').appendTo($choice);
+                $choice.on('click', function () {
+                    $content.children('.plant-panel').prop('hidden', true);
+                    $panel.prop('hidden', false);
+                    $choices.children('button').attr('aria-pressed', 'false');
+                    $choice.attr('aria-pressed', 'true');
+                });
+
+                // Keep the original plant table and its ID for existing selectors.
+                var $plantInfo = $('<details class="committee-disclosure"><summary>بيانات النبات</summary></details>').appendTo($panel);
+                $('<div class="table-scroll" tabindex="0" role="region" aria-label="بيانات النبات"></div>').append($original).appendTo($plantInfo);
+                $rows.first().addClass('ui-original-heading');
+                $original.find('input[onclick="reply_click2(this)"]').addClass('ui-original-toggle');
+                var $lotHeader = $rows.filter('[class*="toggle-div2-Lot_"]').filter(function () { return $(this).children('th').length > 0; }).first();
+
+                $lotStarts.each(function (lotIndex) {
+                    var $start = $(this);
+                    var first = $rows.index(this);
+                    var end = lotIndex + 1 < $lotStarts.length ? $rows.index($lotStarts[lotIndex + 1]) : $rows.length;
+                    var $lotRows = $rows.slice(first + 1, end);
+                    var $cells = $start.children('td');
+                    var number = $.trim($cells.eq(0).text());
+                    var $lot = $('<details class="lot-card"></details>').prop('open', lotIndex === 0).appendTo($panel);
+                    var $summary = $('<summary></summary>').text('لوط رقم ' + number).appendTo($lot);
+                    $('<span class="lot-metrics"></span>').text('وزن إجمالي: ' + $.trim($cells.eq(2).text()) + ' · وزن صافي: ' + $.trim($cells.eq(3).text()) + ' · عدد العبوات: ' + $.trim($cells.eq(4).text())).appendTo($summary);
+                    var $body = $('<div class="lot-body"></div>').appendTo($lot);
+                    // The existing quarantine button still loads its options and toggles its rows.
+                    $start.removeClass('display-none');
+                    $start.find('input[onclick="reply_click6(this)"][id^="Lot_Result_"]').addClass('ui-original-toggle');
+                    $cells.each(function (cellIndex) {
+                        var $cell = $(this);
+                        $cell.attr('data-label', $.trim($lotHeader.children('th').eq(cellIndex).text()));
+                        if (!$.trim($cell.text()) && !$cell.find('input:not(.ui-original-toggle), button, select, textarea').length) {
+                            $cell.addClass('ui-overview-empty');
+                        }
+                    });
+                    scrollTable($lotHeader.clone().removeClass('display-none').addClass('ui-overview-heading').add($start), $body).addClass('lot-overview');
+                    $('<h4></h4>').text('لجان اللوط').appendTo($body);
+                    var $committeeBody = null;
+                    var committeeCount = 0;
+                    $lotRows.each(function () {
+                        var $row = $(this);
+                        var classes = this.className || '';
+                        if (/\btoggle-div6-Lot_Result_/.test(classes)) {
+                            committeeCount++;
+                            var $toggle = $row.find('input[type="button"]').first();
+                            var title = $toggle.length ? $toggle.val().replace(/\s*اضغط هنا\s*$/, '') : $.trim($row.text());
+                            var $committee = $('<details class="committee-disclosure"></details>').appendTo($body);
+                            $('<summary></summary>').text(title).appendTo($committee);
+                            $committeeBody = scrollTable($row, $committee).children('tbody');
+                            $row.addClass('ui-original-heading');
+                        } else if (/\btoggle-div\d+-Lot_Result_/.test(classes) && $committeeBody) {
+                            // Native disclosure controls visibility; result contents stay intact.
+                            $committeeBody.append($row.removeClass('display-none'));
+                        } else if (/\btoggle-div6-stonestand_/.test(classes)) {
+                            scrollTable($row, $body);
+                            $committeeBody = null;
+                        }
+                    });
+                    if (!committeeCount) {
+                        $('<p class="plant-empty"></p>').text('لا توجد نتائج لجان معروضة لهذا اللوط وفقًا للاختيار الحالي.').appendTo($body);
+                    }
+                });
+                // Remaining lot headings are superseded by the cards, but retained in the DOM.
+                $original.children('tbody').children('tr[class*="toggle-div2-Lot_"]').addClass('ui-original-heading');
+                if (!$lotStarts.length) {
+                    $('<p class="plant-empty"></p>').text('لا توجد لوطات معروضة لهذا النبات.').appendTo($panel);
+                }
+            });
+            if ($plants.length) {
+                $browser.append($navigation, $content);
+                $('#MessageData > .row > .col-md-12').prepend($browser).children('br, hr').hide();
+                $workspace.addClass('is-organized');
+            } else {
+                $('#MessageData').append($('<p class="plant-empty"></p>').text('لا توجد نباتات مطابقة للاختيار الحالي.'));
+            }
+
+            $('#expandAllLots').on('click', function () {
+                $content.children('.plant-panel').not('[hidden]').find('.lot-card').prop('open', true);
+            });
+
+            $('#collapseAllLots').on('click', function () {
+                $content.children('.plant-panel').not('[hidden]').find('.lot-card').prop('open', false);
+            });
+
+            $('.committee-steps a').on('click', function () {
+                $('.committee-steps a').removeClass('is-active');
+                $(this).addClass('is-active');
             });
         });
     </script>
