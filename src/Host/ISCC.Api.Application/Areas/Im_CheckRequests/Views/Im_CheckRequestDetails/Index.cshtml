@@ -38,6 +38,7 @@
 
 <form id="submform" method="post" enctype="multipart/form-data"
       action="@Url.Action("acceptRequest", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })">
+    @Html.AntiForgeryToken()
     <input type="hidden" name="Im_CheckRequest_ID" value="@Model.Im_CheckRequest_ID" />
     <input type="hidden" id="txtIsAccepted" name="IsAccepted" value="" />
 
@@ -912,6 +913,9 @@
         var saveReasonsUrl = '@Url.Action("saveReasons", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })';
         var saveItemFeesUrl = '@Url.Action("saveItemFees", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })';
         var getReportUrl = '@Url.Action("GetReport", "Im_CheckRequestDetails", new { area = "Im_CheckRequests" })';
+        var requestToken = document.querySelector('#submform input[name="__RequestVerificationToken"]').value;
+        var requestErrorText = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Common_ErrorOccurred"].Value));
+        var requestSavedText = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Common_UpdatedSuccessfully"].Value));
 
         function btndownload_click(elem) {
             var path = $(elem).data('assigned-id');
@@ -934,9 +938,15 @@
                 var list = $("#rejreasons").val();
                 var id = $(this).data("id");
                 if (list != null) {
-                    $.post(saveReasonsUrl, { listIDs: list, checkReqId: id }, function () {
-                        $("#submform").submit();
-                    });
+                    $.ajax({
+                        url: saveReasonsUrl,
+                        method: "POST",
+                        traditional: true,
+                        data: { listIDs: list, checkReqId: id, __RequestVerificationToken: requestToken }
+                    }).done(function (result) {
+                        if (result !== "succ") { alert(requestErrorText); return; }
+                        document.getElementById("submform").requestSubmit();
+                    }).fail(function () { alert(requestErrorText); });
                 } else {
                     alert("choose reasons");
                 }
@@ -948,9 +958,10 @@
                 var itemId = parts[0].trim();
                 var requestId = parts[1].trim();
                 var fees = $("#i_" + itemId).val();
-                $.post(saveItemFeesUrl, { itemId: itemId, Im_CheckRequest_ID: requestId, fees: fees }, function () {
-                    alert('تم تعديل الرسوم');
-                });
+                if (fees === "") { alert(requestErrorText); return; }
+                $.post(saveItemFeesUrl, { itemId: itemId, Im_CheckRequest_ID: requestId, fees: fees, __RequestVerificationToken: requestToken }, function (result) {
+                    alert(result === "succ" ? requestSavedText : requestErrorText);
+                }).fail(function () { alert(requestErrorText); });
             });
 
             function valOr(data, fallback) {

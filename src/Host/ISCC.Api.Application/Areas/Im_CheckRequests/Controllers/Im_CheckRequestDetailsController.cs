@@ -44,10 +44,10 @@ public class Im_CheckRequestDetailsController : BaseController
         _configuration = configuration;
     }
 
-    /// <summary>Mirrors <c>(short)Session["UserId"]</c> in the legacy controller.</summary>
+    /// <summary>Reads the signed-in user's id from the name-identifier claim.</summary>
     private short GetUserId()
     {
-        var raw = User.FindFirstValue("UserId");
+        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return short.TryParse(raw, out var value) ? value : (short)0;
     }
 
@@ -80,6 +80,7 @@ public class Im_CheckRequestDetailsController : BaseController
 
     /// <summary>Saves the selected refuse reasons against the request.</summary>
     [HttpPost("saveReasons")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> saveReasons(
         List<short>? listIDs,
         long checkReqId,
@@ -110,6 +111,7 @@ public class Im_CheckRequestDetailsController : BaseController
     /// wrote a log row and returned to the current-requests list.
     /// </summary>
     [HttpPost("acceptRequest")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> acceptRequest(ImRequestDetailsDto model, CancellationToken cancellationToken = default)
     {
         try
@@ -126,17 +128,20 @@ public class Im_CheckRequestDetailsController : BaseController
 
             await _service.AcceptRequestAsync(dto, cancellationToken);
 
+            TempData["SuccessMessage"] = L["Common_UpdatedSuccessfully"].Value;
             return RedirectToAction("Index", "List_ImCheckRequest", new { area = "Im_CheckRequests" });
         }
         catch (Exception ex)
         {
             LogErrorToDb(nameof(Im_CheckRequestDetailsController), nameof(acceptRequest), ex.ToString());
+            TempData["ErrorMessage"] = L["Common_ErrorOccurred"].Value;
             return RedirectToAction("Index", "List_ImCheckRequest", new { area = "Im_CheckRequests" });
         }
     }
 
     /// <summary>Updates the fees of one imported item and logs the change.</summary>
     [HttpPost("saveItemFees")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> saveItemFees(
         long? itemId,
         long Im_CheckRequest_ID,
