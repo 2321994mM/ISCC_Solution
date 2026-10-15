@@ -1,11 +1,13 @@
 @model ISCC.Infrastructure.Data.Generated.Outlet
 @using ISCC.Shared.Contracts
+@using ISCC.Api.Application.Areas.DE_Outlets.Models
 @{
     ViewData["PageHeading"] = L["DE_Outlets_Outlet_Create"];
     var culture = (string?)ViewData["Culture"] ?? "ar";
     var generalAdmins = (IReadOnlyList<SelectOption>?)ViewBag.GeneralAdmins ?? Array.Empty<SelectOption>();
     var contactTypes = (IReadOnlyList<SelectOption>?)ViewBag.ContactTypes ?? Array.Empty<SelectOption>();
     var portTypes = (IReadOnlyList<SelectOption>?)ViewBag.PortTypes ?? Array.Empty<SelectOption>();
+    var contacts = (IReadOnlyList<ContactInputModel>?)ViewBag.Contacts ?? Array.Empty<ContactInputModel>();
 }
 
 @if (TempData["ErrorMessage"] is string error)
@@ -22,6 +24,7 @@
     </div>
     <div class="card-body">
         <form method="post" asp-action="Create" class="row g-3">
+            <div class="col-12"><div asp-validation-summary="All" class="text-danger"></div></div>
             <div class="col-md-6">
                 <label class="form-label" asp-for="ArName">@L["DE_Outlets_Outlet_ArName"] <span class="text-danger">*</span></label>
                 <input class="form-control" type="text" asp-for="ArName" required />
@@ -83,14 +86,35 @@
             </div>
             <div class="col-md-3">
                 <label class="form-label" asp-for="IsDisplay">@L["DE_Outlets_Outlet_IsDisplay"]</label>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" asp-for="IsDisplay" checked="@(Model.IsDisplay == 1)" />
-                    <label class="form-check-label" asp-for="IsDisplay">@L["Common_Display"]</label>
-                </div>
+                <select class="form-select" asp-for="IsDisplay">
+                    <option value="0">@L["Common_No"]</option>
+                    <option value="1">@L["Common_Yes"]</option>
+                </select>
             </div>
             <div class="col-md-6">
                 <label class="form-label">@L["DE_Outlets_Outlet_Contacts"]</label>
                 <div id="contactsContainer">
+                    @if (contacts.Count > 0)
+                    {
+                        @for (var index = 0; index < contacts.Count; index++)
+                        {
+                            <div class="contact-row row g-2 mb-2">
+                                <div class="col-md-4">
+                                    <select class="form-select contact-type" name="Contacts[@index].ContactTypeId">
+                                        <option value="">@L["Common_SelectContactType"]</option>
+                                        @foreach (var ct in contactTypes)
+                                        {
+                                            <option value="@ct.Value" selected="@(contacts[index].ContactTypeId?.ToString() == ct.Value ? "selected" : null)">@ct.Text(culture)</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6"><input class="form-control contact-value" type="text" name="Contacts[@index].Value" value="@contacts[index].Value" placeholder="@L["DE_Outlets_Outlet_ContactValue"]" /></div>
+                                <div class="col-md-2"><button type="button" class="btn btn-danger btn-sm remove-contact w-100">@L["Common_Remove"]</button></div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
                     <div class="contact-row row g-2 mb-2">
                         <div class="col-md-4">
                             <select class="form-select contact-type" name="Contacts[0].ContactTypeId">
@@ -105,9 +129,10 @@
                             <input class="form-control contact-value" type="text" name="Contacts[0].Value" placeholder="@L["DE_Outlets_Outlet_ContactValue"]" />
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-danger btn-sm remove-contact w-100" disabled>@L["Common_Remove"]</button>
+                            <button type="button" class="btn btn-danger btn-sm remove-contact w-100">@L["Common_Remove"]</button>
                         </div>
                     </div>
+                    }
                 </div>
                 <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="addContact">@L["Common_AddContact"] <i class="bi bi-plus"></i></button>
             </div>
@@ -162,10 +187,10 @@
                 const rows = container.querySelectorAll('.contact-row');
                 rows.forEach((row, i) => {
                     const btn = row.querySelector('.remove-contact');
-                    btn.disabled = rows.length === 1;
+                    btn.disabled = false;
                     // Update name attributes to maintain sequential indexing
                     row.querySelector('select').name = `Contacts[${i}].ContactTypeId`;
-                    row.querySelector('input').name = `Contacts[${i}].Value`;
+                    row.querySelector('.contact-value').name = `Contacts[${i}].Value`;
                 });
             }
 

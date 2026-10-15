@@ -1,4 +1,6 @@
 using ISCC.Infrastructure.Data.Generated;
+using ISCC.Api.Application.Areas.DE_Outlets.Models;
+using ISCC.Api.Application.Areas.DE_Outlets.Services;
 using ISCC.Shared.Contracts;
 using ISCC.Shared.Localization;
 using ISCC.Shared.Web;
@@ -43,6 +45,7 @@ public class OutletController : BaseController
 
             ViewBag.SearchAr = searchAr ?? string.Empty;
             ViewBag.SearchEn = searchEn ?? string.Empty;
+            ViewBag.GeneralAdminId = 0;
 
             // Get General Admin dropdown for filter
             var generalAdmins = await Db.GeneralAdmins
@@ -159,33 +162,53 @@ public class OutletController : BaseController
     /// <summary>Creates a new outlet.</summary>
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Outlet model, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(Outlet model, List<ContactInputModel>? contacts, CancellationToken cancellationToken = default)
     {
         try
         {
+            ModelState.Remove(nameof(Outlet.IsExportNavigation));
+
             if (ModelState.IsValid)
             {
-                var userId = long.Parse(User.FindFirstValue("UserId") ?? "0");
+                var userId = long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+                var contactUserId = short.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
                 model.UserCreationId = userId;
                 model.UserCreationDate = DateOnly.FromDateTime(DateTime.Now);
                 model.UserDeletionId = null;
                 model.UserDeletionDate = null;
 
+                await using var transaction = await Db.Database.BeginTransactionAsync(cancellationToken);
+                var sequenceValues = await Db.Database
+                    .SqlQueryRaw<long>("SELECT NEXT VALUE FOR dbo.Outlet_SEQ AS value")
+                    .ToListAsync(cancellationToken);
+                model.Id = sequenceValues.Single();
                 Db.Outlets.Add(model);
+
+                if (!await ContactFormPersistence.SyncAsync(Db, model.Id, 12, contacts, contactUserId, ModelState, cancellationToken))
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    await PopulateDropdownsAsync(cancellationToken);
+                    ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
+                    return View(model);
+                }
+
                 await Db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
 
                 TempData["SuccessMessage"] = L["Common_SavedSuccessfully"].Value;
                 return RedirectToAction(nameof(Index));
             }
 
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             return View(model);
         }
         catch (Exception ex)
         {
             LogErrorToDb("Outlet", "Create", ex.ToString());
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             ModelState.AddModelError(string.Empty, L["Common_ErrorOccurred"].Value);
             return View(model);
         }
@@ -231,10 +254,12 @@ public class OutletController : BaseController
     /// <summary>Updates an existing outlet.</summary>
     [HttpPost("Edit/{id:long}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(long id, Outlet model, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Edit(long id, Outlet model, List<ContactInputModel>? contacts, CancellationToken cancellationToken = default)
     {
         try
         {
+            ModelState.Remove(nameof(Outlet.IsExportNavigation));
+
             if (id != model.Id)
             {
                 return BadRequest();
@@ -251,7 +276,8 @@ public class OutletController : BaseController
                     return RedirectToAction(nameof(Index));
                 }
 
-                var userId = long.Parse(User.FindFirstValue("UserId") ?? "0");
+                var userId = long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+                var contactUserId = short.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
                 // Update fields
                 existing.ArName = model.ArName;
@@ -268,8 +294,12 @@ public class OutletController : BaseController
                 existing.UserUpdationId = userId;
                 existing.UserUpdationDate = DateOnly.FromDateTime(DateTime.Now);
 
-                // Handle contacts (simplified - in real app would need proper child collection handling)
-                // For now, we'll just update the main entity
+                if (!await ContactFormPersistence.SyncAsync(Db, id, 12, contacts, contactUserId, ModelState, cancellationToken))
+                {
+                    await PopulateDropdownsAsync(cancellationToken);
+                    ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
+                    return View(model);
+                }
 
                 await Db.SaveChangesAsync(cancellationToken);
 
@@ -278,12 +308,14 @@ public class OutletController : BaseController
             }
 
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             return View(model);
         }
         catch (Exception ex)
         {
             LogErrorToDb("Outlet", "Edit", ex.ToString());
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             ModelState.AddModelError(string.Empty, L["Common_ErrorOccurred"].Value);
             return View(model);
         }
@@ -300,7 +332,7 @@ public class OutletController : BaseController
 
             if (outlet != null)
             {
-                var userId = long.Parse(User.FindFirstValue("UserId") ?? "0");
+                var userId = long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
                 outlet.UserDeletionId = userId;
                 outlet.UserDeletionDate = DateOnly.FromDateTime(DateTime.Now);

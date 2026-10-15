@@ -9718,6 +9718,7 @@ public partial class PlantQuarantineDbContext : DbContext
                 .HasColumnName("ID_HR");
             entity.Property(e => e.IsDisplay)
                 .HasDefaultValue((byte)1)
+                .ValueGeneratedNever()
                 .HasComment("from system code 21\r\nصادر	/وارد	/صادر+ وارد");
             entity.Property(e => e.IsExport).HasComment("from system code 21\r\nصادر	/وارد	/صادر+ وارد");
             entity.Property(e => e.PortNationalId).HasColumnName("PortNational_ID");
