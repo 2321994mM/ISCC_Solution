@@ -21,6 +21,7 @@
     </div>
     <div class="card-body">
         <form method="post" asp-action="Edit" asp-route-id="@Model.Id" class="row g-3">
+            <div class="col-12"><div asp-validation-summary="ModelOnly" class="text-danger"></div></div>
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="UserCreationId" />
             <input type="hidden" asp-for="UserCreationDate" />
@@ -81,7 +82,7 @@
                                     <input class="form-control contact-value" type="text" name="Contacts[@idx].Value" value="@contact.Value" placeholder="@L["DE_Outlets_GeneralAdmin_ContactValue"]" />
                                 </div>
                                 <div class="col-md-2">
-                                    <button type="button" class="btn btn-danger btn-sm remove-contact w-100" @(contacts.Count == 1 ? "disabled" : null)>@L["Common_Remove"]</button>
+                                    <button type="button" class="btn btn-danger btn-sm remove-contact w-100">@L["Common_Remove"]</button>
                                 </div>
                             </div>
                             idx++;
@@ -103,7 +104,7 @@
                                 <input class="form-control contact-value" type="text" name="Contacts[0].Value" placeholder="@L["DE_Outlets_GeneralAdmin_ContactValue"]" />
                             </div>
                             <div class="col-md-2">
-                                <button type="button" class="btn btn-danger btn-sm remove-contact w-100" disabled>@L["Common_Remove"]</button>
+                                <button type="button" class="btn btn-danger btn-sm remove-contact w-100">@L["Common_Remove"]</button>
                             </div>
                         </div>
                     }
@@ -161,9 +162,9 @@
                 const rows = container.querySelectorAll('.contact-row');
                 rows.forEach((row, i) => {
                     const btn = row.querySelector('.remove-contact');
-                    btn.disabled = rows.length === 1;
+                    btn.disabled = false;
                     row.querySelector('select').name = `Contacts[${i}].ContactTypeId`;
-                    row.querySelector('input').name = `Contacts[${i}].Value`;
+                    row.querySelector('.contact-value').name = `Contacts[${i}].Value`;
                     const hiddenId = row.querySelector('input[type="hidden"]');
                     if (hiddenId) {
                         hiddenId.name = `Contacts[${i}].Id`;

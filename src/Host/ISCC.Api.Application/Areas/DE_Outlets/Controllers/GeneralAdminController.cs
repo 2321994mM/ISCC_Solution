@@ -1,4 +1,6 @@
 using ISCC.Infrastructure.Data.Generated;
+using ISCC.Api.Application.Areas.DE_Outlets.Models;
+using ISCC.Api.Application.Areas.DE_Outlets.Services;
 using ISCC.Shared.Contracts;
 using ISCC.Shared.Localization;
 using ISCC.Shared.Web;
@@ -141,33 +143,48 @@ public class GeneralAdminController : BaseController
     /// <summary>Creates a new general administration.</summary>
     [HttpPost("Create")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(GeneralAdmin model, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Create(GeneralAdmin model, List<ContactInputModel>? contacts, CancellationToken cancellationToken = default)
     {
         try
         {
             if (ModelState.IsValid)
             {
-                var userId = short.Parse(User.FindFirstValue("UserId") ?? "0");
+                var userId = short.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
+                model.Id = byte.Parse(GetSequencing("byte", "General_Admin_SEQ"));
                 model.UserCreationId = userId;
                 model.UserCreationDate = DateTime.Now;
                 model.UserDeletionId = null;
                 model.UserDeletionDate = null;
 
+                await using var transaction = await Db.Database.BeginTransactionAsync(cancellationToken);
                 Db.GeneralAdmins.Add(model);
                 await Db.SaveChangesAsync(cancellationToken);
+
+                if (!await ContactFormPersistence.SyncAsync(Db, model.Id, 13, contacts, userId, ModelState, cancellationToken))
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    await PopulateDropdownsAsync(cancellationToken);
+                    ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
+                    return View(model);
+                }
+
+                await Db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
 
                 TempData["SuccessMessage"] = L["Common_SavedSuccessfully"].Value;
                 return RedirectToAction(nameof(Index));
             }
 
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             return View(model);
         }
         catch (Exception ex)
         {
             LogErrorToDb("GeneralAdmin", "Create", ex.ToString());
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             ModelState.AddModelError(string.Empty, L["Common_ErrorOccurred"].Value);
             return View(model);
         }
@@ -213,7 +230,7 @@ public class GeneralAdminController : BaseController
     /// <summary>Updates an existing general administration.</summary>
     [HttpPost("Edit/{id:byte}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(byte id, GeneralAdmin model, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Edit(byte id, GeneralAdmin model, List<ContactInputModel>? contacts, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -233,7 +250,7 @@ public class GeneralAdminController : BaseController
                     return RedirectToAction(nameof(Index));
                 }
 
-                var userId = short.Parse(User.FindFirstValue("UserId") ?? "0");
+                var userId = short.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
                 existing.ArName = model.ArName;
                 existing.EnName = model.EnName;
@@ -244,6 +261,13 @@ public class GeneralAdminController : BaseController
                 existing.UserUpdationId = userId;
                 existing.UserUpdationDate = DateTime.Now;
 
+                if (!await ContactFormPersistence.SyncAsync(Db, id, 13, contacts, userId, ModelState, cancellationToken))
+                {
+                    await PopulateDropdownsAsync(cancellationToken);
+                    ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
+                    return View(model);
+                }
+
                 await Db.SaveChangesAsync(cancellationToken);
 
                 TempData["SuccessMessage"] = L["Common_UpdatedSuccessfully"].Value;
@@ -251,12 +275,14 @@ public class GeneralAdminController : BaseController
             }
 
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             return View(model);
         }
         catch (Exception ex)
         {
             LogErrorToDb("GeneralAdmin", "Edit", ex.ToString());
             await PopulateDropdownsAsync(cancellationToken);
+            ViewBag.Contacts = (IEnumerable<ContactInputModel>?)contacts ?? Array.Empty<ContactInputModel>();
             ModelState.AddModelError(string.Empty, L["Common_ErrorOccurred"].Value);
             return View(model);
         }
@@ -273,7 +299,7 @@ public class GeneralAdminController : BaseController
 
             if (admin != null)
             {
-                var userId = short.Parse(User.FindFirstValue("UserId") ?? "0");
+                var userId = short.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
                 admin.UserDeletionId = userId;
                 admin.UserDeletionDate = DateTime.Now;
