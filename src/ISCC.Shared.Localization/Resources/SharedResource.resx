@@ -783,4 +783,115 @@
   <data name="ImShowData_Show" xml:space="preserve">
     <value>Show</value>
   </data>
+  <data name="Im_List_ResultsHeading" xml:space="preserve">
+    <value>Inspection requests list</value>
+  </data>
+  <data name="Im_List_ResultsSubtitle" xml:space="preserve">
+    <value>Follow up and manage every inspection request and its committee results</value>
+  </data>
+  <data name="Im_List_TotalRequests" xml:space="preserve">
+    <value>Total requests</value>
+  </data>
+  <data name="Im_List_CompletionInPage" xml:space="preserve">
+    <value>Completion requests on this page</value>
+  </data>
+  <data name="Im_List_PageResults" xml:space="preserve">
+    <value>Results on this page</value>
+  </data>
+  <data name="Im_List_ClickShowAll" xml:space="preserve">
+    <value>Click to show everything</value>
+  </data>
+  <data name="Im_List_ClickShow" xml:space="preserve">
+    <value>Click to show the requests</value>
+  </data>
+  <data name="Im_List_UnderReview" xml:space="preserve">
+    <value>Under review</value>
+  </data>
+  <data name="Im_List_ClosedRequests" xml:space="preserve">
+    <value>Closed requests</value>
+  </data>
+  <data name="Im_List_CompletionRequired" xml:space="preserve">
+    <value>Completion required</value>
+  </data>
+  <data name="Im_List_ShowingRange" xml:space="preserve">
+    <value>Showing {0} to {1} of {2} requests</value>
+  </data>
+  <data name="Im_List_PageCountLabel" xml:space="preserve">
+    <value>Results on this page:</value>
+  </data>
+  <data name="Im_List_ColExportCountry" xml:space="preserve">
+    <value>Country of origin</value>
+  </data>
+  <data name="Im_List_ColRequestState" xml:space="preserve">
+    <value>Request state</value>
+  </data>
+  <data name="Im_List_Fees" xml:space="preserve">
+    <value>Show fees</value>
+  </data>
+  <data name="Im_List_Restructure" xml:space="preserve">
+    <value>Restructure committee</value>
+  </data>
+  <data name="Im_List_CompletionDone" xml:space="preserve">
+    <value>Completion done</value>
+  </data>
+  <data name="Im_List_Completion" xml:space="preserve">
+    <value>Completion</value>
+  </data>
+  <data name="Im_List_ClosedBadge" xml:space="preserve">
+    <value>Closed</value>
+  </data>
+  <data name="Im_List_StageClosed" xml:space="preserve">
+    <value>Request closed</value>
+  </data>
+  <data name="Im_List_StageEditedByCustomer" xml:space="preserve">
+    <value>The customer edited the request - waiting for review</value>
+  </data>
+  <data name="Im_List_StageWaitingCompletion" xml:space="preserve">
+    <value>On hold until the request data is completed</value>
+  </data>
+  <data name="Im_List_StageRejected" xml:space="preserve">
+    <value>Request rejected</value>
+  </data>
+  <data name="Im_List_StageCommitteeFormed" xml:space="preserve">
+    <value>Committee formed</value>
+  </data>
+  <data name="Im_List_StageWaitingCommittee" xml:space="preserve">
+    <value>Waiting for the committee to be formed</value>
+  </data>
+  <data name="Im_List_StageWaitingReview" xml:space="preserve">
+    <value>Waiting for the request to be reviewed</value>
+  </data>
+  <data name="Im_List_First" xml:space="preserve">
+    <value>First</value>
+  </data>
+  <data name="Im_List_Last" xml:space="preserve">
+    <value>Last</value>
+  </data>
+  <data name="Im_List_PageOf" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+  </data>
+  <data name="Im_List_Loading" xml:space="preserve">
+    <value>Loading the requests...</value>
+  </data>
+  <data name="Im_List_LoadError" xml:space="preserve">
+    <value>Could not load the requests. Please try again.</value>
+  </data>
+  <data name="Im_List_DtSearch" xml:space="preserve">
+    <value>Search:</value>
+  </data>
+  <data name="Im_List_DtLength" xml:space="preserve">
+    <value>Show _MENU_ entries</value>
+  </data>
+  <data name="Im_List_DtInfo" xml:space="preserve">
+    <value>Showing _START_ to _END_ of _TOTAL_ entries</value>
+  </data>
+  <data name="Im_List_DtInfoEmpty" xml:space="preserve">
+    <value>Showing 0 to 0 of 0 entries</value>
+  </data>
+  <data name="Im_List_DtZeroRecords" xml:space="preserve">
+    <value>No matching records found</value>
+  </data>
+  <data name="Im_List_DtEmptyTable" xml:space="preserve">
+    <value>No data available</value>
+  </data>
 </root>

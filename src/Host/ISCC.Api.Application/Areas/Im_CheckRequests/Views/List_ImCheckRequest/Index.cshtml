@@ -13,6 +13,55 @@
     var statusOpen = selectApproveId is 6 or 7;
 }
 
+@section Styles {
+    <link href="/_shared/lib/datatables/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <style>
+        /* DataTables' own chrome, aligned with the layout's direction instead of the
+           left-aligned defaults the legacy page patched per rule. */
+        .dataTables-top,
+        .dataTables-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dataTables-bottom {
+            margin-top: 12px;
+            margin-bottom: 0;
+        }
+
+        [dir="rtl"] .dataTables_wrapper .dataTables_filter,
+        [dir="rtl"] .dataTables_wrapper .dataTables_paginate,
+        [dir="rtl"] .dataTables_wrapper .dataTables_info {
+            text-align: right;
+            float: none;
+        }
+
+        [dir="rtl"] .dataTables_wrapper .dataTables_length {
+            float: none;
+        }
+
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            display: inline-block;
+            width: auto;
+            margin-inline-start: 6px;
+        }
+
+        #requestListLoading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #requestListContainer {
+            margin-top: 20px;
+        }
+    </style>
+}
+
 @if (ViewBag.Message is string message && !string.IsNullOrWhiteSpace(message))
 {
     <div class="alert alert-warning" role="alert">@message</div>
@@ -24,8 +73,12 @@
             The search form. GET, not POST: the filter values live in the query string of the
             results URL, exactly as the legacy window.open built them, so a results page can
             be refreshed, bookmarked, and paged without resubmitting a form.
+
+            The form stays a real form — JavaScript only intercepts the submit and loads the
+            results into #requestListContainer, matching the new source's AJAX flow while
+            leaving the plain GET as the no-JavaScript fallback.
         *@
-        <form method="get" action="@Url.Action("Im_CheckRequest_List")" class="row g-3">
+        <form method="get" id="frmList" action="@Url.Action("Im_CheckRequest_List")" class="row g-3">
             <div class="col-md-4">
                 <label class="form-label" for="dateFrom">@L["Im_List_DateFrom"]</label>
                 <input class="form-control" type="date" id="dateFrom" name="dateFrom" value="@dateFrom" />
@@ -49,7 +102,7 @@
             </div>
             <div class="col-md-4">
                 <label class="form-label" for="FinalResultList">@L["Im_List_QuarantineStatus"]</label>
-                <select id="FinalResultList" name="FinalResultListId" class="form-select"
+                <select id="FinalResultList" name="finalResultListId" class="form-select"
                         @(statusOpen ? null : "disabled")>
                     <option value="0" selected="@(finalResultListId == 0 ? "selected" : null)">@L["Im_List_Choose"]</option>
                     @foreach (var option in finalResults)
@@ -74,29 +127,216 @@
                 </select>
             </div>
             <div class="col-12">
-                <button type="submit" class="btn btn-primary">@L["Im_List_Search"]</button>
+                <button type="submit" id="btn_Approved" class="btn btn-primary">@L["Im_List_Search"]</button>
             </div>
         </form>
     </div>
 </div>
 
-@*
-    The only behaviour that needs scripting: the quarantine-status select is meaningful
-    only while a working/not-working request status (6/7) is chosen, so it stays disabled
-    otherwise. Options are server-rendered for the status chosen when this page was drawn;
-    picking 6/7 and searching once reloads the search page with that status's options.
-*@
-<script>
-    (function () {
-        const status = document.getElementById('selectApprove');
-        const finalResult = document.getElementById('FinalResultList');
-        function sync() {
-            finalResult.disabled = !(status.value === '6' || status.value === '7');
-            if (finalResult.disabled) {
-                finalResult.value = '0';
+<div id="requestListLoading" class="alert alert-info">@L["Im_List_Loading"]</div>
+<div id="requestListContainer"></div>
+
+@section Scripts {
+    <iscc-scripts jquery="true" select2="false" />
+    <script src="/_shared/lib/datatables/js/jquery.dataTables.min.js"></script>
+    <script>
+        (function () {
+            var strings = {
+                noStatus: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_SelectStatus"].Value)),
+                loadError: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_LoadError"].Value)),
+                search: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_DtSearch"].Value)),
+                lengthMenu: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_DtLength"].Value)),
+                info: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_DtInfo"].Value)),
+                infoEmpty: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_DtInfoEmpty"].Value)),
+                zeroRecords: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_DtZeroRecords"].Value)),
+                emptyTable: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_DtEmptyTable"].Value)),
+                first: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_First"].Value)),
+                previous: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_Prev"].Value)),
+                next: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_Next"].Value)),
+                last: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_Last"].Value))
+            };
+
+            var resultsUrl = '@Url.Action("Im_CheckRequest_List")';
+            var finalResultOptionsUrl = '@Url.Action("FinalResultOptions")';
+
+            var $status = $('#selectApprove');
+            var $finalResult = $('#FinalResultList');
+            var $button = $('#btn_Approved');
+            var $loading = $('#requestListLoading');
+            var $container = $('#requestListContainer');
+
+            // The quarantine-status select is meaningful only while a working/not-working
+            // request status (6/7) is chosen. The new source fetches that status's options
+            // on change; so does this, instead of reloading the search page.
+            function syncFinalResultOptions() {
+                var value = $status.val();
+                var open = $status.val() === '6' || $status.val() === '7';
+                $finalResult.prop('disabled', !open);
+
+                if (!open) {
+                    $finalResult.val('0');
+                    return;
+                }
+
+                $.getJSON(finalResultOptionsUrl, { selectApproveId: value }, function (options) {
+                    $finalResult.empty();
+                    $finalResult.append($('<option />').val('0').text(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(L["Im_List_Choose"].Value))));
+                    $.each(options, function (i, option) {
+                        $finalResult.append($('<option />').val(option.value).text(option.text));
+                    });
+                });
             }
-        }
-        status.addEventListener('change', sync);
-        sync();
-    })();
-</script>
+
+            window.loadImCheckRequests = function (pageNumber) {
+                var selectApproveId = $status.val();
+                var requestNumber = ($('#Txt_CheckRequest_Number').val() || '').trim();
+
+                // A request number searches on its own: the other filters are ignored, the
+                // same rule the new controller applies server-side.
+                var searchByRequestNumber = requestNumber.length > 0;
+
+                if (!searchByRequestNumber && !(parseInt(selectApproveId, 10) > 0)) {
+                    window.alert(strings.noStatus);
+                    return;
+                }
+
+                var page = pageNumber || 1;
+
+                $button.prop('disabled', true);
+                $loading.show();
+                $container.empty();
+
+                $.ajax({
+                    url: resultsUrl,
+                    type: 'GET',
+                    data: {
+                        dateFrom: searchByRequestNumber ? '' : $('#dateFrom').val(),
+                        dateEnd: searchByRequestNumber ? '' : $('#dateEnd').val(),
+                        selectApproveId: searchByRequestNumber ? 1 : selectApproveId,
+                        finalResultListId: searchByRequestNumber ? 0 : ($finalResult.val() || 0),
+                        CheckRequest_Number: requestNumber,
+                        Company_ID: searchByRequestNumber ? 0 : ($('#Company_List').val() || 0),
+                        PageNumber: page
+                    },
+                    success: function (html) {
+                        $container.html(html);
+                        initImCheckRequestTable();
+                        $('html, body').animate({ scrollTop: $container.offset().top - 20 }, 300);
+                    },
+                    error: function () {
+                        $container.html('<div class="alert alert-danger">' + strings.loadError + '</div>');
+                    },
+                    complete: function () {
+                        $loading.hide();
+                        $button.prop('disabled', false);
+                    }
+                });
+            };
+
+            function initImCheckRequestTable() {
+                var $table = $('#table_List_Im_Check');
+                if (!$table.length) return;
+
+                if ($.fn.DataTable.isDataTable($table)) {
+                    $table.DataTable().destroy();
+                }
+
+                var table = $table.DataTable({
+                    responsive: false,
+                    autoWidth: false,
+                    paging: false,
+                    info: true,
+                    lengthChange: true,
+                    dom: '<"dataTables-top"fl>rt<"dataTables-bottom"ip>',
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    language: {
+                        search: strings.search,
+                        lengthMenu: strings.lengthMenu,
+                        info: strings.info,
+                        infoEmpty: strings.infoEmpty,
+                        zeroRecords: strings.zeroRecords,
+                        emptyTable: strings.emptyTable,
+                        paginate: {
+                            first: strings.first,
+                            previous: strings.previous,
+                            next: strings.next,
+                            last: strings.last
+                        }
+                    },
+                });
+
+                // Column 7 holds the committee-status cell; the bucket is carried on the
+                // row so a card filter matches every badge text in both languages.
+                $.fn.dataTable.ext.search.length = 0;
+                var activeStatus = '';
+                $.fn.dataTable.ext.search.push(function (settings, searchData, dataIndex) {
+                    if (!activeStatus) return true;
+                    var node = settings.aoData[dataIndex] && settings.aoData[dataIndex].nTr;
+                    return node ? node.getAttribute('data-status') === activeStatus : true;
+                });
+
+                function applyCard(card) {
+                    activeStatus = $(card).data('status') || '';
+                    $('.stats-card').removeClass('active');
+                    $(card).addClass('active');
+                    table.draw();
+                }
+
+                $('.stats-card')
+                    .off('click.imCheck')
+                    .on('click.imCheck', function () { applyCard(this); })
+                    .off('keydown.imCheck')
+                    .on('keydown.imCheck', function (event) {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            applyCard(this);
+                        }
+                    });
+            }
+
+            // The quarantine-status select is meaningful only while a working/not-working
+            // request status (6/7) is chosen. Its options depend on that status, so they are
+            // re-fetched on a change — the same round trip the legacy screen made.
+            function syncFinalResult(enabled) {
+                $finalResult.prop('disabled', !enabled);
+                if (!enabled) {
+                    $finalResult.val('0');
+                    return;
+                }
+
+                $.ajax({
+                    url: finalResultOptionsUrl,
+                    type: 'GET',
+                    data: { selectApproveId: $status.val() },
+                    success: function (options) {
+                        $finalResult.empty();
+                        $finalResult.append($('<option />').val(0).text('@L["Im_List_Choose"]'));
+                        $.each(options, function (index, option) {
+                            $finalResult.append($('<option />').val(option.value).text(option.text));
+                        });
+                    }
+                });
+            }
+
+            $status.on('change', function () {
+                syncFinalResult($status.val() === '6' || $status.val() === '7');
+            });
+
+            $('#frmList').on('submit', function (event) {
+                event.preventDefault();
+                window.loadImCheckRequests(1);
+            });
+
+            $container.on('click', '.im-pagination-link', function () {
+                if (!$(this).prop('disabled')) {
+                    window.loadImCheckRequests($(this).data('page'));
+                }
+            });
+
+            // The server already rendered options for the status in the query string; this
+            // only re-syncs the disabled state when the page opens.
+            $finalResult.prop('disabled', !( @(statusOpen ? "true" : "false") ));
+        })();
+    </script>
+}

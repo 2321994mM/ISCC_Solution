@@ -99,11 +99,14 @@ public class List_ImCheckRequestController : BaseController
         }
     }
 
-    /// <summary>Runs the search and renders the paged results table.</summary>
+    /// <summary>Runs the search and renders the paged results table, or the results partial.</summary>
     /// <remarks>
-    /// Mirrors the legacy flow: no row at all sends the user back to the search form with a
-    /// "no data" message; a database error logs to <c>A__plant_Error_Save</c> and returns the
-    /// same way. Query strings keep the legacy names so existing bookmarks still work.
+    /// Mirrors the new legacy flow: a request number is a search of its own and drops the other
+    /// filters; an AJAX call (the search form's normal path now) gets the results partial so it
+    /// can be dropped into the page, while a plain GET still renders the full page. A plain GET
+    /// with no rows sends the user back to the search form with a "no data" message, and a
+    /// database error logs to <c>A__plant_Error_Save</c>. Query strings keep the legacy names —
+    /// including <c>PageNumber</c> — so existing bookmarks still work.
     /// </remarks>
     [HttpGet("Im_CheckRequest_List")]
     public async Task<IActionResult> Im_CheckRequest_List(
@@ -114,18 +117,34 @@ public class List_ImCheckRequestController : BaseController
         string? CheckRequest_Number = null,
         long Company_ID = 0,
         int page = 1,
+        int PageNumber = 0,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            if (selectApproveId <= 0)
+            var requestNumber = (CheckRequest_Number ?? string.Empty).Trim();
+            var currentPage = Math.Max(1, PageNumber > 0 ? PageNumber : page);
+
+            var start = (dateFrom ?? DateTime.Now.AddDays(-7)).Date;
+            var end = (dateEnd ?? DateTime.Now).Date;
+
+            if (requestNumber.Length > 0)
+            {
+                // A request number searches on its own. The data layer still demands a valid
+                // date range, so this wide window neutralises the date filter, and 1 means
+                // "all statuses" to the procedure while 0 would return nothing.
+                start = new DateTime(1900, 1, 1);
+                end = new DateTime(9999, 12, 30);
+                selectApproveId = 1;
+                finalResultListId = 0;
+                Company_ID = 0;
+            }
+            else if (selectApproveId <= 0)
             {
                 TempData["ListMessage"] = L["Im_List_SelectStatus"].Value;
                 return RedirectToAction(nameof(Index));
             }
 
-            var start = (dateFrom ?? DateTime.Now.AddDays(-7)).Date;
-            var end = (dateEnd ?? DateTime.Now).Date;
             var isArabic = CurrentCulture.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
 
             var query = new ImCheckRequestListQuery(
@@ -134,14 +153,17 @@ public class List_ImCheckRequestController : BaseController
                 end,
                 selectApproveId,
                 finalResultListId,
-                CheckRequest_Number ?? string.Empty,
+                requestNumber,
                 Company_ID,
-                page,
+                currentPage,
                 isArabic);
 
             var result = await _service.SearchAsync(query, cancellationToken);
 
-            if (result.Items.Count == 0)
+            var isAjax = string.Equals(
+                Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+
+            if (result.Items.Count == 0 && !isAjax)
             {
                 TempData["ListMessage"] = L["Im_List_NoData"].Value;
                 return RedirectToAction(nameof(Index));
@@ -153,16 +175,50 @@ public class List_ImCheckRequestController : BaseController
             ViewBag.DateFrom = start;
             ViewBag.DateEnd = end;
             ViewBag.FinalResultListId = finalResultListId;
-            ViewBag.CheckRequestNumber = CheckRequest_Number ?? string.Empty;
+            ViewBag.CheckRequestNumber = requestNumber;
             ViewBag.CompanyId = Company_ID;
 
-            return View(result);
+            return isAjax
+                ? PartialView(nameof(Im_CheckRequest_List), result)
+                : View(result);
         }
         catch (Exception ex)
         {
             LogErrorToDb("List_ImCheckRequest", "Im_CheckRequest_List", ex.ToString());
+
+            if (string.Equals(
+                    Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+            {
+                Response.StatusCode = StatusCodes.Status500InternalServerError;
+                return Content(L["Im_List_LoadError"].Value);
+            }
+
             TempData["ListMessage"] = L["Im_List_NoData"];
             return RedirectToAction(nameof(Index));
+        }
+    }
+
+    /// <summary>
+    /// The quarantine-status options for a chosen request status (6 = working, 7 = not working).
+    /// </summary>
+    /// <remarks>
+    /// The screen's second select cannot be rendered once and reused: its rows are filtered by
+    /// the request status, so the new legacy screen fetched them on every change. This is that
+    /// round trip, returning the shape the page's script expects.
+    /// </remarks>
+    [HttpGet("FinalResultOptions")]
+    public async Task<IActionResult> FinalResultOptions(
+        int selectApproveId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var options = await _service.GetFinalResultOptionsAsync(selectApproveId, cancellationToken);
+            return Json(options.Select(option => new { value = option.Value, text = option.Text(CurrentCulture) }));
+        }
+        catch (Exception ex)
+        {
+            LogErrorToDb("List_ImCheckRequest", "FinalResultOptions", ex.ToString());
+            throw;
         }
     }
 

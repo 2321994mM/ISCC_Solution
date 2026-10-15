@@ -1,204 +1,455 @@
 @model ISCC.Application.ImCheckRequests.Dtos.ImCheckRequestListResult
 @using ISCC.Application.ImCheckRequests.Dtos
+@*
+    نتائج البحث — "طلبات فحص الوارد" (menu 104), results pane.
+
+    Redesigned to match the new source
+    (PlantQuar.WEB/Areas/Im_CheckRequests/Views/List_ImCheckRequest/Im_CheckRequest_List.cshtml):
+    a two-tone header with the total, a completion banner, five clickable stats cards, a
+    "showing X to Y" strip, one fixed ten-column table with status badges, and first/previous/
+    next/last paging.
+
+    Two deliberate differences from the legacy file:
+
+      * The status is rendered from Im_CheckRequest.Completion_Status (1/2) rather than from the
+        Arabic literals the legacy BLL wrote over Current_Status, so an English user reads the
+        same states in English.
+      * Every string comes from the resource file instead of being hardcoded, because the portal
+        is bilingual.
+
+    The markup is also the AJAX fragment the search page loads into #requestListContainer, so it
+    stays self-contained: the style block and the table travel with the response. DataTables is
+    set up by the search page (List_ImCheckRequest/Index), which owns the scripts.
+*@
 @{
-    ViewData["PageHeading"] = L["Im_List_Title"];
-    var selectApproveId = (int)ViewBag.SelectApproveId;
     var culture = (string?)ViewData["Culture"] ?? "ar";
-    var dateFrom = ((DateTime)ViewBag.DateFrom).ToString("yyyy-MM-dd");
-    var dateEnd = ((DateTime)ViewBag.DateEnd).ToString("yyyy-MM-dd");
-    var finalResultListId = (int)ViewBag.FinalResultListId;
-    var checkRequestNumber = (string?)ViewBag.CheckRequestNumber ?? string.Empty;
-    var companyId = (long)ViewBag.CompanyId;
+    var items = Model.Items;
+    var totalCount = Model.TotalCount;
+    var pageSize = Model.PageSize <= 0 ? 25 : Model.PageSize;
+    var pageNumber = Model.PageNumber < 1 ? 1 : Model.PageNumber;
+    var totalPages = Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+    var firstRow = totalCount == 0 ? 0 : ((pageNumber - 1) * pageSize) + 1;
+    var lastRow = Math.Min(totalCount, pageNumber * (long)pageSize);
 
-    var totalPages = Model.TotalCount == 0 ? 1 : (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
-    var currentPage = Model.PageNumber;
-}
+    // Completion workflow states, read from the model's side lookup (the procedure does not
+    // project Completion_Status); see ImCheckRequestListResult.
+    byte? CompletionOf(ImCheckRequestListRow row) => Model.CompletionStatusOf(row.Im_CheckRequest_ID);
 
-<p>
-    <a class="btn btn-outline-secondary btn-sm" asp-action="Index"
-       asp-route-dateFrom="@dateFrom"
-       asp-route-dateTo="@dateEnd" asp-route-selectApproveId="@selectApproveId"
-       asp-route-finalResultListId="@finalResultListId" asp-route-checkRequestNumber="@checkRequestNumber"
-       asp-route-companyId="@companyId">
-        &larr; @L["Im_List_BackToSearch"]
-    </a>
-</p>
-
-@if (TempData["SuccessMessage"] is string success)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @success
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-@if (TempData["ErrorMessage"] is string error)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @error
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-@if (Model.Items.Count == 0)
-{
-    <span>@L["Im_List_NoData"]</span>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr class="table-primary">
-                    <th>@L["Im_List_ColNo"]</th>
-                    <th>@L["Im_List_ColRequestNumber"]</th>
-                    <th>@L["Im_List_ColImporterType"]</th>
-                    <th>@L["Im_List_ColSupplier"]</th>
-                    <th>@L["Im_List_ColExport"]</th>
-                    <th>@L["Im_List_ColCreationDate"]</th>
-                    <th>@L["Im_List_ColDetails"]</th>
-                    <th>@L["Im_List_ColCommittee"]</th>
-                    <th>@L["Im_List_ColResults"]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @{
-                    var rowNo = (Model.PageNumber - 1) * Model.PageSize;
-                }
-                @foreach (var item in Model.Items)
-                {
-                    rowNo++;
-                    <tr>
-                        <td>@rowNo</td>
-                        <td>@item.ImCheckRequest_Number</td>
-                        <td>@item.ImporterTypeName</td>
-                        <td>@item.ImporterName</td>
-                        <td>@item.ExportCountryName</td>
-                        <td>@(item.Creation_Date?.ToString("yyyy-MM-dd"))</td>
-                        @switch (selectApproveId)
-                        {
-                            case 1:
-                                <td>
-                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
-                                </td>
-                                <td>
-                                    @if (item.IsAccepted == false && item.Closed_Request == null)
-                                    {
-                                        @L["Im_List_NotApproved"]
-                                    }
-                                    else if (item.IsAccepted == true && item.Closed_Request == null)
-                                    {
-                                        <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]<br />@L["Im_List_ApprovedDone"]</a>
-                                    }
-                                    else if (item.IsAccepted == null)
-                                    {
-                                        @L["Im_List_NoAction"]
-                                    }
-                                    else if (item.Closed_Request == true)
-                                    {
-                                        <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</a>
-                                    }
-                                    else if (item.Closed_Request == false)
-                                    {
-                                        @item.Name_Final_Result
-                                    }
-                                </td>
-                                <td>
-                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
-                                </td>
-                                break;
-                            case 2:
-                                <td>
-                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
-                                </td>
-                                <td>@L["Im_List_NotApproved"]</td>
-                                <td>
-                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
-                                </td>
-                                break;
-                            case 3:
-                                <td>
-                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
-                                </td>
-                                <td>@L["Im_List_NoAction"]</td>
-                                <td>
-                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
-                                </td>
-                                break;
-                            case 4:
-                                <td>
-                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
-                                </td>
-                                <td>@L["Im_List_Closed"]</td>
-                                <td>
-                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
-                                </td>
-                                break;
-                            case 5:
-                                <td>
-                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
-                                </td>
-                                <td>
-                                    <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]</a>
-                                </td>
-                                <td>
-                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
-                                </td>
-                                break;
-                            case 6:
-                                <td>
-                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
-                                </td>
-                                <td>
-                                    <a href='/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_FormCommittee"]<br />@item.Name_Final_Result</a>
-                                </td>
-                                <td>
-                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
-                                </td>
-                                break;
-                            case 7:
-                                <td>
-                                    <a href='/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID'>@L["Im_List_Details"]</a>
-                                </td>
-                                <td>@item.Name_Final_Result</td>
-                                <td>
-                                    <a href='/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID'>@L["Im_List_ShowResults"]</a>
-                                </td>
-                                break;
-                            default:
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                break;
-                        }
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    @if (totalPages > 1)
+    bool InCompletion(ImCheckRequestListRow row)
     {
-        <nav aria-label="@L["Im_List_Title"]">
-            <ul class="pagination">
-                <li class="page-item @(currentPage <= 1 ? "disabled" : null)">
-                    <a class="page-link" asp-action="Im_CheckRequest_List"
-                       asp-route-dateFrom="@dateFrom" asp-route-dateEnd="@dateEnd"
-                       asp-route-selectApproveId="@selectApproveId" asp-route-finalResultListId="@finalResultListId"
-                       asp-route-CheckRequest_Number="@checkRequestNumber" asp-route-Company_ID="@companyId"
-                       asp-route-page="@(currentPage - 1)">@L["Im_List_Prev"]</a>
-                </li>
-                <li class="page-item disabled">
-                    <span class="page-link">@currentPage / @totalPages</span>
-                </li>
-                <li class="page-item @(currentPage >= totalPages ? "disabled" : null)">
-                    <a class="page-link" asp-action="Im_CheckRequest_List"
-                       asp-route-dateFrom="@dateFrom" asp-route-dateEnd="@dateEnd"
-                       asp-route-selectApproveId="@selectApproveId" asp-route-finalResultListId="@finalResultListId"
-                       asp-route-CheckRequest_Number="@checkRequestNumber" asp-route-Company_ID="@companyId"
-                       asp-route-page="@(currentPage + 1)">@L["Im_List_Next"]</a>
-                </li>
-            </ul>
-        </nav>
+        var status = CompletionOf(row);
+        return row.IsAccepted == null && (status == 1 || status == 2);
     }
+
+    var completionCount = items.Count(InCompletion);
+    var approvedCount = items.Count(r => r.IsAccepted == true && r.Closed_Request != true);
+    var reviewCount = items.Count(r => r.IsAccepted == null && r.Closed_Request != true && !InCompletion(r));
+    var closedCount = items.Count(r => r.Closed_Request == true);
+
+    // The bucket each row belongs to for the stats cards. Single value, in the same priority
+    // order the legacy badge ladder used, so the card totals and the table agree.
+    string RowStatus(ImCheckRequestListRow row) =>
+        InCompletion(row) ? "completion"
+        : row.Closed_Request == true ? "closed"
+        : row.IsAccepted == true ? "approved"
+        : row.IsAccepted == false ? "rejected"
+        : "review";
 }
+
+<style>
+    .im-request-results .page-header-custom {
+        background: linear-gradient(135deg, #1f2937, #374151);
+        color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .im-request-results .page-header-custom h2 {
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+
+    .im-request-results .page-header-custom p {
+        margin-bottom: 0;
+    }
+
+    .im-request-results .stats-card {
+        padding: 18px;
+        border-radius: 12px;
+        text-align: center;
+        color: #fff;
+        cursor: pointer;
+        user-select: none;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .im-request-results .stats-card:hover,
+    .im-request-results .stats-card:focus {
+        color: #fff;
+        outline: none;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .16);
+    }
+
+    .im-request-results .stats-card.active {
+        box-shadow: 0 0 0 4px rgba(17, 24, 39, .18), 0 8px 18px rgba(0, 0, 0, .16);
+        transform: translateY(-3px);
+    }
+
+    .im-request-results .stats-card .stats-count {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 25px;
+        font-weight: 700;
+    }
+
+    .im-request-results .stats-card .stats-hint {
+        display: block;
+        margin-top: 4px;
+        font-size: 11px;
+        opacity: .85;
+    }
+
+    .im-request-results .bg-primary-soft { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .im-request-results .bg-success-soft { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .im-request-results .bg-warning-soft { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .im-request-results .bg-danger-soft { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .im-request-results .bg-completion-soft { background: linear-gradient(135deg, #6366f1, #4338ca); }
+
+    .im-request-results .completion-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 13px 17px;
+        margin-bottom: 15px;
+        color: #3730a3;
+        background: #eef2ff;
+        border-inline-end: 5px solid #4f46e5;
+        border-radius: 8px;
+        font-weight: 700;
+    }
+
+    .im-request-results .completion-summary strong {
+        min-width: 38px;
+        padding: 5px 10px;
+        text-align: center;
+        color: #fff;
+        background: #4f46e5;
+        border-radius: 16px;
+    }
+
+    .im-request-results #table_List_Im_Check {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .im-request-results #table_List_Im_Check th,
+    .im-request-results #table_List_Im_Check td {
+        padding: 11px 9px !important;
+        vertical-align: middle;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: center;
+    }
+
+    .im-request-results #table_List_Im_Check tbody tr:hover {
+        background-color: #f0f7f7;
+    }
+
+    .im-request-results #table_List_Im_Check td a {
+        display: inline-block;
+        padding: 5px 9px;
+        margin: 2px;
+        color: #167479;
+        background: #e8f4f4;
+        border-radius: 5px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .im-request-results #table_List_Im_Check thead {
+        background: #111827;
+        color: #fff;
+    }
+
+    .im-request-results .badge-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+    }
+
+    .im-request-results .badge-pending { background: #fef3c7; color: #92400e; }
+    .im-request-results .badge-approved { background: #dcfce7; color: #166534; }
+    .im-request-results .badge-closed { background: #fee2e2; color: #991b1b; }
+    .im-request-results .badge-completion { background: #e0e7ff; color: #3730a3; }
+
+    .im-request-results .badge-stage {
+        display: inline-block;
+        padding: 6px 10px;
+        color: #155e75;
+        background: #cffafe;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .im-request-results .im-request-pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    @@media (max-width: 991px) {
+        .im-request-results .im-request-stats > div {
+            width: 50%;
+            margin-bottom: 12px;
+        }
+    }
+
+    @@media (max-width: 767px) {
+        .im-request-results .im-request-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+        .im-request-results .im-request-stats > div { width: auto; margin: 0; }
+        .im-request-results .im-request-stats > div:first-child { grid-column: 1 / -1; }
+        .im-request-results .stats-card { height: 100%; padding: 12px 8px; font-size: 13px; }
+        .im-request-results .completion-summary { padding: 12px; font-size: 13px; }
+        .im-request-results #table_List_Im_Check { display: block; border: 0 !important; }
+        .im-request-results #table_List_Im_Check thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+        .im-request-results #table_List_Im_Check tbody { display: block; width: 100%; }
+        .im-request-results #table_List_Im_Check tbody tr { display: block; margin-bottom: 16px; border: 1px solid #d5e3e4; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 3px 12px rgba(0,0,0,.06); }
+        .im-request-results #table_List_Im_Check tbody td { display: block; position: relative; min-height: 44px; padding: 10px 39% 10px 12px !important; border: 0 !important; border-bottom: 1px solid #e5eded !important; text-align: start; background: #fff; overflow-wrap: anywhere; }
+        .im-request-results #table_List_Im_Check tbody td::before { content: attr(data-label); position: absolute; inset-inline-end: 12px; top: 10px; width: 33%; color: #526970; font-weight: bold; font-size: 13px; }
+        .im-request-results #table_List_Im_Check tbody td:nth-child(2) { background: #edf6f6; color: #155e63; font-weight: bold; }
+        .im-request-results #table_List_Im_Check tbody td:last-child { border-bottom: 0 !important; }
+        .im-request-results #table_List_Im_Check td a { display: flex; align-items: center; justify-content: center; min-height: 44px; margin: 4px 0; padding: 8px; }
+        .im-request-results #table_List_Im_Check td br { display: none; }
+        .im-request-results #table_List_Im_Check td.dataTables_empty { padding: 20px 12px !important; text-align: center; }
+        .im-request-results #table_List_Im_Check td.dataTables_empty::before { content: none; }
+        .im-request-results .im-pagination-link { flex: 1 1 40%; min-height: 44px; margin: 0; }
+    }
+</style>
+
+<div class="im-request-results">
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @success
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="page-header-custom">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2>@L["Im_List_ResultsHeading"]</h2>
+                <p>@L["Im_List_ResultsSubtitle"]</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <h2>@totalCount</h2>
+                <span>@L["Im_List_TotalRequests"]</span>
+            </div>
+        </div>
+    </div>
+
+    @if (items.Count == 0)
+    {
+        <div class="alert alert-info">@L["Im_List_NoData"]</div>
+    }
+    else
+    {
+        <div class="completion-summary">
+            <span>@L["Im_List_CompletionInPage"]</span>
+            <strong>@completionCount</strong>
+        </div>
+
+        <div class="row im-request-stats" style="margin-bottom:15px;">
+            <div class="col stats-card-col">
+                <div class="stats-card bg-primary-soft active" data-status="" role="button" tabindex="0">
+                    <span class="stats-count">@items.Count</span>
+                    @L["Im_List_PageResults"]
+                    <span class="stats-hint">@L["Im_List_ClickShowAll"]</span>
+                </div>
+            </div>
+            <div class="col stats-card-col">
+                <div class="stats-card bg-success-soft" data-status="approved" role="button" tabindex="0">
+                    <span class="stats-count">@approvedCount</span>
+                    @L["Im_List_ApprovedDone"]
+                    <span class="stats-hint">@L["Im_List_ClickShow"]</span>
+                </div>
+            </div>
+            <div class="col stats-card-col">
+                <div class="stats-card bg-warning-soft" data-status="review" role="button" tabindex="0">
+                    <span class="stats-count">@reviewCount</span>
+                    @L["Im_List_UnderReview"]
+                    <span class="stats-hint">@L["Im_List_ClickShow"]</span>
+                </div>
+            </div>
+            <div class="col stats-card-col">
+                <div class="stats-card bg-danger-soft" data-status="closed" role="button" tabindex="0">
+                    <span class="stats-count">@closedCount</span>
+                    @L["Im_List_ClosedRequests"]
+                    <span class="stats-hint">@L["Im_List_ClickShow"]</span>
+                </div>
+            </div>
+            <div class="col stats-card-col">
+                <div class="stats-card bg-completion-soft" data-status="completion" role="button" tabindex="0">
+                    <span class="stats-count">@completionCount</span>
+                    @L["Im_List_CompletionRequired"]
+                    <span class="stats-hint">@L["Im_List_ClickShow"]</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-3 p-3 bg-body rounded">
+            <div>@string.Format(L["Im_List_ShowingRange"], firstRow, lastRow, totalCount)</div>
+            <div>@L["Im_List_PageCountLabel"] <strong>@pageSize</strong></div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="table_List_Im_Check" class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th>@L["Im_List_ColNo"]</th>
+                        <th>@L["Im_List_ColRequestNumber"]</th>
+                        <th>@L["Im_List_ColImporterType"]</th>
+                        <th>@L["Im_List_ColSupplier"]</th>
+                        <th>@L["Im_List_ColExportCountry"]</th>
+                        <th>@L["Im_List_ColCreationDate"]</th>
+                        <th>@L["Im_List_ColDetails"]</th>
+                        <th>@L["Im_List_ColCommittee"]</th>
+                        <th>@L["Im_List_ColRequestState"]</th>
+                        <th>@L["Im_List_ColResults"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var serialNumber = firstRow;
+                    }
+                    @foreach (var item in items)
+                    {
+                        var state = RowStatus(item);
+                        var completion = CompletionOf(item);
+                        <tr data-status="@state">
+                            <td data-label="@L["Im_List_ColNo"]">@serialNumber</td>
+                            <td data-label="@L["Im_List_ColRequestNumber"]">@item.ImCheckRequest_Number</td>
+                            <td data-label="@L["Im_List_ColImporterType"]">@item.ImporterTypeName</td>
+                            <td data-label="@L["Im_List_ColSupplier"]">@item.ImporterName</td>
+                            <td data-label="@L["Im_List_ColExportCountry"]">@item.ExportCountryName</td>
+                            <td data-label="@L["Im_List_ColCreationDate"]">@(item.Creation_Date?.ToString("yyyy-MM-dd"))</td>
+
+                            <td data-label="@L["Im_List_ColDetails"]">
+                                @*
+                                    The new source points "تفاصيل" at Im_CheckRequestDisplay, which is not
+                                    ported yet; this stays on the ported Im_CheckRequestDetails page so the
+                                    link keeps working. "عرض الرسوم" already matches the new target.
+                                *@
+                                <a href="/Im_CheckRequests/Im_CheckRequestDetails/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number&Outlet_ID=@item.Outlet_ID">
+                                    @L["Im_List_Details"]
+                                </a>
+                                <br />
+                                <a href="/Committees/FeesTotalResult/Index?ImCheckRequest_Number=@item.ImCheckRequest_Number"
+                                   target="_blank" rel="noopener noreferrer">
+                                    @L["Im_List_Fees"]
+                                </a>
+                            </td>
+
+                            <td data-label="@L["Im_List_ColCommittee"]">
+                                @if (item.IsAccepted == null && completion == 2)
+                                {
+                                    <span class="badge-status badge-approved">@L["Im_List_CompletionDone"]</span>
+                                }
+                                else if (item.IsAccepted == null && completion == 1)
+                                {
+                                    <span class="badge-status badge-completion">@L["Im_List_Completion"]</span>
+                                }
+                                else if (item.Closed_Request == true)
+                                {
+                                    <span class="badge-status badge-closed">@L["Im_List_ClosedBadge"]</span>
+                                }
+                                else if (item.IsAccepted == true)
+                                {
+                                    <span class="badge-status badge-approved">@L["Im_List_ApprovedDone"]</span>
+                                    <br />
+                                    <br />
+                                    <a href="/Committees/Committee_Im/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID">
+                                        @L["Im_List_FormCommittee"]
+                                    </a>
+                                }
+                                else if (item.IsAccepted == false)
+                                {
+                                    <span class="badge-status badge-pending">@L["Im_List_NotApproved"]</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-status badge-pending">@L["Im_List_UnderReview"]</span>
+                                }
+                            </td>
+
+                            <td data-label="@L["Im_List_ColRequestState"]">
+                                @if (item.Closed_Request == true)
+                                {
+                                    <span class="badge-stage">@(string.IsNullOrWhiteSpace(item.Name_Final_Result) ? L["Im_List_StageClosed"].Value : item.Name_Final_Result)</span>
+                                }
+                                else if (item.IsAccepted == null && completion == 2)
+                                {
+                                    <span class="badge-stage">@L["Im_List_StageEditedByCustomer"]</span>
+                                }
+                                else if (item.IsAccepted == null && completion == 1)
+                                {
+                                    <span class="badge-stage">@L["Im_List_StageWaitingCompletion"]</span>
+                                }
+                                else if (item.IsAccepted == false)
+                                {
+                                    <span class="badge-stage">@L["Im_List_StageRejected"]</span>
+                                }
+                                else if (item.IsAccepted == true)
+                                {
+                                    @* The new source checks CommitteeID here, but the procedure does not
+                                       project it, so the column is always null and this branch is
+                                       unreachable there too; "committee formed" is never shown. *@
+                                    <span class="badge-stage">@L["Im_List_StageWaitingCommittee"]</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-stage">@L["Im_List_StageWaitingReview"]</span>
+                                }
+                            </td>
+
+                            <td data-label="@L["Im_List_ColResults"]">
+                                <a href="/Committees/ImCommittee_Final_Result/Index?requestId=@item.Im_CheckRequest_ID&Outlet_ID=@item.Outlet_ID">
+                                    @L["Im_List_ShowResults"]
+                                </a>
+                                <br />
+                                <a href="/Im_CheckRequests/CommitteeRestructuring/index?Im_CheckRequestID=@item.Im_CheckRequest_ID">
+                                    @L["Im_List_Restructure"]
+                                </a>
+                            </td>
+                        </tr>
+                        serialNumber++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="im-request-pagination">
+            <button type="button" class="btn btn-outline-secondary im-pagination-link" data-page="1" @(pageNumber <= 1 ? "disabled" : null)>@L["Im_List_First"]</button>
+            <button type="button" class="btn btn-outline-secondary im-pagination-link" data-page="@(pageNumber - 1)" @(pageNumber <= 1 ? "disabled" : null)>@L["Im_List_Prev"]</button>
+            <span class="px-3 py-2">@string.Format(L["Im_List_PageOf"], pageNumber, totalPages)</span>
+            <button type="button" class="btn btn-outline-secondary im-pagination-link" data-page="@(pageNumber + 1)" @(pageNumber >= totalPages ? "disabled" : null)>@L["Im_List_Next"]</button>
+            <button type="button" class="btn btn-outline-secondary im-pagination-link" data-page="@totalPages" @(pageNumber >= totalPages ? "disabled" : null)>@L["Im_List_Last"]</button>
+        </div>
+    }
+</div>

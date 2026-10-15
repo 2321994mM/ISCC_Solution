@@ -93,7 +93,48 @@ public class ImCheckRequestListService : IImCheckRequestListService
         // zero. The list itself is the rows, paged by the procedure.
         var totalCount = rows.Count == 0 ? 0 : rows[0].TotalCount;
 
-        return new ImCheckRequestListResult(rows, totalCount, pageNumber, PageSize);
+        var completion = await GetCompletionStatusAsync(rows, cancellationToken);
+
+        return new ImCheckRequestListResult(rows, totalCount, pageNumber, PageSize, completion);
+    }
+
+    /// <summary>
+    /// Reads <c>Im_CheckRequest.Completion_Status</c> for the rows on this page that are still
+    /// awaiting a decision.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The procedure does not project the completion workflow, so it is read separately — the
+    /// legacy <c>List_Im_checkRequestsBLL</c> did the same with a second Entity Framework query
+    /// and then overwrote the row's <c>Current_Status</c> with an Arabic literal. Keeping the
+    /// numeric value lets the view render it in the request's own language.
+    /// </para>
+    /// <para>
+    /// Only rows with <c>IsAccepted == null</c> are fetched: a request that has already been
+    /// accepted or rejected cannot be in the completion workflow. The page holds 25 rows, so the
+    /// <c>IN</c> list stays well inside SQL Server's parameter limit and the legacy batching loop
+    /// is not needed.
+    /// </para>
+    /// </remarks>
+    private async Task<IReadOnlyDictionary<long, byte>> GetCompletionStatusAsync(
+        List<ImCheckRequestListRow> rows, CancellationToken cancellationToken)
+    {
+        var pending = rows
+            .Where(r => r.IsAccepted == null)
+            .Select(r => r.Im_CheckRequest_ID)
+            .Distinct()
+            .ToList();
+
+        if (pending.Count == 0) return new Dictionary<long, byte>();
+
+        var statuses = await _db.ImCheckRequests
+            .Where(r => pending.Contains(r.Id) && r.CompletionStatus != null)
+            .Select(r => new { r.Id, r.CompletionStatus })
+            .ToListAsync(cancellationToken);
+
+        return statuses
+            .Where(r => r.CompletionStatus.HasValue)
+            .ToDictionary(r => r.Id, r => r.CompletionStatus!.Value);
     }
 
     public async Task<IReadOnlyList<SelectOption>> GetCompaniesAsync(
